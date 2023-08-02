@@ -1,0 +1,3 @@
+/* Only include tailwind's base, which includes the reset. This is output as a separate file so that it can be
+   included optionally. */
+@tailwind base;

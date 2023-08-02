@@ -2,15 +2,13 @@
 // https://tailwindcss.com/docs/configuration
 
 const plugin = require("tailwindcss/plugin")
-const fs = require("fs")
-const path = require("path")
 
 module.exports = {
   content: [
     "./js/**/*.js",
-    "../lib/*_web.ex",
-    "../lib/*_web/**/*.*ex"
+    "../lib/**/*.*ex"
   ],
+  prefix: "-",
   theme: {
     extend: {
       colors: {
@@ -18,8 +16,13 @@ module.exports = {
       }
     },
   },
+  corePlugins: {
+    preflight: false,
+  },
   plugins: [
-    require("@tailwindcss/forms"),
+    require("@tailwindcss/forms")({
+      strategy: 'class'
+    }),
     // Allows prefixing tailwind classes with LiveView classes to add rules
     // only when LiveView classes are applied, for example:
     //
