@@ -29,7 +29,7 @@ defmodule Pax.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix, "~> 1.7.7"},
+      {:phoenix, "~> 1.7.0"},
       {:phoenix_live_view, "~> 0.19.0"},
       {:ecto, "~> 3.10"},
       # {:phoenix_ecto, "~> 4.4"},
