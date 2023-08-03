@@ -87,8 +87,6 @@ defmodule Pax.Index.Live do
   end
 
   defmacro adapter(adapter, opts \\ []) do
-    dbg()
-
     quote do
       @adapter {unquote(adapter), unquote(adapter).init(__MODULE__, unquote(opts))}
     end

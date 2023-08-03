@@ -12,10 +12,6 @@ config :esbuild,
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "3.3.3",
-  reset: [
-    args: ~w(--config=tailwind.reset.config.js --input=css/reset.css --output=../priv/static/reset.css),
-    cd: Path.expand("../assets", __DIR__)
-  ],
   default: [
     args: ~w(--config=tailwind.config.js --input=css/pax.css --output=../priv/static/pax.css),
     cd: Path.expand("../assets", __DIR__)

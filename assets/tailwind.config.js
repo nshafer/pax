@@ -8,7 +8,9 @@ module.exports = {
     "./js/**/*.js",
     "../lib/**/*.*ex"
   ],
-  prefix: "-",
+  // Add an ancestor selector to all Tailwind utilities so that they are scoped to children of "#pax" root element
+  // Note: this does not apply to Components, such as .container
+  important: "#pax",
   theme: {
     extend: {
       colors: {
@@ -17,9 +19,11 @@ module.exports = {
     },
   },
   corePlugins: {
+    // Disable preflight as we have a customized version scoped to #pax in css/pax.css
     preflight: false,
   },
   plugins: [
+    // Configure forms to require form-* classes, instead of applying reset styles to all form elements
     require("@tailwindcss/forms")({
       strategy: 'class'
     }),

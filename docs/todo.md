@@ -1,1 +1,2 @@
 - [ ] Fix/figure out phx.digest. Do it or not?
+- [ ] Rejig `mix assets.deploy` to output to pax.min.css
