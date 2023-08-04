@@ -6,18 +6,20 @@ defmodule Pax.Index.Components do
       use Phoenix.Component
 
       attr(:pax_module, :atom, required: true)
+      attr(:pax_fields, :list, required: true)
       attr(:objects, :list, required: true)
       attr(:class, :string, default: nil)
 
       def pax_index(var!(assigns)) do
         ~H"""
         <div id="pax" class={["pax pax-index", @class]} phx-hook="PaxHook">
-          <.pax_table pax_module={@pax_module} objects={@objects} />
+          <.pax_table pax_module={@pax_module} pax_fields={@pax_fields} objects={@objects} />
         </div>
         """
       end
 
       attr(:pax_module, :atom, required: true)
+      attr(:pax_fields, :list, required: true)
       attr(:objects, :list, required: true)
       attr(:class, :string, default: nil)
 
@@ -29,11 +31,11 @@ defmodule Pax.Index.Components do
             @class
           ]}>
             <thead class="pax-table-head after:table-row after:h-2">
-              <.pax_table_head pax_module={@pax_module} />
+              <.pax_table_head pax_module={@pax_module} pax_fields={@pax_fields} />
             </thead>
             <tbody class="pax-table-body">
               <%= for object <- @objects do %>
-                <.pax_table_row pax_module={@pax_module} object={object} />
+                <.pax_table_row pax_module={@pax_module} pax_fields={@pax_fields} object={object} />
               <% end %>
             </tbody>
           </table>
@@ -42,12 +44,13 @@ defmodule Pax.Index.Components do
       end
 
       attr(:pax_module, :atom, required: true)
+      attr(:pax_fields, :list, required: true)
       attr(:class, :string, default: nil)
 
       def pax_table_head(var!(assigns)) do
         ~H"""
         <tr>
-          <%= for field <- Pax.Index.Live.fields(@pax_module) do %>
+          <%= for field <- @pax_fields do %>
             <th class={[
               "pax-table-head-cell px-2 py-2 font-medium text-left text-neutral-600 dark:text-neutral-400",
               "bg-neutral-200 dark:bg-neutral-800",
@@ -62,13 +65,14 @@ defmodule Pax.Index.Components do
       end
 
       attr(:pax_module, :atom, required: true)
+      attr(:pax_fields, :list, required: true)
       attr(:object, :any, required: true)
       attr(:class, :string, default: nil)
 
       def pax_table_row(var!(assigns)) do
         ~H"""
         <tr class={["pax-table-row", @class]}>
-          <%= for field <- Pax.Index.Live.fields(@pax_module) do %>
+          <%= for field <- @pax_fields do %>
             <.pax_table_cell pax_module={@pax_module} field={field} object={@object} />
           <% end %>
         </tr>

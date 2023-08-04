@@ -76,7 +76,8 @@ defmodule Pax.Index.Field do
     case value do
       nil -> Map.get(object, name)
       {mod, fun} when is_atom(mod) and is_atom(fun) -> resolve_value_from_mod_fun(mod, fun, name, object)
-      value when is_atom(value) -> resolve_value_from_function_or_field(mod, name, object, value)
+      fun when is_function(fun) -> resolve_value_from_function(mod, name, object, fun)
+      value when is_atom(value) -> resolve_value_from_atom(mod, name, object, value)
       _ -> value
     end
   end
@@ -89,20 +90,29 @@ defmodule Pax.Index.Field do
     end
   end
 
-  defp resolve_value_from_function_or_field(mod, name, object, value) do
-    cond do
-      value = resolve_value_from_function(mod, name, object, value) ->
-        value
-
-      value = resolve_value_from_field(mod, object, value) ->
-        value
-
-      true ->
-        raise "Invalid value: #{inspect(value)} for field #{inspect(name)}. Must be a function/1, function/2 or a field."
+  defp resolve_value_from_function(_mod, name, object, fun) do
+    case Function.info(fun, :arity) do
+      {:arity, 1} -> fun.(object)
+      {:arity, 2} -> fun.(name, object)
+      _ -> raise ArgumentError, "Invalid function arity: #{inspect(fun)}. Must be a fn/1 or fn/2."
     end
   end
 
-  defp resolve_value_from_function(mod, name, object, value) do
+  defp resolve_value_from_atom(mod, name, object, value) do
+    # Try it as a function name in the mod, then as a field name in the object
+    cond do
+      value = resolve_value_from_function_name(mod, name, object, value) ->
+        value
+
+      value = resolve_value_from_field_name(mod, object, value) ->
+        value
+
+      true ->
+        raise "Invalid value: #{inspect(value)} for field #{inspect(name)}. Must be a def/1, def/2 or a field."
+    end
+  end
+
+  defp resolve_value_from_function_name(mod, name, object, value) do
     cond do
       function_exported?(mod, value, 2) -> apply(mod, value, [name, object])
       function_exported?(mod, value, 1) -> apply(mod, value, [object])
@@ -110,7 +120,7 @@ defmodule Pax.Index.Field do
     end
   end
 
-  defp resolve_value_from_field(_mod, object, value) do
+  defp resolve_value_from_field_name(_mod, object, value) do
     if Map.has_key?(object, value) do
       Map.get(object, value)
     else
