@@ -35,11 +35,13 @@ defmodule Pax.Index.Live do
 
   defp config(opts) do
     quote bind_quoted: [opts: opts] do
-      @otp_app Keyword.get(opts, :otp_app) || raise("otp_app is required")
-      @adapter nil
+      @pax_otp_app Keyword.get(opts, :otp_app) || raise("otp_app is required")
+      @pax_adapter nil
+      # @pax_fields []
+      Module.register_attribute(__MODULE__, :pax_fields, accumulate: true)
 
       use Phoenix.LiveView, Keyword.take(opts, [:container, :global_prefixes, :layout, :log, :namespace])
-      import Pax.Index.Live, only: [adapter: 1, adapter: 2]
+      import Pax.Index.Live, only: [adapter: 1, adapter: 2, field: 2, field: 3]
 
       def on_mount(:pax_index, params, session, socket),
         do: Pax.Index.Live.on_mount(__MODULE__, params, session, socket)
@@ -54,7 +56,7 @@ defmodule Pax.Index.Live do
     components = Keyword.get(opts, :components) || Pax.Index.DefaultComponents
 
     quote do
-      @components unquote(components)
+      @pax_components unquote(components)
       import unquote(components)
     end
   end
@@ -63,7 +65,7 @@ defmodule Pax.Index.Live do
     quote unquote: false do
       def render(var!(assigns)) do
         ~H"""
-        <.pax_index objects={@objects} />
+        <.pax_index pax_module={@pax_module} objects={@objects} />
         """
       end
 
@@ -77,18 +79,19 @@ defmodule Pax.Index.Live do
 
     quote do
       def __pax__(:type), do: :index
-      def __pax__(:otp_app), do: @otp_app
-      def __pax__(:adapter), do: @adapter
-      def __pax__(:components), do: @components
+      def __pax__(:otp_app), do: @pax_otp_app
+      def __pax__(:adapter), do: @pax_adapter
+      def __pax__(:components), do: @pax_components
+      def __pax__(:fields), do: @pax_fields |> Enum.reverse()
 
-      def __pax__(:config), do: Application.get_env(@otp_app, Pax, [])
+      def __pax__(:config), do: Application.get_env(@pax_otp_app, Pax, [])
       def __pax__(:config, key, default \\ nil), do: Keyword.get(__pax__(:config), key, default)
     end
   end
 
   defmacro adapter(adapter, opts \\ []) do
     quote do
-      @adapter {unquote(adapter), unquote(adapter).init(__MODULE__, unquote(opts))}
+      @pax_adapter {unquote(adapter), unquote(adapter).init(__MODULE__, unquote(opts))}
     end
   end
 
@@ -106,5 +109,23 @@ defmodule Pax.Index.Live do
 
       """
     end
+  end
+
+  defmacro field(name, type, opts \\ []) do
+    # TODO: support anonymous functions for the value opt. Do this by converting it into a function in the caller's
+    #       module, then just storing the MFA to it.
+    # TODO: add field/2 macro that gets the type and opts from the adapter
+    quote do
+      Pax.Index.Live.__field__(__MODULE__, unquote(name), unquote(type), unquote(opts))
+    end
+  end
+
+  def __field__(mod, name, type, opts) do
+    {type, opts} = Pax.Index.Field.init(mod, type, opts)
+    Module.put_attribute(mod, :pax_fields, {name, type, opts})
+  end
+
+  def fields(mod) do
+    mod.__pax__(:fields)
   end
 end
