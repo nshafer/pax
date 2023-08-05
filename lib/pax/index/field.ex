@@ -40,7 +40,7 @@ defmodule Pax.Index.Field do
   end
 
   def init(mod, type, opts) do
-    if function_exported?(type, :init, 2) do
+    if Code.ensure_loaded?(type) and function_exported?(type, :init, 2) do
       global = Keyword.take(opts, @global_opts) |> Map.new()
       opts = type.init(mod, opts)
       {type, Map.merge(opts, global)}
