@@ -56,12 +56,18 @@ defmodule Pax.Index.Live do
 
   def on_handle_params(params, uri, socket) do
     IO.puts("#{__MODULE__}.on_handle_params(#{inspect(params)}, #{inspect(uri)}")
-    {:cont, socket |> assign_objects()}
+
+    socket =
+      socket
+      |> assign(:objects, get_objects(params, uri, socket))
+
+    {:cont, socket}
   end
 
-  defp assign_objects(socket) do
+  defp get_objects(params, uri, socket) do
+    module = socket.assigns.pax_module
     {adapter, adapter_opts} = socket.assigns.pax_adapter
-    assign(socket, :objects, adapter.list_objects(adapter_opts, socket))
+    adapter.list_objects(module, adapter_opts, params, uri, socket)
   end
 
   defp init_adapter(module, params, session, socket) do

@@ -10,7 +10,7 @@ defmodule Pax.Index.SchemaAdapter do
   end
 
   @impl Pax.Index.Adapter
-  def list_objects(%{repo: repo, schema: schema}, _socket) do
+  def list_objects(_module, %{repo: repo, schema: schema}, _params, _uri, _socket) do
     repo.all(schema)
   end
 end
