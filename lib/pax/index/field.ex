@@ -49,7 +49,7 @@ defmodule Pax.Index.Field do
     end
   end
 
-  def title(_mod, {name, _type, opts}) do
+  def title({name, _type, opts}) do
     case Map.get(opts, :title) do
       nil -> name_to_title(name)
       title -> title
@@ -67,22 +67,22 @@ defmodule Pax.Index.Field do
     |> String.slice(0..25)
   end
 
-  def render(mod, {name, type, opts}, object) do
-    value = resolve_value(mod, name, object, Map.get(opts, :value))
+  def render({name, type, opts}, object) do
+    value = resolve_value(name, object, Map.get(opts, :value))
     type.render(opts, value)
   end
 
-  defp resolve_value(mod, name, object, value) do
+  defp resolve_value(name, object, value) do
     case value do
       nil -> Map.get(object, name)
-      {mod, fun} when is_atom(mod) and is_atom(fun) -> resolve_value_from_mod_fun(mod, fun, name, object)
-      fun when is_function(fun) -> resolve_value_from_function(mod, name, object, fun)
-      value when is_atom(value) -> resolve_value_from_atom(mod, name, object, value)
+      {mod, fun} when is_atom(mod) and is_atom(fun) -> resolve_value_from_mod_fun(name, object, mod, fun)
+      fun when is_function(fun) -> resolve_value_from_function(name, object, fun)
+      value when is_atom(value) -> resolve_value_from_field_name(name, object, value)
       _ -> value
     end
   end
 
-  defp resolve_value_from_mod_fun(mod, fun, name, object) do
+  defp resolve_value_from_mod_fun(name, object, mod, fun) do
     cond do
       function_exported?(mod, fun, 2) -> apply(mod, fun, [name, object])
       function_exported?(mod, fun, 1) -> apply(mod, fun, [object])
@@ -90,7 +90,7 @@ defmodule Pax.Index.Field do
     end
   end
 
-  defp resolve_value_from_function(_mod, name, object, fun) do
+  defp resolve_value_from_function(name, object, fun) do
     case Function.info(fun, :arity) do
       {:arity, 1} -> fun.(object)
       {:arity, 2} -> fun.(name, object)
@@ -98,33 +98,11 @@ defmodule Pax.Index.Field do
     end
   end
 
-  defp resolve_value_from_atom(mod, name, object, value) do
-    # Try it as a function name in the mod, then as a field name in the object
-    cond do
-      value = resolve_value_from_function_name(mod, name, object, value) ->
-        value
-
-      value = resolve_value_from_field_name(mod, object, value) ->
-        value
-
-      true ->
-        raise "Invalid value: #{inspect(value)} for field #{inspect(name)}. Must be a def/1, def/2 or a field."
-    end
-  end
-
-  defp resolve_value_from_function_name(mod, name, object, value) do
-    cond do
-      function_exported?(mod, value, 2) -> apply(mod, value, [name, object])
-      function_exported?(mod, value, 1) -> apply(mod, value, [object])
-      true -> nil
-    end
-  end
-
-  defp resolve_value_from_field_name(_mod, object, value) do
+  defp resolve_value_from_field_name(_name, object, value) do
     if Map.has_key?(object, value) do
       Map.get(object, value)
     else
-      nil
+      raise "Invalid value: #{inspect(value)}. Must be a field name."
     end
   end
 end

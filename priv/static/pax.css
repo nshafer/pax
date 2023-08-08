@@ -486,6 +486,10 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
   text-align: left;
 }
 
+#pax :is(.align-bottom) {
+  vertical-align: bottom;
+}
+
 #pax :is(.text-sm) {
   font-size: 0.875rem;
   line-height: 1.25rem;

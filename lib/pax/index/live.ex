@@ -2,18 +2,23 @@ defmodule Pax.Index.Live do
   use Phoenix.Component
   import Phoenix.LiveView
 
-  defmacro __using__(opts) do
+  @callback adapter(
+              params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
+              session :: map(),
+              socket :: Phoenix.LiveView.Socket.t()
+            ) :: {module(), keyword()}
+
+  @callback fields(
+              params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
+              session :: map(),
+              socket :: Phoenix.LiveView.Socket.t()
+            ) :: list({atom(), atom() | module(), keyword()})
+
+  defmacro __using__(_opts) do
     quote do
       IO.puts("Pax.Index.Live.__using__ for #{inspect(__MODULE__)}")
+      @behaviour Pax.Index.Live
 
-      unquote(live_view(opts))
-      unquote(components(opts))
-      unquote(render())
-    end
-  end
-
-  defp live_view(_opts) do
-    quote do
       def on_mount(:pax_index, params, session, socket),
         do: Pax.Index.Live.on_mount(__MODULE__, params, session, socket)
 
@@ -21,52 +26,39 @@ defmodule Pax.Index.Live do
     end
   end
 
-  defp components(opts) do
-    components = Keyword.get(opts, :components) || Pax.Index.DefaultComponents
-
-    quote do
-      import unquote(components)
-    end
-  end
-
-  defp render() do
-    quote unquote: false do
-      def render(var!(assigns)) do
-        ~H"""
-        <.pax_index pax_module={@pax_module} pax_fields={@pax_fields} objects={@objects} />
-        """
-      end
-
-      defoverridable render: 1
-    end
-  end
-
   def on_mount(module, params, session, socket) do
     IO.puts("#{__MODULE__}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
 
+    fields = init_fields(module, params, session, socket)
+    # plugins = init_plugins(module, params, sessions, socket)
+    plugins = []
+    adapter = init_adapter(module, params, session, socket)
+
+    handle_params_wrapper = fn params, uri, socket ->
+      on_handle_params(module, adapter, plugins, fields, params, uri, socket)
+    end
+
     socket =
       socket
-      |> assign(:pax_module, module)
-      |> assign(:pax_adapter, init_adapter(module, params, session, socket))
-      |> assign(:pax_fields, init_fields(module, params, session, socket))
-      |> attach_hook(:pax_handle_params, :handle_params, &on_handle_params/3)
+      |> assign(:adapter, adapter)
+      |> assign(:plugins, plugins)
+      |> assign(:fields, fields)
+      |> attach_hook(:pax_handle_params, :handle_params, handle_params_wrapper)
 
     {:cont, socket}
   end
 
-  def on_handle_params(params, uri, socket) do
-    IO.puts("#{__MODULE__}.on_handle_params(#{inspect(params)}, #{inspect(uri)}")
+  def on_handle_params(module, adapter, _plugins, _fields, params, uri, socket) do
+    IO.puts("#{__MODULE__}.on_handle_params(#{inspect(module)}, #{inspect(params)}, #{inspect(uri)}")
 
     socket =
       socket
-      |> assign(:objects, get_objects(params, uri, socket))
+      |> assign(:objects, get_objects(module, adapter, params, uri, socket))
 
     {:cont, socket}
   end
 
-  defp get_objects(params, uri, socket) do
-    module = socket.assigns.pax_module
-    {adapter, adapter_opts} = socket.assigns.pax_adapter
+  defp get_objects(module, {adapter, adapter_opts}, params, uri, socket) do
     adapter.list_objects(module, adapter_opts, params, uri, socket)
   end
 
