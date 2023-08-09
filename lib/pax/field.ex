@@ -3,6 +3,7 @@ defmodule Pax.Field do
   @callback render(opts :: any(), value :: any()) :: String.t() | nil
 
   alias Pax.Field
+  require Logger
 
   @global_opts [:title, :link, :value]
 
@@ -41,11 +42,45 @@ defmodule Pax.Field do
 
   def init(mod, type, opts) do
     if Code.ensure_loaded?(type) and function_exported?(type, :init, 2) do
-      global = Keyword.take(opts, @global_opts) |> Map.new()
+      global = init_global_opts(opts, mod)
       opts = type.init(mod, opts)
       {type, Map.merge(opts, global)}
     else
       raise ArgumentError, "Invalid field type: #{inspect(type)}."
+    end
+  end
+
+  defp init_global_opts(opts, mod) do
+    Keyword.take(opts, @global_opts)
+    |> Map.new()
+    |> resolve_link_opt(mod)
+  end
+
+  defp resolve_link_opt(opts, mod) do
+    case Map.get(opts, :link) do
+      nil ->
+        opts
+
+      true ->
+        case function_exported?(mod, :link, 1) do
+          true -> Map.put(opts, :link, {mod, :link})
+          false -> raise "You must implement a link/1 function in #{inspect(mod)} to set link: true"
+        end
+
+      {mod, fun} when is_atom(mod) and is_atom(fun) ->
+        opts
+
+      fun when is_function(fun) ->
+        opts
+
+      link when is_atom(link) or is_binary(link) ->
+        opts
+
+      %URI{} ->
+        opts
+
+      _ ->
+        raise "Invalid link option: #{inspect(opts[:link])}"
     end
   end
 
@@ -65,6 +100,60 @@ defmodule Pax.Field do
     |> Enum.map(&String.capitalize/1)
     |> Enum.join(" ")
     |> String.slice(0..25)
+  end
+
+  def link({_name, _type, opts}, object) do
+    resolve_link(object, Map.get(opts, :link))
+  end
+
+  defp resolve_link(object, link_opt) do
+    case link_opt do
+      nil -> nil
+      {mod, fun} when is_atom(mod) and is_atom(fun) -> resolve_link_from_mod_fun(object, mod, fun)
+      fun when is_function(fun) -> resolve_link_from_function(object, fun)
+      %URI{} = link -> URI.to_string(link)
+      _ -> link_opt
+    end
+  end
+
+  defp resolve_link_from_mod_fun(object, mod, fun) do
+    cond do
+      function_exported?(mod, fun, 1) -> apply(mod, fun, [object]) |> resolve_returned_link()
+      true -> raise UndefinedFunctionError, "function #{mod}.#{fun}/1 is undefined or private"
+    end
+  end
+
+  defp resolve_link_from_function(object, fun) do
+    case Function.info(fun, :arity) do
+      {:arity, 1} -> fun.(object) |> resolve_returned_link()
+      _ -> raise ArgumentError, "Invalid function arity: #{inspect(fun)}. Must be a fn/1."
+    end
+  end
+
+  defp resolve_returned_link(link) do
+    case link do
+      nil ->
+        nil
+
+      false ->
+        nil
+
+      link when is_atom(link) ->
+        to_string(link)
+
+      link when is_binary(link) ->
+        link
+
+      %URI{} ->
+        URI.to_string(link)
+
+      _ ->
+        Logger.warning(
+          "Invalid link returned from link/1 function. Must be a string, atom or URI. Got: #{inspect(link)}"
+        )
+
+        nil
+    end
   end
 
   def render({name, type, opts}, object) do

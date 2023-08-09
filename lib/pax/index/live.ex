@@ -14,6 +14,10 @@ defmodule Pax.Index.Live do
               socket :: Phoenix.LiveView.Socket.t()
             ) :: list({atom(), atom() | module(), keyword()})
 
+  @callback link(object :: map()) :: String.t()
+
+  @optional_callbacks [link: 1]
+
   defmacro __using__(_opts) do
     quote do
       IO.puts("Pax.Index.Live.__using__ for #{inspect(__MODULE__)}")

@@ -1,9 +1,9 @@
 defmodule Pax.Index.Components do
   use Phoenix.Component
 
-  attr(:fields, :list, required: true)
-  attr(:objects, :list, required: true)
-  attr(:class, :string, default: nil)
+  attr :fields, :list, required: true
+  attr :objects, :list, required: true
+  attr :class, :string, default: nil
 
   def index(assigns) do
     ~H"""
@@ -13,9 +13,9 @@ defmodule Pax.Index.Components do
     """
   end
 
-  attr(:fields, :list, required: true)
-  attr(:objects, :list, required: true)
-  attr(:class, :string, default: nil)
+  attr :fields, :list, required: true
+  attr :objects, :list, required: true
+  attr :class, :string, default: nil
 
   def table(assigns) do
     ~H"""
@@ -43,7 +43,7 @@ defmodule Pax.Index.Components do
             <tr>
               <%= for field <- @fields do %>
                 <td class="px-2 py-1">
-                  <%= Pax.Field.render(field, object) %>
+                  <Pax.Field.Components.display field={field} object={object} />
                 </td>
               <% end %>
             </tr>
