@@ -24,3 +24,6 @@ pax-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Ignore static files that are produced by build tools.
+/priv/static/
