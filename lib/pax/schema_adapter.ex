@@ -1,8 +1,8 @@
-defmodule Pax.Detail.SchemaAdapter do
-  @behaviour Pax.Detail.Adapter
+defmodule Pax.SchemaAdapter do
+  @behaviour Pax.Adapter
   import Ecto.Query
 
-  @impl Pax.Detail.Adapter
+  @impl Pax.Adapter
   def init(_module, opts) do
     repo = Keyword.get(opts, :repo) || raise "repo is required"
     schema = Keyword.get(opts, :schema) || raise "schema is required"
@@ -10,7 +10,12 @@ defmodule Pax.Detail.SchemaAdapter do
     %{repo: repo, schema: schema}
   end
 
-  @impl Pax.Detail.Adapter
+  @impl Pax.Adapter
+  def list_objects(_module, %{repo: repo, schema: schema}, _params, _uri, _socket) do
+    repo.all(schema)
+  end
+
+  @impl Pax.Adapter
   def get_object(module, %{repo: repo, schema: schema}, params, uri, _socket) do
     query =
       from(s in schema)
