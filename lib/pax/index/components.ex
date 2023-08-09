@@ -33,7 +33,7 @@ defmodule Pax.Index.Components do
                 "bg-neutral-200 dark:bg-neutral-800",
                 "border-b border-b-neutral-300 dark: dark:border-b-neutral-700"
               ]}>
-                <%= Pax.Index.Field.title(field) %>
+                <%= Pax.Field.title(field) %>
               </th>
             <% end %>
           </tr>
@@ -43,7 +43,7 @@ defmodule Pax.Index.Components do
             <tr>
               <%= for field <- @fields do %>
                 <td class="px-2 py-1">
-                  <%= Pax.Index.Field.render(field, object) %>
+                  <%= Pax.Field.render(field, object) %>
                 </td>
               <% end %>
             </tr>

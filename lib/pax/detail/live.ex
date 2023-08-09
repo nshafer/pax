@@ -96,14 +96,14 @@ defmodule Pax.Detail.Live do
   # end
 
   # defp init_field(module, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
-  #   {type, opts} = Pax.Index.Field.init(module, type, opts)
+  #   {type, opts} = Pax.Field.init(module, type, opts)
   #   {name, type, opts}
   # end
 
   # defp init_field(_module, arg) do
   #   raise ArgumentError, """
   #   Invalid field #{inspect(arg)}. Must be {:name, :type, [opts]} or {:name, MyType, [opts]} where MyType
-  #   implements the Pax.Index.Field behaviour.
+  #   implements the Pax.Field behaviour.
   #   """
   # end
 

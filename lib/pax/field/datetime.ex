@@ -1,7 +1,7 @@
-defmodule Pax.Index.Field.Datetime do
-  @behaviour Pax.Index.Field
+defmodule Pax.Field.Datetime do
+  @behaviour Pax.Field
 
-  @impl Pax.Index.Field
+  @impl Pax.Field
   def init(_mod, opts) do
     %{
       format: Keyword.get(opts, :format, nil),
@@ -10,7 +10,7 @@ defmodule Pax.Index.Field.Datetime do
     }
   end
 
-  @impl Pax.Index.Field
+  @impl Pax.Field
   def render(_opts, nil), do: nil
 
   def render(%{format: format}, value) when not is_nil(format) do

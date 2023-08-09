@@ -1,8 +1,8 @@
-defmodule Pax.Index.Field do
+defmodule Pax.Field do
   @callback init(live_module :: module(), opts :: []) :: map()
   @callback render(opts :: any(), value :: any()) :: String.t() | nil
 
-  alias Pax.Index.Field
+  alias Pax.Field
 
   @global_opts [:title, :link, :value]
 

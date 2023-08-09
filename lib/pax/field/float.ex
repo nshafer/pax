@@ -1,7 +1,7 @@
-defmodule Pax.Index.Field.Float do
-  @behaviour Pax.Index.Field
+defmodule Pax.Field.Float do
+  @behaviour Pax.Field
 
-  @impl Pax.Index.Field
+  @impl Pax.Field
   def init(_mod, opts) do
     # TODO: add formatting options: human, scientific, etc
     %{
@@ -9,7 +9,7 @@ defmodule Pax.Index.Field.Float do
     }
   end
 
-  @impl Pax.Index.Field
+  @impl Pax.Field
   def render(_opts, nil), do: nil
 
   def render(%{round: round}, value) do

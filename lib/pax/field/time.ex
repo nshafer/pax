@@ -1,14 +1,14 @@
-defmodule Pax.Index.Field.Time do
-  @behaviour Pax.Index.Field
+defmodule Pax.Field.Time do
+  @behaviour Pax.Field
 
-  @impl Pax.Index.Field
+  @impl Pax.Field
   def init(_mod, opts) do
     %{
       format: Keyword.get(opts, :format, "%I:%M %p")
     }
   end
 
-  @impl Pax.Index.Field
+  @impl Pax.Field
   def render(_opts, nil), do: nil
 
   def render(%{format: format}, value) do
