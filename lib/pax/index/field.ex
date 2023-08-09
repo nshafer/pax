@@ -1,6 +1,6 @@
 defmodule Pax.Index.Field do
   @callback init(live_module :: module(), opts :: []) :: map()
-  @callback render(opts :: any(), value :: any()) :: String.t()
+  @callback render(opts :: any(), value :: any()) :: String.t() | nil
 
   alias Pax.Index.Field
 
@@ -69,7 +69,12 @@ defmodule Pax.Index.Field do
 
   def render({name, type, opts}, object) do
     value = resolve_value(name, object, Map.get(opts, :value))
-    type.render(opts, value)
+
+    case type.render(opts, value) do
+      nil -> "•"
+      # nil -> "∅"
+      value -> value
+    end
   end
 
   defp resolve_value(name, object, value) do
