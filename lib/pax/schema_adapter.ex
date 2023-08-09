@@ -10,24 +10,58 @@ defmodule Pax.SchemaAdapter do
     %{repo: repo, schema: schema}
   end
 
+  @doc """
+  Returns all objects of the schema.
+
+  TODO: pagination, sorting, filtering, etc.
+  """
   @impl Pax.Adapter
   def list_objects(_module, %{repo: repo, schema: schema}, _params, _uri, _socket) do
     repo.all(schema)
   end
 
+  @doc """
+  Will get the object by querying the schema with the following lookups, in order of precedence:application
+
+  ## 1. Module callback `lookup/4`
+
+  If the module defines a callback `lookup/4`, it will be called with the query, params, uri and socket and expects
+  a query in return. For example:
+
+        def lookup(query, %{"id" => id}, _uri, _socket) do
+          from q in query, where: q.id == ^id
+        end
+
+  ## 2. Primary key lookup
+
+  If the params contain all the primary keys of the schema, it will be looked up by those. For example, if the schema
+  has a primary key of `id` and the params contain `id`, it will be looked up by `id`. If the schema has a composite
+  primary key of `id` and `slug` and the params contain `id` and `slug`, it will be looked up by `id` and `slug`.
+
+  ## 3. Field lookup
+
+  If the params contain any of the fields of the schema, it will be looked up by those. For example, if the schema
+  has a field of `slug` and the params contain `slug`, it will be looked up by `slug`. It will lookup all matching
+  fields provided in the params, so extra fields are added (such as in the query string) that don't match, then the
+  lookup will fail.
+
+  This will raise Ecto.NoResultsError if no object is found, and Ecto.MultipleResultsError if more than one object is
+  found. The former will be converted to a 404 error by :phoenix_ecto, but the latter will be raised as a 500 error.
+
+  """
   @impl Pax.Adapter
-  def get_object(module, %{repo: repo, schema: schema}, params, uri, _socket) do
+  def get_object(module, %{repo: repo, schema: schema}, params, uri, socket) do
     query =
       from(s in schema)
-      |> lookup(module, schema, params, uri)
+      |> lookup(module, schema, params, uri, socket)
 
-    repo.one(query)
+    repo.one!(query)
   end
 
-  defp lookup(query, module, schema, params, uri) do
+  defp lookup(query, module, schema, params, uri, socket) do
     cond do
       function_exported?(module, :lookup, 4) ->
-        module.lookup(query, schema, params, uri)
+        module.lookup(query, params, uri, socket)
 
       lookup = lookup_by_primary_key(query, schema, params) ->
         lookup
