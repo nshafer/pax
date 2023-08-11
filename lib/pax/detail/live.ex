@@ -8,11 +8,11 @@ defmodule Pax.Detail.Live do
               socket :: Phoenix.LiveView.Socket.t()
             ) :: {module(), keyword()}
 
-  # @callback fields(
-  #             params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
-  #             session :: map(),
-  #             socket :: Phoenix.LiveView.Socket.t()
-  #           ) :: list({atom(), atom() | module(), keyword()})
+  @callback fieldsets(
+              params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
+              session :: map(),
+              socket :: Phoenix.LiveView.Socket.t()
+            ) :: keyword(list({atom(), atom() | module(), keyword()}))
 
   defmacro __using__(_opts) do
     quote do
@@ -30,26 +30,25 @@ defmodule Pax.Detail.Live do
     IO.puts("#{__MODULE__}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
 
     adapter = init_adapter(module, params, session, socket)
-    # fields = init_fields(module, params, session, socket)
-    fields = []
+    fieldsets = init_fieldsets(module, params, session, socket)
     # plugins = init_plugins(module, params, sessions, socket)
     plugins = []
 
     handle_params_wrapper = fn params, uri, socket ->
-      on_handle_params(module, adapter, plugins, fields, params, uri, socket)
+      on_handle_params(module, adapter, plugins, fieldsets, params, uri, socket)
     end
 
     socket =
       socket
       |> assign(:adapter, adapter)
       |> assign(:plugins, plugins)
-      |> assign(:fields, fields)
+      |> assign(:fieldsets, fieldsets)
       |> attach_hook(:pax_handle_params, :handle_params, handle_params_wrapper)
 
     {:cont, socket}
   end
 
-  def on_handle_params(module, adapter, _plugins, _fields, params, uri, socket) do
+  def on_handle_params(module, adapter, _plugins, _fieldsets, params, uri, socket) do
     IO.puts("#{__MODULE__}.on_handle_params(#{inspect(params)}, #{inspect(uri)}")
 
     socket =
@@ -86,41 +85,73 @@ defmodule Pax.Detail.Live do
     end
   end
 
-  # defp init_fields(module, params, session, socket) do
-  #   fields = get_fields(module, params, session, socket)
-  #   Enum.map(fields, &init_field(module, &1))
-  # end
+  defp init_fieldsets(module, params, session, socket) do
+    fieldsets = get_fieldsets(module, params, session, socket)
 
-  # defp init_field(module, {name, type}) when is_atom(name) and is_atom(type) do
-  #   init_field(module, {name, type, []})
-  # end
+    if is_fieldsets(fieldsets) do
+      Enum.map(fieldsets, &init_fieldset(module, &1))
+    else
+      [default: Enum.map(fieldsets, &init_field(module, &1))]
+    end
+  end
 
-  # defp init_field(module, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
-  #   {type, opts} = Pax.Field.init(module, type, opts)
-  #   {name, type, opts}
-  # end
+  defp is_fieldsets(fieldsets) do
+    Enum.all?(fieldsets, fn
+      {name, value} when is_atom(name) and is_list(value) -> true
+      _ -> false
+    end)
+  end
 
-  # defp init_field(_module, arg) do
-  #   raise ArgumentError, """
-  #   Invalid field #{inspect(arg)}. Must be {:name, :type, [opts]} or {:name, MyType, [opts]} where MyType
-  #   implements the Pax.Field behaviour.
-  #   """
-  # end
+  defp init_fieldset(module, {name, fields}) when is_atom(name) and is_list(fields) do
+    {name, Enum.map(fields, &init_field(module, &1))}
+  end
 
-  # defp get_fields(module, params, session, socket) do
-  #   if function_exported?(module, :fields, 3) do
-  #     case module.fields(params, session, socket) do
-  #       fields when is_list(fields) -> fields
-  #       _ -> raise ArgumentError, "Invalid fields returned from #{inspect(module)}.fields/3"
-  #     end
-  #   else
-  #     raise """
-  #     No fields/3 callback found for #{module}.
-  #     Please configure fields by defining a fields function, for example:
+  defp init_field(module, {name, type}) when is_atom(name) and is_atom(type) do
+    init_field(module, {name, type, []})
+  end
 
-  #         def fields(params, session, socket), do: [{:name, :string}, {:age, :integer}]
+  defp init_field(module, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
+    {type, opts} = Pax.Field.init(module, type, opts)
+    [{name, type, opts}]
+  end
 
-  #     """
-  #   end
-  # end
+  defp init_field(module, fields) when is_list(fields) do
+    Enum.flat_map(fields, &init_field(module, &1))
+  end
+
+  defp init_field(_module, arg) do
+    raise ArgumentError, """
+    Invalid field #{inspect(arg)}. Must be {:name, :type, [opts]} or {:name, MyType, [opts]} where MyType
+    implements the Pax.Field behaviour.
+    """
+  end
+
+  defp get_fieldsets(module, params, session, socket) do
+    if function_exported?(module, :fieldsets, 3) do
+      case module.fieldsets(params, session, socket) do
+        fieldsets when is_list(fieldsets) -> fieldsets
+        _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(module)}.fieldsets/3"
+      end
+    else
+      raise """
+      No fieldsets/3 callback found for #{module}.
+      Please configure fieldsets by defining a fieldsets function, for example:
+
+          def fieldsets(params, session, socket) do
+            [
+              default: [
+                [{:id, :integer}, {:uuid: :string}],
+                {:name, :string},
+                {:age, :float, round: 1}
+              ],
+              metadata: [
+                {:created_at, :datetime},
+                {:updated_at, :datetime}
+              ]
+            ]
+          end
+
+      """
+    end
+  end
 end
