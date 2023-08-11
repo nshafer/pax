@@ -28,12 +28,12 @@ defmodule Pax.Index.Components do
           <tr>
             <%= for field <- @fields do %>
               <th class={[
-                "px-2 py-2 align-bottom",
-                "font-medium text-left text-neutral-600 dark:text-neutral-400",
+                "px-2 py-2 align-bottom font-medium text-left",
                 "bg-neutral-200 dark:bg-neutral-800",
+                "text-neutral-600 dark:text-neutral-400",
                 "border-b border-b-neutral-300 dark: dark:border-b-neutral-700"
               ]}>
-                <%= Pax.Field.title(field) %>
+                <Pax.Field.Components.title field={field} />
               </th>
             <% end %>
           </tr>
@@ -42,7 +42,7 @@ defmodule Pax.Index.Components do
           <%= for object <- @objects do %>
             <tr>
               <%= for field <- @fields do %>
-                <td class="px-2 py-1">
+                <td class="px-2 py-1 align-top">
                   <Pax.Field.Components.display field={field} object={object} />
                 </td>
               <% end %>

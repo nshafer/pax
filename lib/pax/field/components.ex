@@ -2,6 +2,14 @@ defmodule Pax.Field.Components do
   use Phoenix.Component
 
   attr :field, :any, required: true
+
+  def title(assigns) do
+    ~H"""
+    <%= Pax.Field.title(@field) %>
+    """
+  end
+
+  attr :field, :any, required: true
   attr :object, :map, required: true
 
   def display(assigns) do
