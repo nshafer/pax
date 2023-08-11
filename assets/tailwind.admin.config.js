@@ -5,22 +5,15 @@ const plugin = require("tailwindcss/plugin")
 
 module.exports = {
   content: [
-    "./js/**/*.js",
-    "../lib/**/*components.*ex"
+    "./js/admin.js",
+    "../lib/pax/admin/**/*components.*ex"
   ],
-  // Add an ancestor selector to all Tailwind utilities so that they are scoped to children of "#pax" root element
-  // Note: this does not apply to Components, such as .container
-  important: "#pax",
   theme: {
     extend: {
       colors: {
         brand: "#FD4F00",
       }
     },
-  },
-  corePlugins: {
-    // Disable preflight as we have a customized version scoped to #pax in css/pax.css
-    preflight: false,
   },
   experimental: {
     optimizeUniversalDefaults: true
