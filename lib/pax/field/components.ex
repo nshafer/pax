@@ -5,7 +5,9 @@ defmodule Pax.Field.Components do
 
   def title(assigns) do
     ~H"""
-    <%= Pax.Field.title(@field) %>
+    <span class="pax-field-title">
+      <%= Pax.Field.title(@field) %>
+    </span>
     """
   end
 
@@ -24,7 +26,9 @@ defmodule Pax.Field.Components do
 
   def display_as_text(assigns) do
     ~H"""
-    <%= Pax.Field.render(@field, @object) %>
+    <span class="pax-field-text">
+      <%= Pax.Field.render(@field, @object) %>
+    </span>
     """
   end
 
@@ -34,7 +38,7 @@ defmodule Pax.Field.Components do
 
   def display_as_link(assigns) do
     ~H"""
-    <.link class="font-bold underline" navigate={@link}>
+    <.link class="pax-field-link" navigate={@link}>
       <%= Pax.Field.render(@field, @object) %>
     </.link>
     """

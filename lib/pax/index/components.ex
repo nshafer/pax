@@ -7,7 +7,7 @@ defmodule Pax.Index.Components do
 
   def index(assigns) do
     ~H"""
-    <div id="pax" class={["pax pax-index", @class]} phx-hook="PaxHook">
+    <div class={["pax-index", @class]}>
       <Pax.Index.Components.table fields={@fields} objects={@objects} />
     </div>
     """
@@ -19,20 +19,15 @@ defmodule Pax.Index.Components do
 
   def table(assigns) do
     ~H"""
-    <div class="overflow-auto">
+    <div class="pax-table-wrapper">
       <table class={[
-        "pax-table border-collapse table-auto w-full text-sm",
+        "pax-index-table",
         @class
       ]}>
-        <thead class="after:table-row after:h-2">
-          <tr>
+        <thead class="pax-index-table-head">
+          <tr class="pax-index-table-head-row">
             <%= for field <- @fields do %>
-              <th class={[
-                "px-2 py-2 align-bottom font-medium text-left",
-                "bg-neutral-200 dark:bg-neutral-800",
-                "text-neutral-600 dark:text-neutral-400",
-                "border-b border-b-neutral-300 dark: dark:border-b-neutral-700"
-              ]}>
+              <th class="pax-index-table-header">
                 <Pax.Field.Components.title field={field} />
               </th>
             <% end %>
@@ -40,9 +35,9 @@ defmodule Pax.Index.Components do
         </thead>
         <tbody>
           <%= for object <- @objects do %>
-            <tr>
+            <tr class="pax-index-table-row">
               <%= for field <- @fields do %>
-                <td class="px-2 py-1 align-top">
+                <td class="pax-index-table-datacell">
                   <Pax.Field.Components.display field={field} object={object} />
                 </td>
               <% end %>

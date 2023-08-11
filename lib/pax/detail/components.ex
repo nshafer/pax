@@ -7,7 +7,7 @@ defmodule Pax.Detail.Components do
 
   def detail(assigns) do
     ~H"""
-    <div id="pax" class={["pax pax-detail space-y-8", @class]}>
+    <div class={["pax-detail", @class]}>
       <%= for {name, fields} <- @fieldsets do %>
         <Pax.Detail.Components.fieldset name={name} fields={fields} object={@object} />
       <% end %>
@@ -21,43 +21,26 @@ defmodule Pax.Detail.Components do
 
   def fieldset(assigns) do
     ~H"""
-    <div class="pax-fieldset">
-      <h2
-        :if={@name != :default}
-        class={[
-          "font-medium text-lg px-2 py-2 mb-2",
-          "bg-neutral-200 dark:bg-neutral-800",
-          "text-neutral-600 dark:text-neutral-400",
-          "border-b border-b-neutral-300 dark: dark:border-b-neutral-700"
-        ]}
-      >
+    <div class="pax-detail-fieldset">
+      <div :if={@name != :default} class="pax-detail-fieldset-heading">
         <%= @name |> to_string() |> String.capitalize() %>
-      </h2>
-      <%= for row <- @fields do %>
-        <div class={[
-          "flex flex-col flex-wrap mb-2",
-          "sm:flex-row sm:border-b sm:py-2 sm:mb-0 sm:gap-4"
-        ]}>
-          <%= for field <- row do %>
-            <div class={[
-              "flex-1 flex flex-col flex-nowrap mb-2 last:mb-0",
-              "sm:flex-row sm:gap-x-4 sm:mb-0"
-            ]}>
-              <div class={[
-                "font-semibold",
-                "sm:w-32 sm:flex-shrink-0"
-              ]}>
-                <Pax.Field.Components.title field={field} />
+      </div>
+      <div class="pax-detail-fieldset-body">
+        <%= for row <- @fields do %>
+          <div class={["pax-detail-fieldset-row", "pax-field-count-#{Enum.count(row)}"]}>
+            <%= for {field, i} <- Enum.with_index(row) do %>
+              <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
+                <div class="pax-detail-field-title">
+                  <Pax.Field.Components.title field={field} />
+                </div>
+                <div class="pax-detail-field-text">
+                  <Pax.Field.Components.display_as_text field={field} object={@object} />
+                </div>
               </div>
-              <div class={[
-                ""
-              ]}>
-                <Pax.Field.Components.display_as_text field={field} object={@object} />
-              </div>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
     </div>
     """
   end
