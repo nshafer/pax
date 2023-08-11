@@ -22,9 +22,9 @@ defmodule Pax.Field.Datetime do
     time = Calendar.strftime(value, time_format)
 
     [
-      Phoenix.HTML.Tag.content_tag(:span, date, style: "white-space: nowrap;"),
+      Phoenix.HTML.Tag.content_tag(:span, date),
       " ",
-      Phoenix.HTML.Tag.content_tag(:span, time, style: "white-space: nowrap;")
+      Phoenix.HTML.Tag.content_tag(:span, time)
     ]
   end
 end
