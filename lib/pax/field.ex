@@ -102,31 +102,33 @@ defmodule Pax.Field do
     |> String.slice(0..25)
   end
 
-  def link({_name, _type, opts}, object) do
-    resolve_link(object, Map.get(opts, :link))
+  def link({_name, _type, opts}, object, fun_opts \\ []) do
+    resolve_link(object, Map.get(opts, :link), fun_opts)
   end
 
-  defp resolve_link(object, link_opt) do
+  defp resolve_link(object, link_opt, fun_opts) do
     case link_opt do
       nil -> nil
-      {mod, fun} when is_atom(mod) and is_atom(fun) -> resolve_link_from_mod_fun(object, mod, fun)
-      fun when is_function(fun) -> resolve_link_from_function(object, fun)
+      {mod, fun} when is_atom(mod) and is_atom(fun) -> resolve_link_from_mod_fun(object, mod, fun, fun_opts)
+      fun when is_function(fun) -> resolve_link_from_function(object, fun, fun_opts)
       %URI{} = link -> URI.to_string(link)
       _ -> link_opt
     end
   end
 
-  defp resolve_link_from_mod_fun(object, mod, fun) do
+  defp resolve_link_from_mod_fun(object, mod, fun, fun_opts) do
     cond do
+      function_exported?(mod, fun, 2) -> apply(mod, fun, [object, fun_opts]) |> resolve_returned_link()
       function_exported?(mod, fun, 1) -> apply(mod, fun, [object]) |> resolve_returned_link()
-      true -> raise UndefinedFunctionError, "function #{mod}.#{fun}/1 is undefined or private"
+      true -> raise UndefinedFunctionError, "functions #{mod}.#{fun}/1 or #{mod}.#{fun}/1 are undefined or private"
     end
   end
 
-  defp resolve_link_from_function(object, fun) do
+  defp resolve_link_from_function(object, fun, fun_opts) do
     case Function.info(fun, :arity) do
+      {:arity, 2} -> fun.(object, fun_opts) |> resolve_returned_link()
       {:arity, 1} -> fun.(object) |> resolve_returned_link()
-      _ -> raise ArgumentError, "Invalid function arity: #{inspect(fun)}. Must be a fn/1."
+      _ -> raise ArgumentError, "Invalid function arity: #{inspect(fun)}. Must be a fn/1 or fn/2."
     end
   end
 
