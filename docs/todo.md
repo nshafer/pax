@@ -4,19 +4,27 @@
 - [ ] Plugins
 - [ ] Rename Index to List?
 
-## Index Plugins
-- [ ] Pagination
-- [ ] Sorting
-- [ ] Filters
-- [ ] Actions
+## Index
+- [ ] Pagination plugin
+- [ ] Sorting plugin
+- [ ] Filters plugin
+- [ ] Actions plugin
+- [ ] Maybe refactor fieldsets to use css grid?
 
-## Detail Plugins
-- [ ] Inlines
-- [ ] Audit log
-- [ ] Collab / presence.
+## Detail
+- [ ] Inline plugin
+- [ ] Audit log plugin
+- [ ] Collab / presence plugin
 
 ## Fields
 - [ ] Allow specifying just `:fieldname` and default to Field.String maybe? Or callback to adapter to figure it out?
+
+## Admin
+- [x] `use Pax.Admin` macros to create base admin Index/Detail modules with all settings
+    - [x] `section :name, "Title" do` to create sections of resources.
+    - [x] `resource :users, "Users", UserAdmin` to list all admins to include
+    - [ ] `link :name, ~p"/somewhere/"` for random links
+- [x] `pax_admin "/admin", MyAppWeb.Admin` macro for route injection
 
 ## Static
 - [ ] Fix/figure out phx.digest. Do it or not? (Probably not...)
