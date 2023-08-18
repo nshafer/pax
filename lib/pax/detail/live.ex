@@ -2,13 +2,19 @@ defmodule Pax.Detail.Live do
   use Phoenix.Component
   import Phoenix.LiveView
 
-  @callback adapter(
+  @callback pax_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: {module(), keyword()}
+            ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
 
-  @callback fieldsets(
+  @callback pax_adapter(
+              params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
+              session :: map(),
+              socket :: Phoenix.LiveView.Socket.t()
+            ) :: module() | {module(), keyword()} | {module(), module(), keyword()}
+
+  @callback pax_fieldsets(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
@@ -23,12 +29,23 @@ defmodule Pax.Detail.Live do
         do: Pax.Detail.Live.on_mount(__MODULE__, params, session, socket)
 
       on_mount({__MODULE__, :pax_detail})
+
+      def pax_init(_params, _session, socket), do: {:cont, socket}
+
+      defoverridable pax_init: 3
     end
   end
 
   def on_mount(module, params, session, socket) do
     IO.puts("#{__MODULE__}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
 
+    case module.pax_init(params, session, socket) do
+      {:cont, socket} -> init(module, params, session, socket)
+      {:halt, socket} -> {:halt, socket}
+    end
+  end
+
+  def init(module, params, session, socket) do
     adapter = init_adapter(module, params, session, socket)
     fieldsets = init_fieldsets(module, params, session, socket)
     # plugins = init_plugins(module, params, sessions, socket)
@@ -40,9 +57,9 @@ defmodule Pax.Detail.Live do
 
     socket =
       socket
-      |> assign(:adapter, adapter)
-      |> assign(:plugins, plugins)
-      |> assign(:fieldsets, fieldsets)
+      |> assign(:pax_adapter, adapter)
+      |> assign(:pax_plugins, plugins)
+      |> assign(:pax_fieldsets, fieldsets)
       |> attach_hook(:pax_handle_params, :handle_params, handle_params_wrapper)
 
     {:cont, socket}
@@ -58,28 +75,29 @@ defmodule Pax.Detail.Live do
     {:cont, socket}
   end
 
-  defp get_object(module, {adapter, adapter_opts}, params, uri, socket) do
-    adapter.get_object(module, adapter_opts, params, uri, socket)
+  defp get_object(_module, {adapter, callback_module, adapter_opts}, params, uri, socket) do
+    adapter.get_object(callback_module, adapter_opts, params, uri, socket)
   end
 
   defp init_adapter(module, params, session, socket) do
-    {adapter, opts} = get_adapter(module, params, session, socket)
-    {adapter, adapter.init(module, opts)}
+    {adapter, callback_module, opts} = get_adapter(module, params, session, socket)
+    {adapter, callback_module, adapter.init(callback_module, opts)}
   end
 
   defp get_adapter(module, params, session, socket) do
-    if function_exported?(module, :adapter, 3) do
-      case module.adapter(params, session, socket) do
-        {adapter, opts} -> {adapter, opts}
-        adapter when is_atom(adapter) -> {adapter, []}
-        _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.adapter/3"
+    if function_exported?(module, :pax_adapter, 3) do
+      case module.pax_adapter(params, session, socket) do
+        {adapter, callback_module, opts} -> {adapter, callback_module, opts}
+        {adapter, opts} -> {adapter, module, opts}
+        adapter when is_atom(adapter) -> {adapter, module, []}
+        _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.pax_adapter/3"
       end
     else
       raise """
-      No adapter/3 callback found for #{module}.
-      Please configure an adapter by defining an adapter function, for example:
+      No pax_adapter/3 callback found for #{module}.
+      Please configure an adapter by defining a pax_adapter function, for example:
 
-          def adapter(params, session, socket), do: {Pax.Detail.SchemaAdapter, schema: MyApp.MySchema}
+          def pax_adapter(params, session, socket), do: {Pax.Detail.SchemaAdapter, schema: MyApp.MySchema}
 
       """
     end
@@ -127,17 +145,17 @@ defmodule Pax.Detail.Live do
   end
 
   defp get_fieldsets(module, params, session, socket) do
-    if function_exported?(module, :fieldsets, 3) do
-      case module.fieldsets(params, session, socket) do
+    if function_exported?(module, :pax_fieldsets, 3) do
+      case module.pax_fieldsets(params, session, socket) do
         fieldsets when is_list(fieldsets) -> fieldsets
         _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(module)}.fieldsets/3"
       end
     else
       raise """
-      No fieldsets/3 callback found for #{module}.
-      Please configure fieldsets by defining a fieldsets function, for example:
+      No pax_fieldsets/3 callback found for #{module}.
+      Please configure fieldsets by defining a pax_fieldsets function, for example:
 
-          def fieldsets(params, session, socket) do
+          def pax_fieldsets(params, session, socket) do
             [
               default: [
                 [{:id, :integer}, {:uuid: :string}],

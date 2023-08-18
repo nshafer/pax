@@ -2,13 +2,19 @@ defmodule Pax.Index.Live do
   use Phoenix.Component
   import Phoenix.LiveView
 
-  @callback adapter(
+  @callback pax_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: {module(), keyword()}
+            ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
 
-  @callback fields(
+  @callback pax_adapter(
+              params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
+              session :: map(),
+              socket :: Phoenix.LiveView.Socket.t()
+            ) :: module() | {module(), keyword()} | {module(), module(), keyword()}
+
+  @callback pax_fields(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
@@ -20,23 +26,36 @@ defmodule Pax.Index.Live do
 
   defmacro __using__(_opts) do
     quote do
-      IO.puts("Pax.Index.Live.__using__ for #{inspect(__MODULE__)}")
+      # IO.puts("Pax.Index.Live.__using__ for #{inspect(__MODULE__)}")
       @behaviour Pax.Index.Live
 
       def on_mount(:pax_index, params, session, socket),
         do: Pax.Index.Live.on_mount(__MODULE__, params, session, socket)
 
       on_mount {__MODULE__, :pax_index}
+
+      def pax_init(_params, _session, socket), do: {:cont, socket}
+
+      defoverridable pax_init: 3
     end
   end
 
   def on_mount(module, params, session, socket) do
-    IO.puts("#{__MODULE__}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
+    # IO.puts("#{__MODULE__}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
 
-    fields = init_fields(module, params, session, socket)
+    case module.pax_init(params, session, socket) do
+      {:cont, socket} -> init(module, params, session, socket)
+      {:halt, socket} -> {:halt, socket}
+    end
+  end
+
+  def init(module, params, session, socket) do
+    # IO.puts("#{__MODULE__}.init(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
+
+    adapter = init_adapter(module, params, session, socket)
     # plugins = init_plugins(module, params, sessions, socket)
     plugins = []
-    adapter = init_adapter(module, params, session, socket)
+    fields = init_fields(module, params, session, socket)
 
     handle_params_wrapper = fn params, uri, socket ->
       on_handle_params(module, adapter, plugins, fields, params, uri, socket)
@@ -44,16 +63,16 @@ defmodule Pax.Index.Live do
 
     socket =
       socket
-      |> assign(:adapter, adapter)
-      |> assign(:plugins, plugins)
-      |> assign(:fields, fields)
+      |> assign(:pax_adapter, adapter)
+      |> assign(:pax_plugins, plugins)
+      |> assign(:pax_fields, fields)
       |> attach_hook(:pax_handle_params, :handle_params, handle_params_wrapper)
 
     {:cont, socket}
   end
 
   def on_handle_params(module, adapter, _plugins, _fields, params, uri, socket) do
-    IO.puts("#{__MODULE__}.on_handle_params(#{inspect(module)}, #{inspect(params)}, #{inspect(uri)}")
+    # IO.puts("#{__MODULE__}.on_handle_params(#{inspect(module)}, #{inspect(params)}, #{inspect(uri)}")
 
     socket =
       socket
@@ -62,28 +81,29 @@ defmodule Pax.Index.Live do
     {:cont, socket}
   end
 
-  defp get_objects(module, {adapter, adapter_opts}, params, uri, socket) do
-    adapter.list_objects(module, adapter_opts, params, uri, socket)
+  defp get_objects(_module, {adapter, callback_module, adapter_opts}, params, uri, socket) do
+    adapter.list_objects(callback_module, adapter_opts, params, uri, socket)
   end
 
   defp init_adapter(module, params, session, socket) do
-    {adapter, opts} = get_adapter(module, params, session, socket)
-    {adapter, adapter.init(module, opts)}
+    {adapter, callback_module, opts} = get_adapter(module, params, session, socket)
+    {adapter, callback_module, adapter.init(callback_module, opts)}
   end
 
   defp get_adapter(module, params, session, socket) do
-    if function_exported?(module, :adapter, 3) do
-      case module.adapter(params, session, socket) do
-        {adapter, opts} -> {adapter, opts}
-        adapter when is_atom(adapter) -> {adapter, []}
-        _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.adapter/3"
+    if function_exported?(module, :pax_adapter, 3) do
+      case module.pax_adapter(params, session, socket) do
+        {adapter, callback_module, opts} -> {adapter, callback_module, opts}
+        {adapter, opts} -> {adapter, module, opts}
+        adapter when is_atom(adapter) -> {adapter, module, []}
+        _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.pax_adapter/3"
       end
     else
       raise """
-      No adapter/3 callback found for #{module}.
-      Please configure an adapter by defining an adapter function, for example:
+      No pax_adapter/3 callback found for #{module}.
+      Please configure an adapter by defining a pax_adapter function, for example:
 
-          def adapter(params, session, socket), do: {Pax.Index.SchemaAdapter, schema: MyApp.MySchema}
+          def pax_adapter(params, session, socket), do: {Pax.Index.SchemaAdapter, schema: MyApp.MySchema}
 
       """
     end
@@ -111,17 +131,17 @@ defmodule Pax.Index.Live do
   end
 
   defp get_fields(module, params, session, socket) do
-    if function_exported?(module, :fields, 3) do
-      case module.fields(params, session, socket) do
+    if function_exported?(module, :pax_fields, 3) do
+      case module.pax_fields(params, session, socket) do
         fields when is_list(fields) -> fields
-        _ -> raise ArgumentError, "Invalid fields returned from #{inspect(module)}.fields/3"
+        _ -> raise ArgumentError, "Invalid fields returned from #{inspect(module)}.pax_fields/3"
       end
     else
       raise """
-      No fields/3 callback found for #{module}.
-      Please configure fields by defining a fields function, for example:
+      No pax_fields/3 callback found for #{module}.
+      Please configure fields by defining a pax_fields function, for example:
 
-          def fields(params, session, socket), do: [{:name, :string}, {:age, :integer}]
+          def pax_fields(params, session, socket), do: [{:name, :string}, {:age, :integer}]
 
       """
     end

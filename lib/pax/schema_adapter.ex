@@ -3,7 +3,7 @@ defmodule Pax.SchemaAdapter do
   import Ecto.Query
 
   @impl Pax.Adapter
-  def init(_module, opts) do
+  def init(_callback_module, opts) do
     repo = Keyword.get(opts, :repo) || raise "repo is required"
     schema = Keyword.get(opts, :schema) || raise "schema is required"
 
@@ -16,7 +16,7 @@ defmodule Pax.SchemaAdapter do
   TODO: pagination, sorting, filtering, etc.
   """
   @impl Pax.Adapter
-  def list_objects(_module, %{repo: repo, schema: schema}, _params, _uri, _socket) do
+  def list_objects(_callback_module, %{repo: repo, schema: schema}, _params, _uri, _socket) do
     repo.all(schema)
   end
 
@@ -50,18 +50,18 @@ defmodule Pax.SchemaAdapter do
 
   """
   @impl Pax.Adapter
-  def get_object(module, %{repo: repo, schema: schema}, params, uri, socket) do
+  def get_object(callback_module, %{repo: repo, schema: schema}, params, uri, socket) do
     query =
       from(s in schema)
-      |> lookup(module, schema, params, uri, socket)
+      |> lookup(callback_module, schema, params, uri, socket)
 
     repo.one!(query)
   end
 
-  defp lookup(query, module, schema, params, uri, socket) do
+  defp lookup(query, callback_module, schema, params, uri, socket) do
     cond do
-      function_exported?(module, :lookup, 4) ->
-        module.lookup(query, params, uri, socket)
+      function_exported?(callback_module, :lookup, 4) ->
+        callback_module.lookup(query, params, uri, socket)
 
       lookup = lookup_by_primary_key(query, schema, params) ->
         lookup
