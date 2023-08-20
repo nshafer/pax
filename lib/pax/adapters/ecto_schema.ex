@@ -1,4 +1,4 @@
-defmodule Pax.SchemaAdapter do
+defmodule Pax.Adapters.EctoSchema do
   @behaviour Pax.Adapter
   import Ecto.Query
 

@@ -57,11 +57,11 @@ defmodule Pax.Admin.Index.Live do
   def pax_adapter(_admin_mod, params, session, socket) do
     resource_mod = socket.assigns.pax_resource_mod
 
-    # Set the resource_mod as the callback_module for the adapter
+    # Set the resource_mod as the callback_module for the adapter if none were specified
     case resource_mod.pax_adapter(params, session, socket) do
       {adapter, callback_module, adapter_opts} -> {adapter, callback_module, adapter_opts}
       {adapter, adapter_opts} -> {adapter, resource_mod, adapter_opts}
-      adapter -> {adapter, resource_mod, []}
+      adapter when is_atom(adapter) -> {adapter, resource_mod, []}
     end
   end
 

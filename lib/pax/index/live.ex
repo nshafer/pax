@@ -36,7 +36,18 @@ defmodule Pax.Index.Live do
 
       def pax_init(_params, _session, socket), do: {:cont, socket}
 
-      defoverridable pax_init: 3
+      def pax_adapter(_params, _session, _socket) do
+        raise """
+        No pax_adapter/3 callback found for #{__MODULE__}.
+        Please configure an adapter by defining a pax_adapter function, for example:
+
+            def pax_adapter(_params, _session, _socket),
+              do: {Pax.Adapters.EctoSchema, repo: MyAppWeb.Repo, schema: MyApp.MyContext.MySchema}
+
+        """
+      end
+
+      defoverridable pax_init: 3, pax_adapter: 3
     end
   end
 
@@ -71,41 +82,22 @@ defmodule Pax.Index.Live do
     {:cont, socket}
   end
 
-  def on_handle_params(module, adapter, _plugins, _fields, params, uri, socket) do
+  def on_handle_params(_module, adapter, _plugins, _fields, params, uri, socket) do
     # IO.puts("#{__MODULE__}.on_handle_params(#{inspect(module)}, #{inspect(params)}, #{inspect(uri)}")
 
     socket =
       socket
-      |> assign(:objects, get_objects(module, adapter, params, uri, socket))
+      |> assign(:objects, Pax.Adapter.list_objects(adapter, params, uri, socket))
 
     {:cont, socket}
   end
 
-  defp get_objects(_module, {adapter, callback_module, adapter_opts}, params, uri, socket) do
-    adapter.list_objects(callback_module, adapter_opts, params, uri, socket)
-  end
-
   defp init_adapter(module, params, session, socket) do
-    {adapter, callback_module, opts} = get_adapter(module, params, session, socket)
-    {adapter, callback_module, adapter.init(callback_module, opts)}
-  end
-
-  defp get_adapter(module, params, session, socket) do
-    if function_exported?(module, :pax_adapter, 3) do
-      case module.pax_adapter(params, session, socket) do
-        {adapter, callback_module, opts} -> {adapter, callback_module, opts}
-        {adapter, opts} -> {adapter, module, opts}
-        adapter when is_atom(adapter) -> {adapter, module, []}
-        _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.pax_adapter/3"
-      end
-    else
-      raise """
-      No pax_adapter/3 callback found for #{module}.
-      Please configure an adapter by defining a pax_adapter function, for example:
-
-          def pax_adapter(params, session, socket), do: {Pax.Index.SchemaAdapter, schema: MyApp.MySchema}
-
-      """
+    case module.pax_adapter(params, session, socket) do
+      {adapter, callback_module, opts} -> Pax.Adapter.init(adapter, callback_module, opts)
+      {adapter, opts} -> Pax.Adapter.init(adapter, module, opts)
+      adapter when is_atom(adapter) -> Pax.Adapter.init(adapter, module, [])
+      _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.pax_adapter/3"
     end
   end
 
