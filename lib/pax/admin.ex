@@ -1,4 +1,6 @@
 defmodule Pax.Admin do
+  require Logger
+
   defmacro __using__(opts) do
     router = Keyword.get(opts, :router, nil) || raise "missing :router option"
 
@@ -13,14 +15,15 @@ defmodule Pax.Admin do
       def resource_index_path(section \\ nil, resource),
         do: Pax.Admin.resource_index_path(__MODULE__, section, resource)
 
-      def resource_detail_path(section \\ nil, resource, object),
-        do: Pax.Admin.resource_detail_path(__MODULE__, section, resource, object)
+      def resource_detail_path(section \\ nil, resource, object, field \\ nil),
+        do: Pax.Admin.resource_detail_path(__MODULE__, section, resource, object, field)
 
       def resource_index_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource),
         do: Pax.Admin.resource_index_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource)
 
-      def resource_detail_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object),
-        do: Pax.Admin.resource_detail_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource, object)
+      def resource_detail_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil),
+        do:
+          Pax.Admin.resource_detail_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource, object, field)
     end
   end
 
@@ -149,19 +152,44 @@ defmodule Pax.Admin do
   @doc """
   Get the path to the detail page for a resource object.
   """
-  def resource_detail_path(admin_mod, section \\ nil, resource, object) do
-    path = admin_mod.__pax__(:path)
-    id = get_object_id(object)
+  def resource_detail_path(admin_mod, section \\ nil, resource, object, field \\ nil)
 
-    cond do
-      id && section ->
-        "#{path}/#{section}/#{resource}/#{id}"
+  def resource_detail_path(admin_mod, nil, resource, object, nil)
+      when is_atom(admin_mod) and is_atom(resource) and is_map(object) do
+    resource_detail_path(admin_mod, :_, resource, object, nil)
+  end
+
+  def resource_detail_path(admin_mod, section, resource, object, nil)
+      when is_atom(admin_mod) and is_atom(section) and is_atom(resource) and is_map(object) do
+    path = admin_mod.__pax__(:path)
+
+    case get_object_id(object) do
+      nil ->
+        Logger.warning("could not find unique id for object #{inspect(object)}")
+        nil
 
       id ->
-        "#{path}/_/#{resource}/#{id}"
+        "#{path}/#{section}/#{resource}/#{id}"
+    end
+  end
 
-      true ->
+  # Special case when the call gives a field but not a section
+  def resource_detail_path(admin_mod, resource, object, field, nil)
+      when is_atom(admin_mod) and is_atom(resource) and is_map(object) and is_atom(field) do
+    resource_detail_path(admin_mod, :_, resource, object, field)
+  end
+
+  def resource_detail_path(admin_mod, section, resource, object, field)
+      when is_atom(admin_mod) and is_atom(section) and is_atom(resource) and is_map(object) and is_atom(field) do
+    path = admin_mod.__pax__(:path)
+
+    case Map.get(object, field) do
+      nil ->
+        Logger.warning("could not get unique id field #{inspect(field)} for object #{inspect(object)}")
         nil
+
+      id ->
+        "#{path}/#{section}/#{resource}/#{id}"
     end
   end
 
@@ -208,16 +236,13 @@ defmodule Pax.Admin do
     end
   end
 
-  # Everything else, just return nil, as we can't figure out how to generate a path for it.
-  defp get_object_id(_object), do: nil
-
   def resource_index_url(admin_mod, conn_or_socket_or_endpoint_or_uri, section, resource) do
     path = resource_index_path(admin_mod, section, resource)
     Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
   end
 
-  def resource_detail_url(admin_mod, conn_or_socket_or_endpoint_or_uri, section, resource, object) do
-    path = resource_detail_path(admin_mod, section, resource, object)
+  def resource_detail_url(admin_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil) do
+    path = resource_detail_path(admin_mod, section, resource, object, field)
 
     case path do
       nil -> nil
