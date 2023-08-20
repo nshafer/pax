@@ -110,66 +110,9 @@ defmodule Pax.Admin.Index.Live do
   end
 
   defp index_link(admin_mod, object, opts) do
-    path = admin_mod.__pax__(:path)
     section = Keyword.get(opts, :section)
     resource = Keyword.get(opts, :resource)
-    id = get_object_id(object)
 
-    if id do
-      case section do
-        nil ->
-          "#{path}/#{resource}/#{object.id}"
-
-        section ->
-          "#{path}/#{section}/#{resource}/#{object.id}"
-      end
-    else
-      nil
-    end
+    admin_mod.resource_detail_path(section, resource, object)
   end
-
-  # Try to handle structs. Since we can find out the struct (module) then we can try a few things to introspect it:
-  #
-  # 1. It's a schema, so get the configured primary_key and use that to get the object's primary key value
-  # 2. The struct has a function primary_key/1, so call that to get the object's primary key value
-  # 3. The struct has a :primary_key field, so use that
-  # 4. The struct has a function id/1, so call that to get the object's id value
-  # 5. The struct has a :id field, so use that
-  defp get_object_id(%{__struct__: struct} = object) do
-    cond do
-      function_exported?(struct, :__schema__, 1) ->
-        case struct.__schema__(:primary_key) do
-          [key] -> Map.get(object, key)
-          [] -> raise "Compound primary keys are not supported"
-        end
-
-      function_exported?(struct, :primary_key, 1) ->
-        struct.primary_key(object)
-
-      Map.has_key?(object, :primary_key) ->
-        Map.get(object, :primary_key)
-
-      function_exported?(struct, :id, 1) ->
-        struct.id(object)
-
-      Map.has_key?(object, :id) ->
-        Map.get(object, :id)
-
-      true ->
-        nil
-    end
-  end
-
-  # Handle regular maps. Same as structs, but since we don't have a module to check for functions on, then just look
-  # for :primary_key and :id fields.
-  defp get_object_id(%{} = object) do
-    cond do
-      Map.has_key?(object, :primary_key) -> Map.get(object, :primary_key)
-      Map.has_key?(object, :id) -> Map.get(object, :id)
-      true -> nil
-    end
-  end
-
-  # Everything else, just return nil, as we can't figure out how to link it
-  defp get_object_id(_object), do: nil
 end

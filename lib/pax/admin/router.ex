@@ -18,17 +18,17 @@ defmodule Pax.Admin.Router do
       index_mod = Module.concat(admin_mod, IndexLive)
       detail_mod = Module.concat(admin_mod, DetailLive)
 
+      live "#{path}/_/:resource", index_mod, :index, opts
+      live "#{path}/_/:resource/new", detail_mod, :new, opts
+      live "#{path}/_/:resource/:id", detail_mod, :show, opts
+      live "#{path}/_/:resource/:id/edit", detail_mod, :edit, opts
+      live "#{path}/_/:resource/:id/delete", detail_mod, :delete, opts
+
       live "#{path}/:section/:resource", index_mod, :index, opts
       live "#{path}/:section/:resource/new", detail_mod, :new, opts
       live "#{path}/:section/:resource/:id", detail_mod, :show, opts
       live "#{path}/:section/:resource/:id/edit", detail_mod, :edit, opts
       live "#{path}/:section/:resource/:id/delete", detail_mod, :delete, opts
-
-      live "#{path}/:resource", index_mod, :index, opts
-      live "#{path}/:resource/new", detail_mod, :new, opts
-      live "#{path}/:resource/:id", detail_mod, :show, opts
-      live "#{path}/:resource/:id/edit", detail_mod, :edit, opts
-      live "#{path}/:resource/:id/delete", detail_mod, :delete, opts
     end
   end
 

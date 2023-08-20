@@ -9,6 +9,18 @@ defmodule Pax.Admin do
       Module.register_attribute(__MODULE__, :pax_resources, accumulate: true)
       Module.put_attribute(__MODULE__, :pax_current_section, nil)
       @before_compile Pax.Admin
+
+      def resource_index_path(section \\ nil, resource),
+        do: Pax.Admin.resource_index_path(__MODULE__, section, resource)
+
+      def resource_detail_path(section \\ nil, resource, object),
+        do: Pax.Admin.resource_detail_path(__MODULE__, section, resource, object)
+
+      def resource_index_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource),
+        do: Pax.Admin.resource_index_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource)
+
+      def resource_detail_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object),
+        do: Pax.Admin.resource_detail_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource, object)
     end
   end
 
@@ -119,6 +131,97 @@ defmodule Pax.Admin do
         def pax_fieldsets(params, session, socket),
           do: Pax.Admin.Detail.Live.pax_fieldsets(unquote(env.module), params, session, socket)
       end
+    end
+  end
+
+  def resource_index_path(admin_mod, section \\ nil, resource) do
+    path = admin_mod.__pax__(:path)
+
+    cond do
+      section ->
+        "#{path}/#{section}/#{resource}"
+
+      true ->
+        "#{path}/_/#{resource}"
+    end
+  end
+
+  @doc """
+  Get the path to the detail page for a resource object.
+  """
+  def resource_detail_path(admin_mod, section \\ nil, resource, object) do
+    path = admin_mod.__pax__(:path)
+    id = get_object_id(object)
+
+    cond do
+      id && section ->
+        "#{path}/#{section}/#{resource}/#{id}"
+
+      id ->
+        "#{path}/_/#{resource}/#{id}"
+
+      true ->
+        nil
+    end
+  end
+
+  # Try to handle structs. Since we can find out the struct's module, then we can try a few things to introspect it to
+  # see if:
+  #
+  # 1. It's a schema, so get the configured primary_key and use that to get the object's primary key value
+  # 2. The struct has a function primary_key/1, so call that to get the object's primary key value
+  # 3. The struct has a :primary_key field, so use that
+  # 4. The struct has a function id/1, so call that to get the object's id value
+  # 5. The struct has a :id field, so use that
+  defp get_object_id(%{__struct__: struct} = object) do
+    cond do
+      function_exported?(struct, :__schema__, 1) ->
+        case struct.__schema__(:primary_key) do
+          [key] -> Map.get(object, key)
+          [] -> raise "Compound primary keys are not supported"
+        end
+
+      function_exported?(struct, :primary_key, 1) ->
+        struct.primary_key(object)
+
+      Map.has_key?(object, :primary_key) ->
+        Map.get(object, :primary_key)
+
+      function_exported?(struct, :id, 1) ->
+        struct.id(object)
+
+      Map.has_key?(object, :id) ->
+        Map.get(object, :id)
+
+      true ->
+        nil
+    end
+  end
+
+  # Handle regular maps. Same as structs, but since we don't have a module to check for functions on, then just look
+  # for :primary_key and :id fields.
+  defp get_object_id(%{} = object) do
+    cond do
+      Map.has_key?(object, :primary_key) -> Map.get(object, :primary_key)
+      Map.has_key?(object, :id) -> Map.get(object, :id)
+      true -> nil
+    end
+  end
+
+  # Everything else, just return nil, as we can't figure out how to generate a path for it.
+  defp get_object_id(_object), do: nil
+
+  def resource_index_url(admin_mod, conn_or_socket_or_endpoint_or_uri, section, resource) do
+    path = resource_index_path(admin_mod, section, resource)
+    Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
+  end
+
+  def resource_detail_url(admin_mod, conn_or_socket_or_endpoint_or_uri, section, resource, object) do
+    path = resource_detail_path(admin_mod, section, resource, object)
+
+    case path do
+      nil -> nil
+      path -> Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
     end
   end
 end
