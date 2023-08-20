@@ -21,8 +21,9 @@ defmodule Pax.Index.Live do
             ) :: list({atom(), atom() | module(), keyword()})
 
   @callback link(object :: map()) :: String.t()
+  @callback link(object :: map(), opts :: keyword()) :: String.t()
 
-  @optional_callbacks [link: 1]
+  @optional_callbacks link: 1, link: 2
 
   defmacro __using__(_opts) do
     quote do

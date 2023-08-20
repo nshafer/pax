@@ -62,9 +62,10 @@ defmodule Pax.Field do
         opts
 
       true ->
-        case function_exported?(mod, :link, 1) do
-          true -> Map.put(opts, :link, {mod, :link})
-          false -> raise "You must implement a link/1 function in #{inspect(mod)} to set link: true"
+        cond do
+          function_exported?(mod, :link, 2) -> Map.put(opts, :link, {mod, :link})
+          function_exported?(mod, :link, 1) -> Map.put(opts, :link, {mod, :link})
+          true -> raise "You must implement a link/1 or link/2 function in #{inspect(mod)} to set link: true"
         end
 
       {mod, fun} when is_atom(mod) and is_atom(fun) ->

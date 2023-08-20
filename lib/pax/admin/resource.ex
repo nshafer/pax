@@ -19,6 +19,11 @@ defmodule Pax.Admin.Resource do
               socket :: Phoenix.LiveView.Socket.t()
             ) :: list(field()) | list(list(field) | field()) | keyword(list(field))
 
+  @callback index_link(object :: map()) :: String.t()
+  @callback index_link(object :: map(), opts :: keyword()) :: String.t()
+
+  @optional_callbacks index_link: 1, index_link: 2
+
   defmacro __using__(_opts) do
     quote do
       @behaviour Pax.Admin.Resource
