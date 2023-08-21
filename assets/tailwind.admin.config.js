@@ -6,6 +6,7 @@ const plugin = require("tailwindcss/plugin")
 module.exports = {
   content: [
     "./js/admin.js",
+    "../lib/pax/admin/**/layouts*/*.*ex",
     "../lib/pax/admin/**/*components.*ex"
   ],
   theme: {
