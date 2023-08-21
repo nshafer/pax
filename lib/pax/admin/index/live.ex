@@ -27,31 +27,42 @@ defmodule Pax.Admin.Index.Live do
   end
 
   def pax_init(admin_mod, params, _session, socket) do
+    socket =
+      socket
+      |> assign_resource_info(admin_mod, params)
+      |> assign(pax_resource_tree: admin_mod.__pax__(:resource_tree))
+
+    {:cont, socket}
+  end
+
+  defp assign_resource_info(socket, admin_mod, params) do
     section = Map.get(params, "section")
     resource = Map.get(params, "resource")
 
-    socket =
-      case admin_mod.__pax__(:resource, section, resource) do
-        {nil, {resource, resource_title}, resource_mod, resource_opts} ->
-          socket
-          |> assign(:pax_section, nil)
-          |> assign(:pax_section_title, nil)
-          |> assign(:pax_resource, resource)
-          |> assign(:pax_resource_title, resource_title)
-          |> assign(:pax_resource_mod, resource_mod)
-          |> assign(:pax_resource_opts, resource_opts)
+    case admin_mod.__pax__(:resource, section, resource) do
+      nil ->
+        raise Pax.Admin.ResourceNotFoundError.exception(section: section, resource: resource)
 
-        {{section, section_title}, {resource, resource_title}, resource_mod, resource_opts} ->
-          socket
-          |> assign(:pax_section, section)
-          |> assign(:pax_section_title, section_title)
-          |> assign(:pax_resource, resource)
-          |> assign(:pax_resource_title, resource_title)
-          |> assign(:pax_resource_mod, resource_mod)
-          |> assign(:pax_resource_opts, resource_opts)
-      end
+      %{} = resource ->
+        socket
+        |> assign_section_info(resource.section)
+        |> assign(:pax_resource, resource.name)
+        |> assign(:pax_resource_title, resource.title)
+        |> assign(:pax_resource_mod, resource.mod)
+        |> assign(:pax_resource_opts, resource.opts)
+    end
+  end
 
-    {:cont, socket}
+  defp assign_section_info(socket, nil) do
+    socket
+    |> assign(:pax_section, nil)
+    |> assign(:pax_section_title, nil)
+  end
+
+  defp assign_section_info(socket, section) do
+    socket
+    |> assign(:pax_section, section.name)
+    |> assign(:pax_section_title, section.title)
   end
 
   def pax_adapter(_admin_mod, params, session, socket) do

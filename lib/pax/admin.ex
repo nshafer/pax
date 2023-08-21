@@ -41,12 +41,9 @@ defmodule Pax.Admin do
     Map.merge(defaults, Map.new(opts))
   end
 
-  defmacro section(path, name, do: context) when is_atom(path) and is_binary(name) do
-    path = to_string(path)
-
+  defmacro section(name, title, do: context) when is_atom(name) and is_binary(title) do
     quote do
-      # TODO: check if already in a section, raise error
-      Module.put_attribute(__MODULE__, :pax_current_section, {unquote(path), unquote(name)})
+      Pax.Admin.__section__(__MODULE__, unquote(name), unquote(title))
 
       try do
         unquote(context)
@@ -56,16 +53,46 @@ defmodule Pax.Admin do
     end
   end
 
-  defmacro resource(path, name, resource_mod, opts \\ []) when is_atom(path) and is_binary(name) do
-    path = to_string(path)
+  def __section__(admin_mod, name, title) do
+    case Module.get_attribute(admin_mod, :pax_current_section) do
+      nil ->
+        Module.put_attribute(admin_mod, :pax_current_section, %{
+          name: name,
+          path: to_string(name),
+          title: title
+        })
 
+      _ ->
+        raise "cannot embed section inside another section"
+    end
+  end
+
+  defmacro resource(name, title, resource_mod, opts \\ []) when is_atom(name) and is_binary(title) do
     quote do
-      Module.put_attribute(
-        __MODULE__,
-        :pax_resources,
-        {Module.get_attribute(__MODULE__, :pax_current_section), {unquote(path), unquote(name)}, unquote(resource_mod),
-         unquote(opts)}
-      )
+      Pax.Admin.__resource__(__MODULE__, unquote(name), unquote(title), unquote(resource_mod), unquote(opts))
+    end
+  end
+
+  def __resource__(admin_mod, name, title, resource_mod, opts \\ []) do
+    current_section = Module.get_attribute(admin_mod, :pax_current_section)
+    resources = Module.get_attribute(admin_mod, :pax_resources)
+    exists? = Enum.any?(resources, &match?(%{section: ^current_section, name: ^name}, &1))
+
+    if exists? do
+      if current_section do
+        raise "duplicate resource #{inspect(name)} in section #{inspect(current_section.name)}"
+      else
+        raise "duplicate resource #{inspect(name)}"
+      end
+    else
+      Module.put_attribute(admin_mod, :pax_resources, %{
+        section: current_section,
+        name: name,
+        path: to_string(name),
+        title: title,
+        mod: resource_mod,
+        opts: opts
+      })
     end
   end
 
@@ -76,33 +103,50 @@ defmodule Pax.Admin do
       def __pax__(:config), do: @pax_config
       def __pax__(:resources), do: @pax_resources |> Enum.reverse()
 
-      def __pax__(:resource, nil, resource) do
-        __pax__(:resources)
-        |> Enum.find(fn {s, r, _, _} -> s == nil and match?({^resource, _}, r) end)
-        |> case do
-          nil ->
-            raise Pax.Admin.ResourceNotFoundError, resource: resource
-
-          {_, {resource, resource_title}, resource_mod, resource_opts} ->
-            {nil, {String.to_atom(resource), resource_title}, resource_mod, resource_opts}
-        end
+      def __pax__(:resource, nil, resource_name) when is_atom(resource_name) do
+        __pax__(:resources) |> Enum.find(&match?(%{section: nil, name: ^resource_name}, &1))
       end
 
-      def __pax__(:resource, section, resource) do
-        __pax__(:resources)
-        |> Enum.find(fn {s, r, _, _} -> match?({^section, _}, s) and match?({^resource, _}, r) end)
-        |> case do
-          nil ->
-            raise Pax.Admin.ResourceNotFoundError, section: section, resource: resource
+      def __pax__(:resource, nil, resource_path) when is_binary(resource_path) do
+        __pax__(:resources) |> Enum.find(&match?(%{section: nil, path: ^resource_path}, &1))
+      end
 
-          {{section, section_title}, {resource, resource_title}, resource_mod, resource_opts} ->
-            {{String.to_atom(section), section_title}, {String.to_atom(resource), resource_title}, resource_mod,
-             resource_opts}
-        end
+      def __pax__(:resource, section_name, resource_name) when is_atom(section_name) and is_atom(resource_name) do
+        __pax__(:resources) |> Enum.find(&match?(%{section: %{name: ^section_name}, name: ^resource_name}, &1))
+      end
+
+      def __pax__(:resource, section_path, resource_path) when is_binary(section_path) and is_binary(resource_path) do
+        __pax__(:resources) |> Enum.find(&match?(%{section: %{path: ^section_path}, path: ^resource_path}, &1))
+      end
+
+      def __pax__(:resource_tree) do
+        __pax__(:resources)
+        |> Enum.reduce({nil, []}, fn
+          resource, {nil, []} ->
+            {resource.section, [%{section: resource.section, resources: [resource]}]}
+
+          %{section: current_section} = resource, {current_section, [curr | rest]} ->
+            {current_section, [%{curr | resources: [resource | curr.resources]} | rest]}
+
+          resource, {_current_section, acc} ->
+            {resource.section, [%{section: resource.section, resources: [resource]} | acc]}
+        end)
+        |> elem(1)
+        |> Enum.map(fn %{resources: resources} = entry -> %{entry | resources: Enum.reverse(resources)} end)
+        |> Enum.reverse()
+      end
+
+      defmodule DashboardLive do
+        use Phoenix.LiveView, layout: {Pax.Admin.Layouts, :app}
+
+        def render(assigns), do: Pax.Admin.Dashboard.Live.render(unquote(env.module), assigns)
+
+        def mount(params, session, socket),
+          do: Pax.Admin.Dashboard.Live.mount(unquote(env.module), params, session, socket)
       end
 
       defmodule IndexLive do
-        use Phoenix.LiveView
+        use Phoenix.LiveView, layout: {Pax.Admin.Layouts, :app}
         use Pax.Index.Live
 
         def render(assigns), do: Pax.Admin.Index.Live.render(unquote(env.module), assigns)
@@ -120,7 +164,7 @@ defmodule Pax.Admin do
       end
 
       defmodule DetailLive do
-        use Phoenix.LiveView
+        use Phoenix.LiveView, layout: {Pax.Admin.Layouts, :app}
         use Pax.Detail.Live
 
         def render(assigns), do: Pax.Admin.Detail.Live.render(unquote(env.module), assigns)
