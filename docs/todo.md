@@ -25,11 +25,14 @@
     - [x] `resource :users, "Users", UserAdmin` to list all admins to include
     - [ ] `link :name, ~p"/somewhere/"` for random links
 - [x] `pax_admin "/admin", MyAppWeb.Admin` macro for route injection
+- [ ] Admin interface with sidebar menu
+- [ ] Flashes
+- [ ] Dashboard with widgets
 
 ## Static
 - [ ] Fix/figure out phx.digest. Do it or not? (Probably not...)
     - [ ] Figure out / write docs on importing pax.css directly.
     - [ ] Figure out / write docs on creating custom admin.css that imports pax_admin.css
 - [ ] Rejig `mix assets.deploy` to output to pax.min.css
-- [ ] Make basic pax.css using minimal css instead of tailwind?
+- [x] Make basic pax.css using minimal css instead of tailwind?
 - [ ] Maybe don't use tailwind for pax.css? Use postcss instead?

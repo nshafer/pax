@@ -15,8 +15,11 @@ defmodule Pax.Admin.Router do
       full_admin_mod = Phoenix.Router.scoped_alias(__MODULE__, admin_mod)
       @pax_paths Map.put(@pax_paths, full_admin_mod, full_path)
 
+      dashboard_mod = Module.concat(admin_mod, DashboardLive)
       index_mod = Module.concat(admin_mod, IndexLive)
       detail_mod = Module.concat(admin_mod, DetailLive)
+
+      live "#{path}", dashboard_mod, :dashboard, opts
 
       live "#{path}/_/:resource", index_mod, :index, opts
       live "#{path}/_/:resource/new", detail_mod, :new, opts
