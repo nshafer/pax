@@ -29,8 +29,8 @@ defmodule Pax.Admin.Detail.Live do
   def pax_init(admin_mod, params, _session, socket) do
     socket =
       socket
+      |> assign(pax_admin_mod: admin_mod)
       |> assign_resource_info(admin_mod, params)
-      |> assign(pax_resource_tree: admin_mod.__pax__(:resource_tree))
 
     {:cont, socket}
   end

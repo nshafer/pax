@@ -11,9 +11,11 @@ defmodule Pax.Admin.Dashboard.Live do
 
   def render_dashboard(assigns) do
     ~H"""
-    <h1 class="text-2xl mb-3 flex justify-between"><%= @pax_title %> <small>Pax.Admin.Dashboard.Live</small></h1>
+    <h1 class="text-2xl mb-3 flex justify-between">
+      <%= @pax_admin_mod.__pax__(:config).title %> <small>Pax.Admin.Dashboard.Live</small>
+    </h1>
 
-    <Pax.Admin.Dashboard.Components.toc pax_admin_mod={@pax_admin_mod} pax_resource_tree={@pax_resource_tree} />
+    <Pax.Admin.Dashboard.Components.toc pax_admin_mod={@pax_admin_mod} />
     """
   end
 

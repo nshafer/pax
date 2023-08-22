@@ -2,18 +2,17 @@ defmodule Pax.Admin.Dashboard.Components do
   use Phoenix.Component
 
   attr :pax_admin_mod, :atom, required: true
-  attr :pax_resource_tree, :list, required: true
 
   def toc(assigns) do
     ~H"""
     <ul class="list-disc ml-4">
-      <.toc_section :for={entry <- @pax_resource_tree} entry={entry} pax_admin_mod={@pax_admin_mod} />
+      <.toc_section :for={entry <- @pax_admin_mod.__pax__(:resource_tree)} entry={entry} pax_admin_mod={@pax_admin_mod} />
     </ul>
     """
   end
 
-  attr :entry, :map, required: true
   attr :pax_admin_mod, :atom, required: true
+  attr :entry, :map, required: true
 
   def toc_section(%{entry: %{section: nil}} = assigns) do
     ~H"""
