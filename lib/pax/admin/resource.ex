@@ -22,7 +22,9 @@ defmodule Pax.Admin.Resource do
   @callback index_link(object :: map()) :: String.t()
   @callback index_link(object :: map(), opts :: keyword()) :: String.t()
 
-  @optional_callbacks index_link: 1, index_link: 2
+  @callback detail_title(object :: map()) :: String.t()
+
+  @optional_callbacks index_link: 1, index_link: 2, detail_title: 1
 
   defmacro __using__(_opts) do
     quote do

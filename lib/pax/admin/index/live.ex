@@ -45,6 +45,7 @@ defmodule Pax.Admin.Index.Live do
 
       %{} = resource ->
         socket
+        |> assign(:page_title, resource.title)
         |> assign_section_info(resource.section)
         |> assign(:pax_resource, resource.name)
         |> assign(:pax_resource_title, resource.title)

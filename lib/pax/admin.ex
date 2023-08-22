@@ -177,6 +177,9 @@ defmodule Pax.Admin do
 
         def pax_fieldsets(params, session, socket),
           do: Pax.Admin.Detail.Live.pax_fieldsets(unquote(env.module), params, session, socket)
+
+        def handle_params(params, uri, socket),
+          do: Pax.Admin.Detail.Live.handle_params(unquote(env.module), params, uri, socket)
       end
     end
   end

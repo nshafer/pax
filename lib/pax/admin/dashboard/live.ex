@@ -20,13 +20,10 @@ defmodule Pax.Admin.Dashboard.Live do
   end
 
   def mount(admin_mod, _params, _session, socket) do
-    config = admin_mod.__pax__(:config)
-
     socket =
       socket
+      |> assign(page_title: "Dashboard")
       |> assign(pax_admin_mod: admin_mod)
-      |> assign(pax_title: config.title)
-      |> assign(pax_resource_tree: admin_mod.__pax__(:resource_tree))
 
     {:ok, socket}
   end
