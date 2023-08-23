@@ -201,14 +201,9 @@ defmodule Pax.Admin do
   """
   def resource_detail_path(admin_mod, section \\ nil, resource, object, field \\ nil)
 
-  def resource_detail_path(admin_mod, nil, resource, object, nil)
-      when is_atom(admin_mod) and is_atom(resource) and is_map(object) do
-    resource_detail_path(admin_mod, :_, resource, object, nil)
-  end
-
-  def resource_detail_path(admin_mod, section, resource, object, nil)
-      when is_atom(admin_mod) and is_atom(section) and is_atom(resource) and is_map(object) do
+  def resource_detail_path(admin_mod, section, resource, object, nil) when is_map(object) do
     path = admin_mod.__pax__(:path)
+    section = section || "_"
 
     case get_object_id(object) do
       nil ->
@@ -221,14 +216,13 @@ defmodule Pax.Admin do
   end
 
   # Special case when the call gives a field but not a section
-  def resource_detail_path(admin_mod, resource, object, field, nil)
-      when is_atom(admin_mod) and is_atom(resource) and is_map(object) and is_atom(field) do
-    resource_detail_path(admin_mod, :_, resource, object, field)
+  def resource_detail_path(admin_mod, resource, object, field, nil) when is_map(object) do
+    resource_detail_path(admin_mod, nil, resource, object, field)
   end
 
-  def resource_detail_path(admin_mod, section, resource, object, field)
-      when is_atom(admin_mod) and is_atom(section) and is_atom(resource) and is_map(object) and is_atom(field) do
+  def resource_detail_path(admin_mod, section, resource, object, field) when is_map(object) do
     path = admin_mod.__pax__(:path)
+    section = section || "_"
 
     case Map.get(object, field) do
       nil ->
