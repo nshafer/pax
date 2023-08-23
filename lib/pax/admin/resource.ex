@@ -1,5 +1,5 @@
 defmodule Pax.Admin.Resource do
-  @type field() :: {atom(), atom() | module()} | {atom(), atom() | module(), keyword()}
+  @type field() :: Pax.Field.field()
 
   @callback pax_adapter(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,

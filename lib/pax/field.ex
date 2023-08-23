@@ -1,4 +1,8 @@
 defmodule Pax.Field do
+  @type field() ::
+          {atom(), atom() | module()}
+          | {atom(), atom() | module(), keyword()}
+
   @callback init(live_module :: module(), opts :: []) :: map()
   @callback render(opts :: any(), value :: any()) :: String.t() | nil
 
@@ -7,44 +11,61 @@ defmodule Pax.Field do
 
   @global_opts [:title, :link, :value]
 
-  def init(mod, :boolean, opts) do
-    init(mod, Field.Boolean, opts)
+  def init(mod, {name, type}) when is_atom(name) and is_atom(type) do
+    dbg()
+    init(mod, name, type, [])
   end
 
-  def init(mod, :date, opts) do
-    init(mod, Field.Date, opts)
+  def init(mod, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
+    dbg()
+    init(mod, name, type, opts)
   end
 
-  def init(mod, :datetime, opts) do
-    init(mod, Field.Datetime, opts)
+  def init(_mod, arg) do
+    raise ArgumentError, """
+    Invalid field #{inspect(arg)}. Must be {:name, :type, [opts]} or {:name, MyType, [opts]} where MyType
+    implements the Pax.Field behaviour.
+    """
   end
 
-  def init(mod, :time, opts) do
-    init(mod, Field.Time, opts)
+  def init(mod, name, :boolean, opts) do
+    init(mod, name, Field.Boolean, opts)
+  end
+
+  def init(mod, name, :date, opts) do
+    init(mod, name, Field.Date, opts)
+  end
+
+  def init(mod, name, :datetime, opts) do
+    init(mod, name, Field.Datetime, opts)
+  end
+
+  def init(mod, name, :time, opts) do
+    init(mod, name, Field.Time, opts)
   end
 
   # TODO: :decimal
 
-  def init(mod, :float, opts) do
-    init(mod, Field.Float, opts)
+  def init(mod, name, :float, opts) do
+    init(mod, name, Field.Float, opts)
   end
 
-  def init(mod, :integer, opts) do
-    init(mod, Field.Integer, opts)
+  def init(mod, name, :integer, opts) do
+    init(mod, name, Field.Integer, opts)
   end
 
   # TODO: :list
   # TODO: :map ?
 
-  def init(mod, :string, opts) do
-    init(mod, Field.String, opts)
+  def init(mod, name, :string, opts) do
+    init(mod, name, Field.String, opts)
   end
 
-  def init(mod, type, opts) do
+  def init(mod, name, type, opts) do
     if Code.ensure_loaded?(type) and function_exported?(type, :init, 2) do
       global = init_global_opts(opts, mod)
       opts = type.init(mod, opts)
-      {type, Map.merge(opts, global)}
+      {name, type, Map.merge(opts, global)}
     else
       raise ArgumentError, "Invalid field type: #{inspect(type)}."
     end

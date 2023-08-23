@@ -1,6 +1,7 @@
 defmodule Pax.Detail.Live do
   use Phoenix.Component
   import Phoenix.LiveView
+  @type field() :: Pax.Field.field()
 
   @callback pax_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
@@ -18,7 +19,7 @@ defmodule Pax.Detail.Live do
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: keyword(list({atom(), atom() | module(), keyword()}))
+            ) :: list(field()) | list(list(field) | field()) | keyword(list(field))
 
   defmacro __using__(_opts) do
     quote do
@@ -43,7 +44,29 @@ defmodule Pax.Detail.Live do
         """
       end
 
-      defoverridable pax_init: 3, pax_adapter: 3
+      def pax_fieldsets(_params, _session, _socket) do
+        raise """
+        No pax_fieldsets/3 callback found for #{__MODULE__}.
+        Please configure fieldsets by defining a pax_fieldsets function, for example:
+
+            def pax_fieldsets(params, session, socket) do
+              [
+                default: [
+                  [{:id, :integer}, {:uuid: :string}],
+                  {:name, :string},
+                  {:age, :float, round: 1}
+                ],
+                metadata: [
+                  {:created_at, :datetime},
+                  {:updated_at, :datetime}
+                ]
+              ]
+            end
+
+        """
+      end
+
+      defoverridable pax_init: 3, pax_adapter: 3, pax_fieldsets: 3
     end
   end
 
@@ -96,16 +119,22 @@ defmodule Pax.Detail.Live do
   end
 
   defp init_fieldsets(module, params, session, socket) do
-    fieldsets = get_fieldsets(module, params, session, socket)
+    fieldsets =
+      case module.pax_fieldsets(params, session, socket) do
+        fieldsets when is_list(fieldsets) -> fieldsets
+        _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(module)}.fieldsets/3"
+      end
 
-    if is_fieldsets(fieldsets) do
+    # Check if the user just returned a keyword list of fieldset name -> fields, and if not, make it :default
+    if is_fieldsets?(fieldsets) do
       Enum.map(fieldsets, &init_fieldset(module, &1))
     else
-      [default: Enum.map(fieldsets, &init_field(module, &1))]
+      [init_fieldset(module, {:default, fieldsets})]
     end
+    |> dbg()
   end
 
-  defp is_fieldsets(fieldsets) do
+  defp is_fieldsets?(fieldsets) do
     Enum.all?(fieldsets, fn
       {name, value} when is_atom(name) and is_list(value) -> true
       _ -> false
@@ -113,55 +142,18 @@ defmodule Pax.Detail.Live do
   end
 
   defp init_fieldset(module, {name, fields}) when is_atom(name) and is_list(fields) do
-    {name, Enum.map(fields, &init_field(module, &1))}
+    dbg()
+    {name, Enum.map(fields, &init_fieldgroup(module, &1))}
   end
 
-  defp init_field(module, {name, type}) when is_atom(name) and is_atom(type) do
-    init_field(module, {name, type, []})
+  # A fieldgroup can be a list of fields to display on one line, or just one field to display by itself
+  defp init_fieldgroup(module, groups) when is_list(groups) do
+    dbg()
+    Enum.map(groups, &Pax.Field.init(module, &1))
   end
 
-  defp init_field(module, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
-    {type, opts} = Pax.Field.init(module, type, opts)
-    [{name, type, opts}]
-  end
-
-  defp init_field(module, fields) when is_list(fields) do
-    Enum.flat_map(fields, &init_field(module, &1))
-  end
-
-  defp init_field(_module, arg) do
-    raise ArgumentError, """
-    Invalid field #{inspect(arg)}. Must be {:name, :type, [opts]} or {:name, MyType, [opts]} where MyType
-    implements the Pax.Field behaviour.
-    """
-  end
-
-  defp get_fieldsets(module, params, session, socket) do
-    if function_exported?(module, :pax_fieldsets, 3) do
-      case module.pax_fieldsets(params, session, socket) do
-        fieldsets when is_list(fieldsets) -> fieldsets
-        _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(module)}.fieldsets/3"
-      end
-    else
-      raise """
-      No pax_fieldsets/3 callback found for #{module}.
-      Please configure fieldsets by defining a pax_fieldsets function, for example:
-
-          def pax_fieldsets(params, session, socket) do
-            [
-              default: [
-                [{:id, :integer}, {:uuid: :string}],
-                {:name, :string},
-                {:age, :float, round: 1}
-              ],
-              metadata: [
-                {:created_at, :datetime},
-                {:updated_at, :datetime}
-              ]
-            ]
-          end
-
-      """
-    end
+  defp init_fieldgroup(module, field) do
+    dbg()
+    [Pax.Field.init(module, field)]
   end
 end
