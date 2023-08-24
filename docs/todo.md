@@ -11,6 +11,7 @@
 - [ ] Filters plugin
 - [ ] Actions plugin
 - [ ] Maybe refactor fieldsets to use css grid?
+- [ ] Field alignment: left, center, right
 
 ## Detail
 - [ ] Inline plugin

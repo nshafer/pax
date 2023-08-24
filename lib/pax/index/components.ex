@@ -7,7 +7,7 @@ defmodule Pax.Index.Components do
 
   def index(assigns) do
     ~H"""
-    <div class={["pax-index", @class]}>
+    <div class={["pax pax-index", @class]}>
       <Pax.Index.Components.table pax_fields={@pax_fields} objects={@objects} />
     </div>
     """

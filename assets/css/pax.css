@@ -3,9 +3,51 @@
    part, the components should just adapt to the existing styles of the page they're on.
 */
 
-/* Pax Index */
+/*****************/
+/* Pax Variables */
+/*****************/
 
-.pax-index {}
+.pax {
+    /* 14px when body is 16px */
+    --pax-table-font-size: .875em;
+    --pax-fieldset-font-size: .875em;
+
+    --pax-header-bg: rgba(0, 0, 0, 0.1);
+    --pax-border-color: rgba(0, 0, 0, 0.1);
+    --pax-odd-row-bg: rgba(0, 0, 0, 0.05);
+
+    --pax-table-header-padding: 1em .5em;
+    --pax-table-cell-padding: .2em .5em;
+
+    --pax-fieldset-header-padding: 0.75em 1em;
+    --pax-fieldset-gap: 0.5em 1em;
+    --pax-fieldset-title-width: 10em;
+}
+
+@media (prefers-color-scheme: dark) {
+    .pax {
+        --pax-header-bg: rgba(255, 255, 255, 0.1);
+        --pax-border-color: rgba(255, 255, 255, 0.1);
+        --pax-odd-row-bg: rgba(255, 255, 255, 0.05);
+    }
+}
+
+/**************/
+/* Mild reset */
+/**************/
+
+.pax,
+.pax *,
+.pax ::before,
+.pax ::after {
+    box-sizing: border-box;
+}
+
+/*************/
+/* Pax Index */
+/*************/
+
+/* .pax-index {} */
 
 .pax-table-wrapper {
     overflow-x: auto;
@@ -15,11 +57,10 @@
     border-collapse: collapse;
     table-layout: auto;
     width: 100%;
-    /* 14px when body is 16px */
-    font-size: .875em;
+    font-size: var(--pax-table-font-size);
 }
 
-.pax-index-table-head {}
+/* .pax-index-table-head {} */
 
 .pax-index-table-head::after {
     content: '';
@@ -27,31 +68,36 @@
     height: .5em;
 }
 
-.pax-index-table-head-row {}
+/* .pax-index-table-head-row {} */
 
 .pax-index-table-header {
     font-weight: bold;
-    padding: 1em .5em;
+    padding: var(--pax-table-header-padding);
     text-align: left;
     vertical-align: bottom;
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--pax-header-bg);
 }
 
-.pax-index-table-row {}
+/* .pax-index-table-row {} */
 
 .pax-index-table-row:nth-child(2n) {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--pax-odd-row-bg);
 }
 
 .pax-index-table-datacell {
-    padding: .1em .5em;
+    padding: var(--pax-table-cell-padding);
     vertical-align: top;
 }
 
+/**************/
 /* Pax Detail */
-.pax-detail {}
+/**************/
 
-.pax-detail-fieldset {}
+/* .pax-detail {} */
+
+.pax-detail-fieldset {
+    font-size: var(--pax-fieldset-font-size);
+}
 
 .pax-detail-fieldset:not(:last-child) {
     margin-bottom: 2em;
@@ -59,9 +105,9 @@
 
 .pax-detail-fieldset-heading {
     font-weight: bold;
-    padding: 0.5em;
-    margin-bottom: 0.5em;
-    background: rgba(0, 0, 0, 0.1);
+    padding: var(--pax-fieldset-header-padding);
+    margin-bottom: 1em;
+    background: var(--pax-header-bg);
 }
 
 .pax-detail-fieldset-row {
@@ -72,12 +118,12 @@
 @media (min-width: 640px) {
     .pax-detail-fieldset-row {
         flex-flow: row wrap;
-        gap: 0.5em 1em;
+        gap: var(--pax-fieldset-gap);
         padding: 0.5em 0;
     }
 
     .pax-detail-fieldset-row:not(:last-child) {
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid var(--pax-border-color);
     }
 }
 
@@ -102,7 +148,7 @@
 @media (min-width: 640px) {
     .pax-detail-field-title {
         font-weight: bold;
-        width: 8em;
+        width: var(--pax-fieldset-title-width);
     }
 }
 

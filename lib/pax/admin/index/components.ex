@@ -10,7 +10,7 @@ defmodule Pax.Admin.Index.Components do
 
   def index(assigns) do
     ~H"""
-    <div class={["pax-index", @class]}>
+    <div class={["pax pax-index", @class]}>
       <Pax.Admin.Index.Components.table
         pax_section={@pax_section}
         pax_resource={@pax_resource}
