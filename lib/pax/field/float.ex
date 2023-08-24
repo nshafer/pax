@@ -5,7 +5,7 @@ defmodule Pax.Field.Float do
   def init(_mod, opts) do
     # TODO: add formatting options: human, scientific, etc
     %{
-      round: Keyword.get(opts, :round)
+      round: Keyword.get(opts, :round, 5)
     }
   end
 

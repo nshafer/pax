@@ -78,7 +78,7 @@ defmodule Pax.Index.Live do
     adapter = init_adapter(module, params, session, socket)
     # plugins = init_plugins(module, params, sessions, socket)
     plugins = []
-    fields = init_fields(module, params, session, socket)
+    fields = init_fields(module, adapter, params, session, socket)
 
     handle_params_wrapper = fn params, uri, socket ->
       on_handle_params(module, adapter, plugins, fields, params, uri, socket)
@@ -113,9 +113,9 @@ defmodule Pax.Index.Live do
     end
   end
 
-  defp init_fields(module, params, session, socket) do
+  defp init_fields(module, adapter, params, session, socket) do
     case module.pax_fields(params, session, socket) do
-      fields when is_list(fields) -> Enum.map(fields, &Pax.Field.init(module, &1))
+      fields when is_list(fields) -> Enum.map(fields, &Pax.Field.init(module, adapter, &1))
       _ -> raise ArgumentError, "Invalid fields returned from #{inspect(module)}.pax_fields/3"
     end
   end

@@ -81,7 +81,7 @@ defmodule Pax.Detail.Live do
 
   def init(module, params, session, socket) do
     adapter = init_adapter(module, params, session, socket)
-    fieldsets = init_fieldsets(module, params, session, socket)
+    fieldsets = init_fieldsets(module, adapter, params, session, socket)
     # plugins = init_plugins(module, params, sessions, socket)
     plugins = []
 
@@ -118,7 +118,7 @@ defmodule Pax.Detail.Live do
     end
   end
 
-  defp init_fieldsets(module, params, session, socket) do
+  defp init_fieldsets(module, adapter, params, session, socket) do
     fieldsets =
       case module.pax_fieldsets(params, session, socket) do
         fieldsets when is_list(fieldsets) -> fieldsets
@@ -127,11 +127,10 @@ defmodule Pax.Detail.Live do
 
     # Check if the user just returned a keyword list of fieldset name -> fields, and if not, make it :default
     if is_fieldsets?(fieldsets) do
-      Enum.map(fieldsets, &init_fieldset(module, &1))
+      Enum.map(fieldsets, &init_fieldset(module, adapter, &1))
     else
-      [init_fieldset(module, {:default, fieldsets})]
+      [init_fieldset(module, adapter, {:default, fieldsets})]
     end
-    |> dbg()
   end
 
   defp is_fieldsets?(fieldsets) do
@@ -141,19 +140,16 @@ defmodule Pax.Detail.Live do
     end)
   end
 
-  defp init_fieldset(module, {name, fields}) when is_atom(name) and is_list(fields) do
-    dbg()
-    {name, Enum.map(fields, &init_fieldgroup(module, &1))}
+  defp init_fieldset(module, adapter, {name, fields}) when is_atom(name) and is_list(fields) do
+    {name, Enum.map(fields, &init_fieldgroup(module, adapter, &1))}
   end
 
   # A fieldgroup can be a list of fields to display on one line, or just one field to display by itself
-  defp init_fieldgroup(module, groups) when is_list(groups) do
-    dbg()
-    Enum.map(groups, &Pax.Field.init(module, &1))
+  defp init_fieldgroup(module, adapter, groups) when is_list(groups) do
+    Enum.map(groups, &Pax.Field.init(module, adapter, &1))
   end
 
-  defp init_fieldgroup(module, field) do
-    dbg()
-    [Pax.Field.init(module, field)]
+  defp init_fieldgroup(module, adapter, field) do
+    [Pax.Field.init(module, adapter, field)]
   end
 end

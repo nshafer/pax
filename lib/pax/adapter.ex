@@ -1,4 +1,6 @@
 defmodule Pax.Adapter do
+  require Logger
+
   @type adapter :: module
   @type callback_module :: module
 
@@ -14,6 +16,7 @@ defmodule Pax.Adapter do
   @type socket :: Phoenix.LiveView.Socket.t()
 
   @callback init(callback_module, opts :: []) :: map()
+  @callback field_type(callback_module(), opts :: map(), field_name :: atom()) :: atom() | module()
   @callback list_objects(callback_module(), opts :: map(), unsigned_params(), uri :: String.t(), socket()) :: [map()]
   @callback get_object(callback_module(), opts :: map(), unsigned_params(), uri :: String.t(), socket()) :: map()
 
@@ -24,6 +27,11 @@ defmodule Pax.Adapter do
       callback_module: callback_module,
       opts: adapter.init(callback_module, opts)
     }
+  end
+
+  @spec list_objects(t(), unsigned_params(), String.t(), socket()) :: [map()]
+  def field_type(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, field_name) do
+    adapter.field_type(callback_module, opts, field_name)
   end
 
   @spec list_objects(t(), unsigned_params(), String.t(), socket()) :: [map()]

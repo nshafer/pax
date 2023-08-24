@@ -3,6 +3,7 @@
 ## General
 - [ ] Plugins
 - [ ] Rename Index to List?
+- [ ] Make stacktraces better?
 
 ## Index
 - [ ] Pagination plugin

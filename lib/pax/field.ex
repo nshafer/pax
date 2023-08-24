@@ -1,6 +1,7 @@
 defmodule Pax.Field do
   @type field() ::
-          {atom(), atom() | module()}
+          atom()
+          | {atom(), atom() | module()}
           | {atom(), atom() | module(), keyword()}
 
   @callback init(live_module :: module(), opts :: []) :: map()
@@ -11,57 +12,65 @@ defmodule Pax.Field do
 
   @global_opts [:title, :link, :value]
 
-  def init(mod, {name, type}) when is_atom(name) and is_atom(type) do
-    dbg()
-    init(mod, name, type, [])
+  def init(mod, adapter, name) when is_atom(name) do
+    type = Pax.Adapter.field_type(adapter, name)
+    init(mod, adapter, name, type, [])
   end
 
-  def init(mod, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
-    dbg()
-    init(mod, name, type, opts)
+  def init(mod, adapter, {name, opts}) when is_atom(name) and is_list(opts) do
+    type = Pax.Adapter.field_type(adapter, name)
+    init(mod, adapter, name, type, opts)
   end
 
-  def init(_mod, arg) do
+  def init(mod, adapter, {name, type}) when is_atom(name) and is_atom(type) do
+    init(mod, adapter, name, type, [])
+  end
+
+  def init(mod, adapter, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
+    init(mod, adapter, name, type, opts)
+  end
+
+  def init(_mod, _adapter, arg) do
     raise ArgumentError, """
     Invalid field #{inspect(arg)}. Must be {:name, :type, [opts]} or {:name, MyType, [opts]} where MyType
     implements the Pax.Field behaviour.
     """
   end
 
-  def init(mod, name, :boolean, opts) do
-    init(mod, name, Field.Boolean, opts)
+  def init(mod, adapter, name, :boolean, opts) do
+    init(mod, adapter, name, Field.Boolean, opts)
   end
 
-  def init(mod, name, :date, opts) do
-    init(mod, name, Field.Date, opts)
+  def init(mod, adapter, name, :date, opts) do
+    init(mod, adapter, name, Field.Date, opts)
   end
 
-  def init(mod, name, :datetime, opts) do
-    init(mod, name, Field.Datetime, opts)
+  def init(mod, adapter, name, :datetime, opts) do
+    init(mod, adapter, name, Field.Datetime, opts)
   end
 
-  def init(mod, name, :time, opts) do
-    init(mod, name, Field.Time, opts)
+  def init(mod, adapter, name, :time, opts) do
+    init(mod, adapter, name, Field.Time, opts)
   end
 
   # TODO: :decimal
 
-  def init(mod, name, :float, opts) do
-    init(mod, name, Field.Float, opts)
+  def init(mod, adapter, name, :float, opts) do
+    init(mod, adapter, name, Field.Float, opts)
   end
 
-  def init(mod, name, :integer, opts) do
-    init(mod, name, Field.Integer, opts)
+  def init(mod, adapter, name, :integer, opts) do
+    init(mod, adapter, name, Field.Integer, opts)
   end
 
   # TODO: :list
   # TODO: :map ?
 
-  def init(mod, name, :string, opts) do
-    init(mod, name, Field.String, opts)
+  def init(mod, adapter, name, :string, opts) do
+    init(mod, adapter, name, Field.String, opts)
   end
 
-  def init(mod, name, type, opts) do
+  def init(mod, _adapter, name, type, opts) do
     if Code.ensure_loaded?(type) and function_exported?(type, :init, 2) do
       global = init_global_opts(opts, mod)
       opts = type.init(mod, opts)

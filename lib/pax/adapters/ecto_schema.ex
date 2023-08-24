@@ -11,6 +11,45 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @doc """
+  Returns the field type for the given field name.
+  """
+  @impl Pax.Adapter
+  def field_type(_callback_module, %{schema: schema}, field_name) do
+    case schema.__schema__(:type, field_name) do
+      nil -> raise "Unknown field #{inspect(field_name)} for schema #{inspect(schema)}"
+      :id -> :integer
+      :binary_id -> :string
+      :integer -> :integer
+      :float -> :float
+      :boolean -> :boolean
+      :string -> :string
+      :binary -> raise ":binary fields are not supported"
+      {:array, _inner_type} -> raise "TODO: arrays"
+      :map -> raise "TODO: maps"
+      {:map, _inner_type} -> raise "TODO: maps"
+      :decimal -> raise "TODO: decimals"
+      :date -> :date
+      :time -> :time
+      :time_usec -> :time
+      :naive_datetime -> :datetime
+      :naive_datetime_usec -> :datetime
+      :utc_datetime -> :datetime
+      :utc_datetime_usec -> :datetime
+      Ecto.UUID -> :string
+      Ecto.Enum -> raise "TODO: Enums"
+      type -> invalid_type!(type, field_name, schema)
+    end
+  end
+
+  defp invalid_type!(type, field_name, schema) do
+    raise """
+    Unknown schema type #{inspect(type)} for field #{inspect(field_name)} in schema #{inspect(schema)}.
+
+    If you are using a custom type, you must create a custom Type module that implements the Pax.Field behaviour.
+    """
+  end
+
+  @doc """
   Returns all objects of the schema.
 
   TODO: pagination, sorting, filtering, etc.

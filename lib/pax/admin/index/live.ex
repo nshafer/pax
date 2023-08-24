@@ -80,15 +80,20 @@ defmodule Pax.Admin.Index.Live do
   def pax_fields(_admin_mod, params, session, socket) do
     resource_mod = socket.assigns.pax_resource_mod
 
-    resource_mod.pax_index_fields(params, session, socket)
-    |> maybe_set_default_link_field()
+    case resource_mod.pax_index_fields(params, session, socket) do
+      fields when is_list(fields) -> fields |> maybe_set_default_link_field()
+      _ -> raise ArgumentError, "Invalid fields returned from #{inspect(resource_mod)}.pax_index_fields/3"
+    end
   end
 
-  defp maybe_set_default_link_field(fields) do
+  defp maybe_set_default_link_field([]), do: []
+
+  defp maybe_set_default_link_field(fields) when is_list(fields) do
     has_link? =
       Enum.any?(fields, fn
-        {_name, _type} -> false
+        {_name, opts} when is_list(opts) -> Keyword.has_key?(opts, :link)
         {_name, _type, opts} -> Keyword.has_key?(opts, :link)
+        _ -> false
       end)
 
     if has_link? do
@@ -98,10 +103,16 @@ defmodule Pax.Admin.Index.Live do
 
       first_field =
         case first_field do
-          {name, type} ->
+          name when is_atom(name) ->
+            {name, link: true}
+
+          {name, opts} when is_atom(name) and is_list(opts) ->
+            {name, Keyword.put(opts, :link, true)}
+
+          {name, type} when is_atom(name) and is_atom(type) ->
             {name, type, link: true}
 
-          {name, type, opts} ->
+          {name, type, opts} when is_atom(name) and is_atom(type) and is_list(opts) ->
             {name, type, Keyword.put(opts, :link, true)}
         end
 
