@@ -19,7 +19,7 @@ defmodule Pax.Index.Live do
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: list(field())
+            ) :: list(field()) | nil
 
   @callback link(object :: map()) :: String.t()
   @callback link(object :: map(), opts :: keyword()) :: String.t()
@@ -49,15 +49,7 @@ defmodule Pax.Index.Live do
         """
       end
 
-      def pax_fields(_params, _session, _socket) do
-        raise """
-        No pax_fields/3 callback found for #{__MODULE__}.
-        Please configure fields by defining a pax_fields function, for example:
-
-            def pax_fields(params, session, socket), do: [{:name, :string}, {:age, :integer}]
-
-        """
-      end
+      def pax_fields(_params, _session, _socket), do: nil
 
       defoverridable pax_init: 3, pax_adapter: 3, pax_fields: 3
     end
@@ -114,9 +106,24 @@ defmodule Pax.Index.Live do
   end
 
   defp init_fields(module, adapter, params, session, socket) do
+    get_fields(module, adapter, params, session, socket)
+    |> set_link_field_if_link_callback(module)
+    |> Enum.map(&Pax.Field.init(module, adapter, &1))
+  end
+
+  defp get_fields(module, adapter, params, session, socket) do
     case module.pax_fields(params, session, socket) do
-      fields when is_list(fields) -> Enum.map(fields, &Pax.Field.init(module, adapter, &1))
+      fields when is_list(fields) -> fields
+      nil -> Pax.Adapter.default_index_fields(adapter)
       _ -> raise ArgumentError, "Invalid fields returned from #{inspect(module)}.pax_fields/3"
+    end
+  end
+
+  defp set_link_field_if_link_callback(fields, module) do
+    if function_exported?(module, :link, 1) do
+      fields |> Pax.Field.Util.maybe_set_default_link_field()
+    else
+      fields
     end
   end
 end

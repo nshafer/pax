@@ -13,12 +13,12 @@ defmodule Pax.Field do
   @global_opts [:title, :link, :value]
 
   def init(mod, adapter, name) when is_atom(name) do
-    type = Pax.Adapter.field_type(adapter, name)
+    type = Pax.Adapter.field_type!(adapter, name)
     init(mod, adapter, name, type, [])
   end
 
   def init(mod, adapter, {name, opts}) when is_atom(name) and is_list(opts) do
-    type = Pax.Adapter.field_type(adapter, name)
+    type = Pax.Adapter.field_type!(adapter, name)
     init(mod, adapter, name, type, opts)
   end
 

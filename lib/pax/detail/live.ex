@@ -19,7 +19,7 @@ defmodule Pax.Detail.Live do
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: list(field()) | list(list(field) | field()) | keyword(list(field))
+            ) :: list(field()) | list(list(field) | field()) | keyword(list(field)) | nil
 
   defmacro __using__(_opts) do
     quote do
@@ -44,27 +44,7 @@ defmodule Pax.Detail.Live do
         """
       end
 
-      def pax_fieldsets(_params, _session, _socket) do
-        raise """
-        No pax_fieldsets/3 callback found for #{__MODULE__}.
-        Please configure fieldsets by defining a pax_fieldsets function, for example:
-
-            def pax_fieldsets(params, session, socket) do
-              [
-                default: [
-                  [{:id, :integer}, {:uuid: :string}],
-                  {:name, :string},
-                  {:age, :float, round: 1}
-                ],
-                metadata: [
-                  {:created_at, :datetime},
-                  {:updated_at, :datetime}
-                ]
-              ]
-            end
-
-        """
-      end
+      def pax_fieldsets(_params, _session, _socket), do: nil
 
       defoverridable pax_init: 3, pax_adapter: 3, pax_fieldsets: 3
     end
@@ -122,6 +102,7 @@ defmodule Pax.Detail.Live do
     fieldsets =
       case module.pax_fieldsets(params, session, socket) do
         fieldsets when is_list(fieldsets) -> fieldsets
+        nil -> Pax.Adapter.default_detail_fieldsets(adapter)
         _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(module)}.fieldsets/3"
       end
 

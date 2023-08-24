@@ -2,6 +2,40 @@ defmodule Pax.Adapters.EctoSchema do
   @behaviour Pax.Adapter
   import Ecto.Query
 
+  defp schema_to_field_type(schema, schema_type) do
+    case schema_type do
+      :id -> {:ok, :integer}
+      :binary_id -> {:ok, :string}
+      :integer -> {:ok, :integer}
+      :float -> {:ok, :float}
+      :boolean -> {:ok, :boolean}
+      :string -> {:ok, :string}
+      :binary -> {:error, ":binary fields are not supported"}
+      {:array, _inner_type} -> {:error, "TODO: arrays"}
+      :map -> {:error, "TODO: maps"}
+      {:map, _inner_type} -> {:error, "TODO: maps"}
+      :decimal -> {:error, "TODO: decimals"}
+      :date -> {:ok, :date}
+      :time -> {:ok, :time}
+      :time_usec -> {:ok, :time}
+      :naive_datetime -> {:ok, :datetime}
+      :naive_datetime_usec -> {:ok, :datetime}
+      :utc_datetime -> {:ok, :datetime}
+      :utc_datetime_usec -> {:ok, :datetime}
+      Ecto.UUID -> {:ok, :string}
+      Ecto.Enum -> {:error, "TODO: Enums"}
+      type -> {:error, invalid_type(type, schema)}
+    end
+  end
+
+  defp invalid_type(type, schema) do
+    """
+    Unknown schema type #{inspect(type)} in schema #{inspect(schema)}.
+
+    If you are using a custom type, you must create a custom Type module that implements the Pax.Field behaviour.
+    """
+  end
+
   @impl Pax.Adapter
   def init(_callback_module, opts) do
     repo = Keyword.get(opts, :repo) || raise "repo is required"
@@ -10,43 +44,32 @@ defmodule Pax.Adapters.EctoSchema do
     %{repo: repo, schema: schema}
   end
 
+  @impl Pax.Adapter
+  def default_index_fields(_callback_module, %{schema: schema}) do
+    for field_name <- schema.__schema__(:fields),
+        schema_type = schema.__schema__(:type, field_name),
+        {:ok, field_type} = schema_to_field_type(schema, schema_type) do
+      {field_name, field_type}
+    end
+  end
+
+  @impl Pax.Adapter
+  def default_detail_fieldsets(callback_module, opts) do
+    [default: default_index_fields(callback_module, opts)]
+  end
+
   @doc """
   Returns the field type for the given field name.
   """
   @impl Pax.Adapter
   def field_type(_callback_module, %{schema: schema}, field_name) do
-    case schema.__schema__(:type, field_name) do
-      nil -> raise "Unknown field #{inspect(field_name)} for schema #{inspect(schema)}"
-      :id -> :integer
-      :binary_id -> :string
-      :integer -> :integer
-      :float -> :float
-      :boolean -> :boolean
-      :string -> :string
-      :binary -> raise ":binary fields are not supported"
-      {:array, _inner_type} -> raise "TODO: arrays"
-      :map -> raise "TODO: maps"
-      {:map, _inner_type} -> raise "TODO: maps"
-      :decimal -> raise "TODO: decimals"
-      :date -> :date
-      :time -> :time
-      :time_usec -> :time
-      :naive_datetime -> :datetime
-      :naive_datetime_usec -> :datetime
-      :utc_datetime -> :datetime
-      :utc_datetime_usec -> :datetime
-      Ecto.UUID -> :string
-      Ecto.Enum -> raise "TODO: Enums"
-      type -> invalid_type!(type, field_name, schema)
+    schema_type = schema.__schema__(:type, field_name)
+
+    if schema_type do
+      schema_to_field_type(schema, schema_type)
+    else
+      {:error, "Unknown field #{inspect(field_name)} for schema #{inspect(schema)}"}
     end
-  end
-
-  defp invalid_type!(type, field_name, schema) do
-    raise """
-    Unknown schema type #{inspect(type)} for field #{inspect(field_name)} in schema #{inspect(schema)}.
-
-    If you are using a custom type, you must create a custom Type module that implements the Pax.Field behaviour.
-    """
   end
 
   @doc """
