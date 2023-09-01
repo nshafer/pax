@@ -87,15 +87,17 @@ defmodule Pax.Field do
   end
 
   defp resolve_link_opt(opts, mod) do
+    # Make sure the link option is properly set. Mainly, if it's set to true, make sure the pax_link/1 or pax_link/2
+    # function is implemented in the module.
     case Map.get(opts, :link) do
       nil ->
         opts
 
       true ->
         cond do
-          function_exported?(mod, :link, 2) -> Map.put(opts, :link, {mod, :link})
-          function_exported?(mod, :link, 1) -> Map.put(opts, :link, {mod, :link})
-          true -> raise "You must implement a link/1 or link/2 function in #{inspect(mod)} to set link: true"
+          function_exported?(mod, :pax_link, 2) -> Map.put(opts, :link, {mod, :pax_link})
+          function_exported?(mod, :pax_link, 1) -> Map.put(opts, :link, {mod, :pax_link})
+          true -> raise "You must implement a pax_link/1 or pax_link/2 function in #{inspect(mod)} to set link: true"
         end
 
       {mod, fun} when is_atom(mod) and is_atom(fun) ->

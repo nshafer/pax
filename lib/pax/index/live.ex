@@ -21,10 +21,10 @@ defmodule Pax.Index.Live do
               socket :: Phoenix.LiveView.Socket.t()
             ) :: list(field()) | nil
 
-  @callback link(object :: map()) :: String.t()
-  @callback link(object :: map(), opts :: keyword()) :: String.t()
+  @callback pax_link(object :: map()) :: String.t()
+  @callback pax_link(object :: map(), opts :: keyword()) :: String.t()
 
-  @optional_callbacks link: 1, link: 2
+  @optional_callbacks pax_link: 1, pax_link: 2
 
   defmacro __using__(_opts) do
     quote do
@@ -120,7 +120,10 @@ defmodule Pax.Index.Live do
   end
 
   defp set_link_field_if_link_callback(fields, module) do
-    if function_exported?(module, :link, 1) do
+    # If a pax_link callback is defined, set the link field to the first field unless at least one field is already set
+    # to link. This is so that if not fields are defined to link, but pax_link() is provided, then make the first field
+    # linked by default.
+    if function_exported?(module, :pax_link, 1) do
       fields |> Pax.Field.Util.maybe_set_default_link_field()
     else
       fields
