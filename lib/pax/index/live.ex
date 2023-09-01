@@ -64,7 +64,7 @@ defmodule Pax.Index.Live do
     end
   end
 
-  def init(module, params, session, socket) do
+  defp init(module, params, session, socket) do
     # IO.puts("#{__MODULE__}.init(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
 
     adapter = init_adapter(module, params, session, socket)

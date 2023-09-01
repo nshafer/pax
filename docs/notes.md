@@ -19,3 +19,9 @@ Two methods of including statics:
         - Less setup steps
     - Cons:
         - files are not cache-busted, and updates to :pax will require force reloads.
+
+
+## Admins
+
+A loosely related collection of tools to facilitate the administration of an application, with a dashboard, hierarchial menu, and common
+configuration for resources, links and custom pages.

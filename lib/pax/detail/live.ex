@@ -59,7 +59,7 @@ defmodule Pax.Detail.Live do
     end
   end
 
-  def init(module, params, session, socket) do
+  defp init(module, params, session, socket) do
     adapter = init_adapter(module, params, session, socket)
     fieldsets = init_fieldsets(module, adapter, params, session, socket)
     # plugins = init_plugins(module, params, sessions, socket)

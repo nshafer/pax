@@ -12,18 +12,22 @@ defmodule Pax.Admin.Dashboard.Live do
   def render_dashboard(assigns) do
     ~H"""
     <h1 class="text-2xl mb-3 flex justify-between">
-      <%= @pax_admin_mod.__pax__(:config).title %> <small>Pax.Admin.Dashboard.Live</small>
+      <%= @dashboard.config.title %> <small>Pax.Admin.Dashboard.Live</small>
     </h1>
 
-    <Pax.Admin.Dashboard.Components.toc pax_admin_mod={@pax_admin_mod} />
+    <Pax.Admin.Dashboard.Components.toc dashboard={@dashboard} />
     """
   end
 
-  def mount(admin_mod, _params, _session, socket) do
+  def mount(admin_mod, params, session, socket) do
     socket =
       socket
       |> assign(page_title: "Dashboard")
-      |> assign(pax_admin_mod: admin_mod)
+      |> assign(:dashboard, %{
+        admin_mod: admin_mod,
+        config: Pax.Admin.Config.config_for(admin_mod, params, session, socket),
+        resource_tree: Pax.Admin.Config.resource_tree(admin_mod, params, session, socket)
+      })
 
     {:ok, socket}
   end

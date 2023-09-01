@@ -30,6 +30,8 @@
 - [ ] Admin interface with sidebar menu
 - [ ] Flashes
 - [ ] Dashboard with widgets
+- [ ] Support section prefixes in macro, i.e. `section :name, "Title", PaxDemoWeb.Admin do/end` which gets prefixed onto resources, so can do `resource :name, "Title", LabelResource` to save typing. Same as Phoenix router scopes.
+- [ ] Recents - save current params as recent view, allow pinning.
 
 ## Static
 - [ ] Fix/figure out phx.digest. Do it or not? (Probably not...)

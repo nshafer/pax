@@ -26,20 +26,20 @@ defmodule Pax.Admin.Index.Live do
     """
   end
 
-  def pax_init(admin_mod, params, _session, socket) do
+  def pax_init(admin_mod, params, session, socket) do
     socket =
       socket
       |> assign(pax_admin_mod: admin_mod)
-      |> assign_resource_info(admin_mod, params)
+      |> assign_resource_info(admin_mod, params, session)
 
     {:cont, socket}
   end
 
-  defp assign_resource_info(socket, admin_mod, params) do
+  defp assign_resource_info(socket, admin_mod, params, session) do
     section = Map.get(params, "section")
     resource = Map.get(params, "resource")
 
-    case admin_mod.__pax__(:resource, section, resource) do
+    case Pax.Admin.Config.match_resource(admin_mod, params, session, socket, section, resource) do
       nil ->
         raise Pax.Admin.ResourceNotFoundError.exception(section: section, resource: resource)
 

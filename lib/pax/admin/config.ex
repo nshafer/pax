@@ -1,49 +1,94 @@
-defmodule Pax.Admin do
+defmodule Pax.Admin.Config do
   require Logger
+
+  @default_config %{
+    title: "Pax Admin"
+  }
+
+  @callback config(
+              params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
+              session :: map(),
+              socket :: Phoenix.LiveView.Socket.t()
+            ) :: nil | map()
+
+  @callback resources(
+              params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
+              session :: map(),
+              socket :: Phoenix.LiveView.Socket.t()
+            ) :: nil | list()
+
+  @optional_callbacks config: 3, resources: 3
 
   defmacro __using__(opts) do
     router = Keyword.get(opts, :router, nil) || raise "missing :router option"
 
     quote do
-      import Pax.Admin
+      import Pax.Admin.Config
+      @before_compile Pax.Admin.Config
+      @behaviour Pax.Admin.Config
+
       Module.put_attribute(__MODULE__, :pax_router, unquote(router))
-      Module.register_attribute(__MODULE__, :pax_config, accumulate: false)
-      Module.register_attribute(__MODULE__, :pax_resources, accumulate: true)
+      Module.put_attribute(__MODULE__, :pax_config, nil)
       Module.put_attribute(__MODULE__, :pax_current_section, nil)
-      @before_compile Pax.Admin
+      Module.register_attribute(__MODULE__, :pax_resources, accumulate: true)
 
       def resource_index_path(section \\ nil, resource),
-        do: Pax.Admin.resource_index_path(__MODULE__, section, resource)
+        do: Pax.Admin.Config.resource_index_path(__MODULE__, section, resource)
 
       def resource_detail_path(section \\ nil, resource, object, field \\ nil),
-        do: Pax.Admin.resource_detail_path(__MODULE__, section, resource, object, field)
+        do: Pax.Admin.Config.resource_detail_path(__MODULE__, section, resource, object, field)
 
       def resource_index_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource),
-        do: Pax.Admin.resource_index_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource)
+        do: Pax.Admin.Config.resource_index_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource)
 
       def resource_detail_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil),
         do:
-          Pax.Admin.resource_detail_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource, object, field)
+          Pax.Admin.Config.resource_detail_url(
+            __MODULE__,
+            conn_or_socket_or_endpoint_or_uri,
+            section,
+            resource,
+            object,
+            field
+          )
     end
   end
 
   defmacro config(opts) do
     quote do
-      Module.put_attribute(__MODULE__, :pax_config, Pax.Admin.__config__(unquote(opts)))
+      Module.put_attribute(__MODULE__, :pax_config, Pax.Admin.Config.__config__(unquote(opts)))
     end
   end
 
-  def __config__(opts) do
-    defaults = %{
-      title: "Pax Admin"
-    }
+  def __config__(opts) when is_list(opts), do: Map.new(opts) |> __config__()
+  def __config__(conf) when is_map(conf), do: conf
+  def __config__(arg), do: raise("invalid config: #{inspect(arg)}")
 
-    Map.merge(defaults, Map.new(opts))
+  def config_for(admin_mod, params, session, socket) do
+    if Code.ensure_loaded?(admin_mod) and function_exported?(admin_mod, :config, 3) do
+      admin_mod.config(params, session, socket)
+      |> merge_config()
+    else
+      admin_mod.__pax__(:config)
+      |> merge_config()
+    end
+  end
+
+  defp merge_config(nil), do: @default_config
+
+  defp merge_config(opts) when is_list(opts), do: Map.new(opts) |> merge_config()
+
+  defp merge_config(conf) when is_map(conf) do
+    Map.merge(@default_config, conf)
+  end
+
+  defp merge_config(arg) do
+    raise "invalid config: #{inspect(arg)}"
   end
 
   defmacro section(name, title, do: context) when is_atom(name) and is_binary(title) do
     quote do
-      Pax.Admin.__section__(__MODULE__, unquote(name), unquote(title))
+      Pax.Admin.Config.__section__(__MODULE__, unquote(name), unquote(title))
 
       try do
         unquote(context)
@@ -63,13 +108,14 @@ defmodule Pax.Admin do
         })
 
       _ ->
-        raise "cannot embed section inside another section"
+        current_section = Module.get_attribute(admin_mod, :pax_current_section)
+        raise "cannot embed section '#{name}' inside another section '#{current_section.name}'"
     end
   end
 
   defmacro resource(name, title, resource_mod, opts \\ []) when is_atom(name) and is_binary(title) do
     quote do
-      Pax.Admin.__resource__(__MODULE__, unquote(name), unquote(title), unquote(resource_mod), unquote(opts))
+      Pax.Admin.Config.__resource__(__MODULE__, unquote(name), unquote(title), unquote(resource_mod), unquote(opts))
     end
   end
 
@@ -80,12 +126,13 @@ defmodule Pax.Admin do
 
     if exists? do
       if current_section do
-        raise "duplicate resource #{inspect(name)} in section #{inspect(current_section.name)}"
+        raise "duplicate resource '#{name}' in section '#{current_section.name}'"
       else
-        raise "duplicate resource #{inspect(name)}"
+        raise "duplicate resource '#{name}'"
       end
     else
       Module.put_attribute(admin_mod, :pax_resources, %{
+        type: :resource,
         section: current_section,
         name: name,
         path: to_string(name),
@@ -96,45 +143,128 @@ defmodule Pax.Admin do
     end
   end
 
+  # TODO: add link, page, etc macros
+
+  def resources_for(admin_mod, params, session, socket) do
+    if Code.ensure_loaded?(admin_mod) and function_exported?(admin_mod, :resources, 3) do
+      admin_mod.resources(params, session, socket)
+      |> merge_resources(nil)
+    else
+      admin_mod.__pax__(:resources)
+    end
+  end
+
+  defp merge_resources(resources, current_section) when is_list(resources) do
+    for resource <- resources, reduce: {[], current_section} do
+      {acc, current_section} -> {[parse_resource(resource, current_section) | acc], current_section}
+    end
+    |> elem(0)
+    |> Enum.reverse()
+    |> List.flatten()
+  end
+
+  defp merge_resources(resources, _current_section) do
+    raise "invalid resources format: #{inspect(resources)}"
+  end
+
+  defp parse_resource({section_name, resources}, nil) when is_atom(section_name) and is_list(resources) do
+    merge_resources(resources, %{
+      name: section_name,
+      path: to_string(section_name),
+      title: section_name |> to_string() |> String.capitalize()
+    })
+  end
+
+  defp parse_resource({name, resources}, current_section) when is_atom(name) and is_list(resources) do
+    raise "cannot embed section '#{name}' inside another section '#{current_section.name}'"
+  end
+
+  defp parse_resource({name, %{resources: resources} = section}, nil) when is_atom(name) do
+    section =
+      section
+      |> Map.put(:name, name)
+      |> Map.put(:path, to_string(name))
+      |> Map.put_new_lazy(:title, fn -> name |> to_string() |> String.capitalize() end)
+
+    merge_resources(resources, section)
+  end
+
+  defp parse_resource({name, %{resources: resources}}, current_section) when is_atom(name) and is_list(resources) do
+    raise "cannot embed section '#{name}' inside another section '#{current_section.name}'"
+  end
+
+  defp parse_resource({name, %{resource: resource_mod} = resource}, current_section) when is_atom(name) do
+    resource
+    |> Map.put(:type, :resource)
+    |> Map.put(:section, current_section)
+    |> Map.put(:name, name)
+    |> Map.put(:path, to_string(name))
+    |> Map.put(:mod, resource_mod)
+    |> Map.put_new_lazy(:title, fn -> name |> to_string() |> String.capitalize() end)
+    |> Map.put_new(:opts, [])
+  end
+
+  # TODO: parse links, pages, etc
+
+  defp parse_resource({name, resource}, current_section) do
+    if current_section do
+      raise "invalid resource #{inspect(name)}: '#{inspect(resource)}' in section '#{inspect(current_section.name)}'"
+    else
+      raise "duplicate resource #{inspect(name)}: '#{inspect(resource)}'"
+    end
+  end
+
+  defp parse_resource(arg, current_section) do
+    raise "invalid resource #{inspect(arg)} in section '#{inspect(current_section.name)}'"
+  end
+
+  def match_resource(admin_mod, params, session, socket, nil, resource_name) when is_atom(resource_name) do
+    resources_for(admin_mod, params, session, socket)
+    |> Enum.find(&match?(%{section: nil, name: ^resource_name}, &1))
+  end
+
+  def match_resource(admin_mod, params, session, socket, nil, resource_path) when is_binary(resource_path) do
+    resources_for(admin_mod, params, session, socket)
+    |> Enum.find(&match?(%{section: nil, path: ^resource_path}, &1))
+  end
+
+  def match_resource(admin_mod, params, session, socket, section_name, resource_name)
+      when is_atom(section_name) and is_atom(resource_name) do
+    resources_for(admin_mod, params, session, socket)
+    |> Enum.find(&match?(%{section: %{name: ^section_name}, name: ^resource_name}, &1))
+  end
+
+  def match_resource(admin_mod, params, session, socket, section_path, resource_path)
+      when is_binary(section_path) and is_binary(resource_path) do
+    resources_for(admin_mod, params, session, socket)
+    |> Enum.find(&match?(%{section: %{path: ^section_path}, path: ^resource_path}, &1))
+  end
+
+  def resource_tree(admin_mod, params, session, socket) do
+    resources_for(admin_mod, params, session, socket)
+    |> Enum.reduce({[], nil}, fn
+      resource, {[], nil} ->
+        {[%{section: resource.section, resources: [resource]}], resource.section}
+
+      %{section: current_section} = resource, {[curr | rest], current_section} ->
+        {[%{curr | resources: [resource | curr.resources]} | rest], current_section}
+
+      resource, {acc, _current_section} ->
+        {[%{section: resource.section, resources: [resource]} | acc], resource.section}
+    end)
+    |> elem(0)
+    |> Enum.map(fn %{resources: resources} = entry -> %{entry | resources: Enum.reverse(resources)} end)
+    |> Enum.reverse()
+  end
+
   defmacro __before_compile__(env) do
     quote do
       def __pax__(:router), do: @pax_router
       def __pax__(:path), do: @pax_router.__pax__(:paths) |> Map.get(__MODULE__)
       def __pax__(:config), do: @pax_config
-      def __pax__(:resources), do: @pax_resources |> Enum.reverse()
 
-      def __pax__(:resource, nil, resource_name) when is_atom(resource_name) do
-        __pax__(:resources) |> Enum.find(&match?(%{section: nil, name: ^resource_name}, &1))
-      end
-
-      def __pax__(:resource, nil, resource_path) when is_binary(resource_path) do
-        __pax__(:resources) |> Enum.find(&match?(%{section: nil, path: ^resource_path}, &1))
-      end
-
-      def __pax__(:resource, section_name, resource_name) when is_atom(section_name) and is_atom(resource_name) do
-        __pax__(:resources) |> Enum.find(&match?(%{section: %{name: ^section_name}, name: ^resource_name}, &1))
-      end
-
-      def __pax__(:resource, section_path, resource_path) when is_binary(section_path) and is_binary(resource_path) do
-        __pax__(:resources) |> Enum.find(&match?(%{section: %{path: ^section_path}, path: ^resource_path}, &1))
-      end
-
-      def __pax__(:resource_tree) do
-        __pax__(:resources)
-        |> Enum.reduce({nil, []}, fn
-          resource, {nil, []} ->
-            {resource.section, [%{section: resource.section, resources: [resource]}]}
-
-          %{section: current_section} = resource, {current_section, [curr | rest]} ->
-            {current_section, [%{curr | resources: [resource | curr.resources]} | rest]}
-
-          resource, {_current_section, acc} ->
-            {resource.section, [%{section: resource.section, resources: [resource]} | acc]}
-        end)
-        |> elem(1)
-        |> Enum.map(fn %{resources: resources} = entry -> %{entry | resources: Enum.reverse(resources)} end)
-        |> Enum.reverse()
-      end
+      @pax_resources_sorted Module.delete_attribute(__MODULE__, :pax_resources) |> Enum.reverse()
+      def __pax__(:resources), do: @pax_resources_sorted
 
       defmodule DashboardLive do
         use Phoenix.LiveView, layout: {Pax.Admin.Layouts, :app}
