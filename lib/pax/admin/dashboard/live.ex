@@ -12,10 +12,10 @@ defmodule Pax.Admin.Dashboard.Live do
   def render_dashboard(assigns) do
     ~H"""
     <h1 class="text-2xl mb-3 flex justify-between">
-      <%= @dashboard.config.title %> <small>Pax.Admin.Dashboard.Live</small>
+      <%= @admin.config.title %> <small>Pax.Admin.Dashboard.Live</small>
     </h1>
 
-    <Pax.Admin.Dashboard.Components.toc dashboard={@dashboard} />
+    <Pax.Admin.Dashboard.Components.toc admin={@admin} />
     """
   end
 
@@ -23,8 +23,8 @@ defmodule Pax.Admin.Dashboard.Live do
     socket =
       socket
       |> assign(page_title: "Dashboard")
-      |> assign(:dashboard, %{
-        admin_mod: admin_mod,
+      |> assign(:admin, %{
+        mod: admin_mod,
         config: Pax.Admin.Config.config_for(admin_mod, params, session, socket),
         resource_tree: Pax.Admin.Config.resource_tree(admin_mod, params, session, socket)
       })

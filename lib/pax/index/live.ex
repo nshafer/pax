@@ -78,9 +78,7 @@ defmodule Pax.Index.Live do
 
     socket =
       socket
-      |> assign(:pax_adapter, adapter)
-      |> assign(:pax_plugins, plugins)
-      |> assign(:pax_fields, fields)
+      |> assign(:pax, %{adapter: adapter, plugins: plugins, fields: fields})
       |> attach_hook(:pax_handle_params, :handle_params, handle_params_wrapper)
 
     {:cont, socket}

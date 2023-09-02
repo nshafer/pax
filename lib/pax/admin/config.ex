@@ -290,7 +290,7 @@ defmodule Pax.Admin.Config do
         def pax_fields(params, session, socket),
           do: Pax.Admin.Index.Live.pax_fields(unquote(env.module), params, session, socket)
 
-        def link(object, opts \\ []), do: Pax.Admin.Index.Live.link(unquote(env.module), object, opts)
+        def pax_link(object, opts \\ []), do: Pax.Admin.Index.Live.pax_link(unquote(env.module), object, opts)
       end
 
       defmodule DetailLive do

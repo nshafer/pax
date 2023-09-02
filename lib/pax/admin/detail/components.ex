@@ -1,33 +1,23 @@
 defmodule Pax.Admin.Detail.Components do
   use Phoenix.Component
 
-  attr :pax_section, :string, required: true
-  attr :pax_resource, :string, required: true
-  attr :pax_resource_mod, :atom, required: true
-  attr(:pax_fieldsets, :list, required: true)
+  attr :pax, :map, required: true
+  attr :resource, :map, required: true
   attr(:object, :map, required: true)
   attr(:class, :string, default: nil)
 
   def detail(assigns) do
     ~H"""
     <div class={["pax-detail", @class]}>
-      <%= for {name, fields} <- @pax_fieldsets do %>
-        <Pax.Admin.Detail.Components.fieldset
-          pax_section={@pax_section}
-          pax_resource={@pax_resource}
-          pax_resource_mod={@pax_resource_mod}
-          name={name}
-          fields={fields}
-          object={@object}
-        />
+      <%= for {name, fields} <- @pax.fieldsets do %>
+        <Pax.Admin.Detail.Components.fieldset pax={@pax} resource={@resource} name={name} fields={fields} object={@object} />
       <% end %>
     </div>
     """
   end
 
-  attr :pax_section, :string, required: true
-  attr :pax_resource, :string, required: true
-  attr :pax_resource_mod, :atom, required: true
+  attr :pax, :map, required: true
+  attr :resource, :map, required: true
   attr :name, :string, required: true
   attr :fields, :list, required: true
   attr :object, :map, required: true

@@ -20,7 +20,7 @@ defmodule Pax.Admin.Resource do
             ) :: list(field()) | list(list(field) | field()) | keyword(list(field)) | nil
 
   @callback index_link(object :: map()) :: String.t()
-  @callback index_link(object :: map(), opts :: keyword()) :: String.t()
+  @callback index_link(object :: map(), resource :: map()) :: String.t()
 
   @callback detail_title(object :: map()) :: String.t()
 

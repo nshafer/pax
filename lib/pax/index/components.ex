@@ -1,19 +1,19 @@
 defmodule Pax.Index.Components do
   use Phoenix.Component
 
-  attr :pax_fields, :list, required: true
+  attr :pax, :map, required: true
   attr :objects, :list, required: true
   attr :class, :string, default: nil
 
   def index(assigns) do
     ~H"""
     <div class={["pax pax-index", @class]}>
-      <Pax.Index.Components.table pax_fields={@pax_fields} objects={@objects} />
+      <Pax.Index.Components.table pax={@pax} objects={@objects} />
     </div>
     """
   end
 
-  attr :pax_fields, :list, required: true
+  attr :pax, :map, required: true
   attr :objects, :list, required: true
   attr :class, :string, default: nil
 
@@ -26,7 +26,7 @@ defmodule Pax.Index.Components do
       ]}>
         <thead class="pax-index-table-head">
           <tr class="pax-index-table-head-row">
-            <%= for field <- @pax_fields do %>
+            <%= for field <- @pax.fields do %>
               <th class="pax-index-table-header">
                 <Pax.Field.Components.title field={field} />
               </th>
@@ -36,7 +36,7 @@ defmodule Pax.Index.Components do
         <tbody>
           <%= for object <- @objects do %>
             <tr class="pax-index-table-row">
-              <%= for field <- @pax_fields do %>
+              <%= for field <- @pax.fields do %>
                 <td class="pax-index-table-datacell">
                   <Pax.Field.Components.display field={field} object={object} />
                 </td>

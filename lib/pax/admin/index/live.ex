@@ -4,7 +4,7 @@ defmodule Pax.Admin.Index.Live do
   require Logger
 
   def render(admin_mod, assigns) do
-    %{pax_resource_mod: resource_mod} = assigns
+    %{mod: resource_mod} = assigns.resource
 
     cond do
       function_exported?(resource_mod, :render_index, 1) -> resource_mod.render_index(assigns)
@@ -15,14 +15,8 @@ defmodule Pax.Admin.Index.Live do
 
   def render_index(assigns) do
     ~H"""
-    <h1 class="text-2xl mb-3 flex justify-between"><%= @pax_resource_title %> <small>Pax.Admin.Index.Live</small></h1>
-    <Pax.Admin.Index.Components.index
-      pax_section={@pax_section}
-      pax_resource={@pax_resource}
-      pax_resource_mod={@pax_resource_mod}
-      pax_fields={@pax_fields}
-      objects={@objects}
-    />
+    <h1 class="text-2xl mb-3 flex justify-between"><%= @resource.title %> <small>Pax.Admin.Index.Live</small></h1>
+    <Pax.Admin.Index.Components.index pax={@pax} resource={@resource} objects={@objects} />
     """
   end
 
@@ -46,28 +40,12 @@ defmodule Pax.Admin.Index.Live do
       %{} = resource ->
         socket
         |> assign(:page_title, resource.title)
-        |> assign_section_info(resource.section)
-        |> assign(:pax_resource, resource.name)
-        |> assign(:pax_resource_title, resource.title)
-        |> assign(:pax_resource_mod, resource.mod)
-        |> assign(:pax_resource_opts, resource.opts)
+        |> assign(:resource, resource)
     end
   end
 
-  defp assign_section_info(socket, nil) do
-    socket
-    |> assign(:pax_section, nil)
-    |> assign(:pax_section_title, nil)
-  end
-
-  defp assign_section_info(socket, section) do
-    socket
-    |> assign(:pax_section, section.name)
-    |> assign(:pax_section_title, section.title)
-  end
-
   def pax_adapter(_admin_mod, params, session, socket) do
-    resource_mod = socket.assigns.pax_resource_mod
+    %{mod: resource_mod} = socket.assigns.resource
 
     # Set the resource_mod as the callback_module for the adapter if none were specified
     case resource_mod.pax_adapter(params, session, socket) do
@@ -78,7 +56,7 @@ defmodule Pax.Admin.Index.Live do
   end
 
   def pax_fields(_admin_mod, params, session, socket) do
-    resource_mod = socket.assigns.pax_resource_mod
+    %{mod: resource_mod} = socket.assigns.resource
 
     if function_exported?(resource_mod, :pax_index_fields, 3) do
       case resource_mod.pax_index_fields(params, session, socket) do
@@ -91,22 +69,22 @@ defmodule Pax.Admin.Index.Live do
     end
   end
 
-  def link(admin_mod, object, opts \\ []) do
-    resource_mod = Keyword.get(opts, :resource_mod)
+  def pax_link(admin_mod, object, opts \\ []) do
+    resource = Keyword.get(opts, :resource)
 
     cond do
-      function_exported?(resource_mod, :index_link, 2) -> resource_mod.index_link(object, opts)
-      function_exported?(resource_mod, :index_link, 1) -> resource_mod.index_link(object)
-      function_exported?(admin_mod, :index_link, 2) -> admin_mod.index_link(object, opts)
+      function_exported?(resource.mod, :index_link, 2) -> resource.mod.index_link(object, resource)
+      function_exported?(resource.mod, :index_link, 1) -> resource.mod.index_link(object)
+      function_exported?(admin_mod, :index_link, 2) -> admin_mod.index_link(object, resource)
       function_exported?(admin_mod, :index_link, 1) -> admin_mod.index_link(object)
-      true -> index_link(admin_mod, object, opts)
+      true -> index_link(admin_mod, object, resource)
     end
   end
 
-  defp index_link(admin_mod, object, opts) do
-    section = Keyword.get(opts, :section)
-    resource = Keyword.get(opts, :resource)
-
-    admin_mod.resource_detail_path(section, resource, object)
+  defp index_link(admin_mod, object, resource) do
+    case resource.section do
+      nil -> admin_mod.resource_detail_path(resource.name, object)
+      section -> admin_mod.resource_detail_path(section.name, resource.name, object)
+    end
   end
 end

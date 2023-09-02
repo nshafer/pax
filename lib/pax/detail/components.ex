@@ -1,14 +1,14 @@
 defmodule Pax.Detail.Components do
   use Phoenix.Component
 
-  attr(:pax_fieldsets, :list, required: true)
+  attr(:pax, :map, required: true)
   attr(:object, :map, required: true)
   attr(:class, :string, default: nil)
 
   def detail(assigns) do
     ~H"""
     <div class={["pax-detail", @class]}>
-      <%= for {name, fields} <- @pax_fieldsets do %>
+      <%= for {name, fields} <- @pax.fieldsets do %>
         <Pax.Detail.Components.fieldset name={name} fields={fields} object={@object} />
       <% end %>
     </div>
