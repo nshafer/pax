@@ -1,5 +1,16 @@
 defmodule Pax.Admin.Resource do
-  @type field() :: Pax.Field.field()
+  @type t() :: %__MODULE__{
+          name: atom(),
+          path: String.t(),
+          title: String.t(),
+          type: atom(),
+          section: Pax.Admin.Section.t(),
+          mod: module(),
+          opts: Keyword.t()
+        }
+
+  @enforce_keys [:name, :path, :title, :type, :mod, :opts]
+  defstruct [:name, :path, :title, :type, :section, :mod, :opts]
 
   @callback pax_adapter(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
@@ -11,13 +22,17 @@ defmodule Pax.Admin.Resource do
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: list(field()) | nil
+            ) :: list(Pax.Field.field()) | nil
 
   @callback pax_detail_fieldsets(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: list(field()) | list(list(field) | field()) | keyword(list(field)) | nil
+            ) ::
+              list(Pax.Field.field())
+              | list(list(Pax.Field.field()) | Pax.Field.field())
+              | keyword(list(Pax.Field.field()))
+              | nil
 
   @callback index_link(object :: map()) :: String.t()
   @callback index_link(object :: map(), resource :: map()) :: String.t()

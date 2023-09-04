@@ -1,9 +1,8 @@
 defmodule Pax.Admin.Site do
   require Logger
-
-  @default_config %{
-    title: "Pax Admin"
-  }
+  alias Pax.Admin.Config
+  alias Pax.Admin.Section
+  alias Pax.Admin.Resource
 
   # TODO: create a Pax.Admin.Section struct to hold section info instead of plain map
   # TODO: create a Pax.Admin.Resource struct to hold resource info instead of plain map
@@ -63,8 +62,16 @@ defmodule Pax.Admin.Site do
     end
   end
 
-  def __config__(opts) when is_list(opts), do: Map.new(opts) |> __config__()
-  def __config__(conf) when is_map(conf), do: conf
+  def __config__(%Config{} = config), do: config
+  def __config__(nil), do: %Config{}
+
+  def __config__(opts) when is_list(opts) do
+    struct!(Config, opts)
+  rescue
+    error -> raise "invalid config: #{inspect(opts)}: #{Exception.message(error)}"
+  end
+
+  def __config__(conf) when is_map(conf), do: Keyword.new(conf)
   def __config__(arg), do: raise("invalid config: #{inspect(arg)}")
 
   def config_for(site_mod, params, session, socket) do
@@ -75,19 +82,15 @@ defmodule Pax.Admin.Site do
       site_mod.__pax__(:config)
       |> merge_config()
     end
+  rescue
+    error -> raise "invalid config in #{site_mod}: #{Exception.message(error)}"
   end
 
-  defp merge_config(nil), do: @default_config
-
-  defp merge_config(opts) when is_list(opts), do: Map.new(opts) |> merge_config()
-
-  defp merge_config(conf) when is_map(conf) do
-    Map.merge(@default_config, conf)
-  end
-
-  defp merge_config(arg) do
-    raise "invalid config: #{inspect(arg)}"
-  end
+  defp merge_config(%Config{} = conf), do: conf
+  defp merge_config(nil), do: %Config{}
+  defp merge_config(opts) when is_list(opts), do: struct!(Config, opts)
+  defp merge_config(conf) when is_map(conf), do: Keyword.new(conf) |> merge_config()
+  defp merge_config(arg), do: raise("invalid config: #{inspect(arg)}")
 
   defmacro section(name, title, do: context) when is_atom(name) and is_binary(title) do
     quote do
@@ -104,7 +107,7 @@ defmodule Pax.Admin.Site do
   def __section__(site_mod, name, title) do
     case Module.get_attribute(site_mod, :pax_current_section) do
       nil ->
-        Module.put_attribute(site_mod, :pax_current_section, %{
+        Module.put_attribute(site_mod, :pax_current_section, %Section{
           name: name,
           path: to_string(name),
           title: title
@@ -134,7 +137,7 @@ defmodule Pax.Admin.Site do
         raise "duplicate resource '#{name}'"
       end
     else
-      Module.put_attribute(site_mod, :pax_resources, %{
+      Module.put_attribute(site_mod, :pax_resources, %Resource{
         type: :resource,
         section: current_section,
         name: name,
@@ -152,6 +155,8 @@ defmodule Pax.Admin.Site do
     if Code.ensure_loaded?(site_mod) and function_exported?(site_mod, :resources, 3) do
       site_mod.resources(params, session, socket)
       |> merge_resources(nil)
+      |> List.flatten()
+      |> Enum.reverse()
     else
       site_mod.__pax__(:resources)
     end
@@ -162,8 +167,6 @@ defmodule Pax.Admin.Site do
       {acc, current_section} -> {[parse_resource(resource, current_section) | acc], current_section}
     end
     |> elem(0)
-    |> Enum.reverse()
-    |> List.flatten()
   end
 
   defp merge_resources(resources, _current_section) do
@@ -171,7 +174,7 @@ defmodule Pax.Admin.Site do
   end
 
   defp parse_resource({section_name, resources}, nil) when is_atom(section_name) and is_list(resources) do
-    merge_resources(resources, %{
+    merge_resources(resources, %Section{
       name: section_name,
       path: to_string(section_name),
       title: section_name |> to_string() |> String.capitalize()
@@ -182,14 +185,12 @@ defmodule Pax.Admin.Site do
     raise "cannot embed section '#{name}' inside another section '#{current_section.name}'"
   end
 
-  defp parse_resource({name, %{resources: resources} = section}, nil) when is_atom(name) do
-    section =
-      section
-      |> Map.put(:name, name)
-      |> Map.put(:path, to_string(name))
-      |> Map.put_new_lazy(:title, fn -> name |> to_string() |> String.capitalize() end)
-
-    merge_resources(resources, section)
+  defp parse_resource({section_name, %{resources: resources} = section}, nil) when is_atom(section_name) do
+    merge_resources(resources, %Section{
+      name: section_name,
+      path: to_string(section_name),
+      title: Map.get_lazy(section, :title, fn -> section_name |> to_string() |> String.capitalize() end)
+    })
   end
 
   defp parse_resource({name, %{resources: resources}}, current_section) when is_atom(name) and is_list(resources) do
@@ -197,14 +198,15 @@ defmodule Pax.Admin.Site do
   end
 
   defp parse_resource({name, %{resource: resource_mod} = resource}, current_section) when is_atom(name) do
-    resource
-    |> Map.put(:type, :resource)
-    |> Map.put(:section, current_section)
-    |> Map.put(:name, name)
-    |> Map.put(:path, to_string(name))
-    |> Map.put(:mod, resource_mod)
-    |> Map.put_new_lazy(:title, fn -> name |> to_string() |> String.capitalize() end)
-    |> Map.put_new(:opts, [])
+    %Resource{
+      type: :resource,
+      section: current_section,
+      name: name,
+      path: to_string(name),
+      title: Map.get_lazy(resource, :title, fn -> name |> to_string() |> String.capitalize() end),
+      mod: resource_mod,
+      opts: Map.drop(resource, [:title, :resource]) |> Keyword.new()
+    }
   end
 
   # TODO: parse links, pages, etc
