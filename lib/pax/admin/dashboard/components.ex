@@ -1,19 +1,19 @@
 defmodule Pax.Admin.Dashboard.Components do
   use Phoenix.Component
 
-  attr :admin, :map, required: true
+  attr :admin_site, :map, required: true
 
   def toc(assigns) do
     ~H"""
     <ul class="list-disc ml-4">
-      <%= for entry <- @admin.resource_tree do %>
-        <.toc_section entry={entry} admin={@admin} />
+      <%= for entry <- @admin_site.resource_tree do %>
+        <.toc_section entry={entry} admin_site={@admin_site} />
       <% end %>
     </ul>
     """
   end
 
-  attr :admin, :map, required: true
+  attr :admin_site, :map, required: true
   attr :entry, :map, required: true
 
   def toc_section(assigns) do
@@ -21,7 +21,7 @@ defmodule Pax.Admin.Dashboard.Components do
     <%= if @entry.section == nil do %>
       <%= for resource <- @entry.resources do %>
         <li>
-          <.link navigate={@admin.mod.resource_index_path(nil, resource.path)}>
+          <.link navigate={@admin_site.mod.resource_index_path(nil, resource.path)}>
             <%= resource.title %>
           </.link>
         </li>
@@ -32,7 +32,7 @@ defmodule Pax.Admin.Dashboard.Components do
         <ul class="list-disc ml-4">
           <%= for resource <- @entry.resources do %>
             <li>
-              <.link navigate={@admin.mod.resource_index_path(@entry.section.path, resource.path)}>
+              <.link navigate={@admin_site.mod.resource_index_path(@entry.section.path, resource.path)}>
                 <%= resource.title %>
               </.link>
             </li>

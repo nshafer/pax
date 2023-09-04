@@ -1,9 +1,12 @@
-defmodule Pax.Admin.Config do
+defmodule Pax.Admin.Site do
   require Logger
 
   @default_config %{
     title: "Pax Admin"
   }
+
+  # TODO: create a Pax.Admin.Section struct to hold section info instead of plain map
+  # TODO: create a Pax.Admin.Resource struct to hold resource info instead of plain map
 
   @callback config(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
@@ -23,9 +26,9 @@ defmodule Pax.Admin.Config do
     router = Keyword.get(opts, :router, nil) || raise "missing :router option"
 
     quote do
-      import Pax.Admin.Config
-      @before_compile Pax.Admin.Config
-      @behaviour Pax.Admin.Config
+      import Pax.Admin.Site
+      @before_compile Pax.Admin.Site
+      @behaviour Pax.Admin.Site
 
       Module.put_attribute(__MODULE__, :pax_router, unquote(router))
       Module.put_attribute(__MODULE__, :pax_config, nil)
@@ -33,17 +36,17 @@ defmodule Pax.Admin.Config do
       Module.register_attribute(__MODULE__, :pax_resources, accumulate: true)
 
       def resource_index_path(section \\ nil, resource),
-        do: Pax.Admin.Config.resource_index_path(__MODULE__, section, resource)
+        do: Pax.Admin.Site.resource_index_path(__MODULE__, section, resource)
 
       def resource_detail_path(section \\ nil, resource, object, field \\ nil),
-        do: Pax.Admin.Config.resource_detail_path(__MODULE__, section, resource, object, field)
+        do: Pax.Admin.Site.resource_detail_path(__MODULE__, section, resource, object, field)
 
       def resource_index_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource),
-        do: Pax.Admin.Config.resource_index_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource)
+        do: Pax.Admin.Site.resource_index_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource)
 
       def resource_detail_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil),
         do:
-          Pax.Admin.Config.resource_detail_url(
+          Pax.Admin.Site.resource_detail_url(
             __MODULE__,
             conn_or_socket_or_endpoint_or_uri,
             section,
@@ -56,7 +59,7 @@ defmodule Pax.Admin.Config do
 
   defmacro config(opts) do
     quote do
-      Module.put_attribute(__MODULE__, :pax_config, Pax.Admin.Config.__config__(unquote(opts)))
+      Module.put_attribute(__MODULE__, :pax_config, Pax.Admin.Site.__config__(unquote(opts)))
     end
   end
 
@@ -64,12 +67,12 @@ defmodule Pax.Admin.Config do
   def __config__(conf) when is_map(conf), do: conf
   def __config__(arg), do: raise("invalid config: #{inspect(arg)}")
 
-  def config_for(admin_mod, params, session, socket) do
-    if Code.ensure_loaded?(admin_mod) and function_exported?(admin_mod, :config, 3) do
-      admin_mod.config(params, session, socket)
+  def config_for(site_mod, params, session, socket) do
+    if Code.ensure_loaded?(site_mod) and function_exported?(site_mod, :config, 3) do
+      site_mod.config(params, session, socket)
       |> merge_config()
     else
-      admin_mod.__pax__(:config)
+      site_mod.__pax__(:config)
       |> merge_config()
     end
   end
@@ -88,7 +91,7 @@ defmodule Pax.Admin.Config do
 
   defmacro section(name, title, do: context) when is_atom(name) and is_binary(title) do
     quote do
-      Pax.Admin.Config.__section__(__MODULE__, unquote(name), unquote(title))
+      Pax.Admin.Site.__section__(__MODULE__, unquote(name), unquote(title))
 
       try do
         unquote(context)
@@ -98,30 +101,30 @@ defmodule Pax.Admin.Config do
     end
   end
 
-  def __section__(admin_mod, name, title) do
-    case Module.get_attribute(admin_mod, :pax_current_section) do
+  def __section__(site_mod, name, title) do
+    case Module.get_attribute(site_mod, :pax_current_section) do
       nil ->
-        Module.put_attribute(admin_mod, :pax_current_section, %{
+        Module.put_attribute(site_mod, :pax_current_section, %{
           name: name,
           path: to_string(name),
           title: title
         })
 
       _ ->
-        current_section = Module.get_attribute(admin_mod, :pax_current_section)
+        current_section = Module.get_attribute(site_mod, :pax_current_section)
         raise "cannot embed section '#{name}' inside another section '#{current_section.name}'"
     end
   end
 
   defmacro resource(name, title, resource_mod, opts \\ []) when is_atom(name) and is_binary(title) do
     quote do
-      Pax.Admin.Config.__resource__(__MODULE__, unquote(name), unquote(title), unquote(resource_mod), unquote(opts))
+      Pax.Admin.Site.__resource__(__MODULE__, unquote(name), unquote(title), unquote(resource_mod), unquote(opts))
     end
   end
 
-  def __resource__(admin_mod, name, title, resource_mod, opts \\ []) do
-    current_section = Module.get_attribute(admin_mod, :pax_current_section)
-    resources = Module.get_attribute(admin_mod, :pax_resources)
+  def __resource__(site_mod, name, title, resource_mod, opts \\ []) do
+    current_section = Module.get_attribute(site_mod, :pax_current_section)
+    resources = Module.get_attribute(site_mod, :pax_resources)
     exists? = Enum.any?(resources, &match?(%{section: ^current_section, name: ^name}, &1))
 
     if exists? do
@@ -131,7 +134,7 @@ defmodule Pax.Admin.Config do
         raise "duplicate resource '#{name}'"
       end
     else
-      Module.put_attribute(admin_mod, :pax_resources, %{
+      Module.put_attribute(site_mod, :pax_resources, %{
         type: :resource,
         section: current_section,
         name: name,
@@ -145,12 +148,12 @@ defmodule Pax.Admin.Config do
 
   # TODO: add link, page, etc macros
 
-  def resources_for(admin_mod, params, session, socket) do
-    if Code.ensure_loaded?(admin_mod) and function_exported?(admin_mod, :resources, 3) do
-      admin_mod.resources(params, session, socket)
+  def resources_for(site_mod, params, session, socket) do
+    if Code.ensure_loaded?(site_mod) and function_exported?(site_mod, :resources, 3) do
+      site_mod.resources(params, session, socket)
       |> merge_resources(nil)
     else
-      admin_mod.__pax__(:resources)
+      site_mod.__pax__(:resources)
     end
   end
 
@@ -218,30 +221,30 @@ defmodule Pax.Admin.Config do
     raise "invalid resource #{inspect(arg)} in section '#{inspect(current_section.name)}'"
   end
 
-  def match_resource(admin_mod, params, session, socket, nil, resource_name) when is_atom(resource_name) do
-    resources_for(admin_mod, params, session, socket)
+  def match_resource(site_mod, params, session, socket, nil, resource_name) when is_atom(resource_name) do
+    resources_for(site_mod, params, session, socket)
     |> Enum.find(&match?(%{section: nil, name: ^resource_name}, &1))
   end
 
-  def match_resource(admin_mod, params, session, socket, nil, resource_path) when is_binary(resource_path) do
-    resources_for(admin_mod, params, session, socket)
+  def match_resource(site_mod, params, session, socket, nil, resource_path) when is_binary(resource_path) do
+    resources_for(site_mod, params, session, socket)
     |> Enum.find(&match?(%{section: nil, path: ^resource_path}, &1))
   end
 
-  def match_resource(admin_mod, params, session, socket, section_name, resource_name)
+  def match_resource(site_mod, params, session, socket, section_name, resource_name)
       when is_atom(section_name) and is_atom(resource_name) do
-    resources_for(admin_mod, params, session, socket)
+    resources_for(site_mod, params, session, socket)
     |> Enum.find(&match?(%{section: %{name: ^section_name}, name: ^resource_name}, &1))
   end
 
-  def match_resource(admin_mod, params, session, socket, section_path, resource_path)
+  def match_resource(site_mod, params, session, socket, section_path, resource_path)
       when is_binary(section_path) and is_binary(resource_path) do
-    resources_for(admin_mod, params, session, socket)
+    resources_for(site_mod, params, session, socket)
     |> Enum.find(&match?(%{section: %{path: ^section_path}, path: ^resource_path}, &1))
   end
 
-  def resource_tree(admin_mod, params, session, socket) do
-    resources_for(admin_mod, params, session, socket)
+  def resource_tree(site_mod, params, session, socket) do
+    resources_for(site_mod, params, session, socket)
     |> Enum.reduce({[], nil}, fn
       resource, {[], nil} ->
         {[%{section: resource.section, resources: [resource]}], resource.section}
@@ -314,8 +317,9 @@ defmodule Pax.Admin.Config do
     end
   end
 
-  def resource_index_path(admin_mod, section \\ nil, resource) do
-    path = admin_mod.__pax__(:path)
+  # TODO: make this take a section and resource map as well as strings
+  def resource_index_path(site_mod, section \\ nil, resource) do
+    path = site_mod.__pax__(:path)
 
     cond do
       section ->
@@ -329,10 +333,10 @@ defmodule Pax.Admin.Config do
   @doc """
   Get the path to the detail page for a resource object.
   """
-  def resource_detail_path(admin_mod, section \\ nil, resource, object, field \\ nil)
+  def resource_detail_path(site_mod, section \\ nil, resource, object, field \\ nil)
 
-  def resource_detail_path(admin_mod, section, resource, object, nil) when is_map(object) do
-    path = admin_mod.__pax__(:path)
+  def resource_detail_path(site_mod, section, resource, object, nil) when is_map(object) do
+    path = site_mod.__pax__(:path)
     section = section || "_"
 
     case get_object_id(object) do
@@ -346,12 +350,12 @@ defmodule Pax.Admin.Config do
   end
 
   # Special case when the call gives a field but not a section
-  def resource_detail_path(admin_mod, resource, object, field, nil) when is_map(object) do
-    resource_detail_path(admin_mod, nil, resource, object, field)
+  def resource_detail_path(site_mod, resource, object, field, nil) when is_map(object) do
+    resource_detail_path(site_mod, nil, resource, object, field)
   end
 
-  def resource_detail_path(admin_mod, section, resource, object, field) when is_map(object) do
-    path = admin_mod.__pax__(:path)
+  def resource_detail_path(site_mod, section, resource, object, field) when is_map(object) do
+    path = site_mod.__pax__(:path)
     section = section || "_"
 
     case Map.get(object, field) do
@@ -407,13 +411,13 @@ defmodule Pax.Admin.Config do
     end
   end
 
-  def resource_index_url(admin_mod, conn_or_socket_or_endpoint_or_uri, section, resource) do
-    path = resource_index_path(admin_mod, section, resource)
+  def resource_index_url(site_mod, conn_or_socket_or_endpoint_or_uri, section, resource) do
+    path = resource_index_path(site_mod, section, resource)
     Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
   end
 
-  def resource_detail_url(admin_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil) do
-    path = resource_detail_path(admin_mod, section, resource, object, field)
+  def resource_detail_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil) do
+    path = resource_detail_path(site_mod, section, resource, object, field)
 
     case path do
       nil -> nil

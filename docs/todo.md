@@ -4,6 +4,7 @@
 - [ ] Plugins
 - [ ] Rename Index to List?
 - [ ] Make stacktraces better?
+- [ ] Generators?
 
 ## Index
 - [ ] Pagination plugin
@@ -12,11 +13,15 @@
 - [ ] Actions plugin
 - [ ] Maybe refactor fieldsets to use css grid?
 - [ ] Field alignment: left, center, right
+- [ ] Action Items plugin
+- [ ] Sidebar plugin
+- [ ] More index types: table, grid, blocks, blog? (ActiveAdmin)
 
 ## Detail
 - [ ] Inline plugin
-- [ ] Audit log plugin
+- [ ] Audit log plugin with revert?
 - [ ] Collab / presence plugin
+- [ ] Action Items plugin
 
 ## Fields
 - [ ] Allow specifying just `:fieldname` and default to Field.String maybe? Or callback to adapter to figure it out?
@@ -30,7 +35,7 @@
 - [ ] Admin interface with sidebar menu
 - [ ] Flashes
 - [ ] Dashboard with widgets
-- [ ] Support section prefixes in macro, i.e. `section :name, "Title", PaxDemoWeb.Admin do/end` which gets prefixed onto resources, so can do `resource :name, "Title", LabelResource` to save typing. Same as Phoenix router scopes.
+- [ ] Create `resources MyAppWeb.MyAdmin do` macro, which gets prefixed before resources modules, so can do `resource :name, "Title", LabelResource` to save typing. Same as Phoenix router scopes.
 - [ ] Recents - save current params as recent view, allow pinning.
 
 ## Static

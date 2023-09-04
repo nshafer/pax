@@ -7,17 +7,17 @@ defmodule Pax.Admin.Router do
     end
   end
 
-  defmacro pax_admin(path, admin_mod, opts \\ []) do
-    admin_mod = Macro.expand(admin_mod, __CALLER__)
+  defmacro pax_admin(path, site_mod, opts \\ []) do
+    site_mod = Macro.expand(site_mod, __CALLER__)
 
     quote bind_quoted: binding() do
       full_path = Phoenix.Router.scoped_path(__MODULE__, path)
-      full_admin_mod = Phoenix.Router.scoped_alias(__MODULE__, admin_mod)
-      @pax_paths Map.put(@pax_paths, full_admin_mod, full_path)
+      full_site_mod = Phoenix.Router.scoped_alias(__MODULE__, site_mod)
+      @pax_paths Map.put(@pax_paths, full_site_mod, full_path)
 
-      dashboard_mod = Module.concat(admin_mod, DashboardLive)
-      index_mod = Module.concat(admin_mod, IndexLive)
-      detail_mod = Module.concat(admin_mod, DetailLive)
+      dashboard_mod = Module.concat(site_mod, DashboardLive)
+      index_mod = Module.concat(site_mod, IndexLive)
+      detail_mod = Module.concat(site_mod, DetailLive)
 
       live "#{path}", dashboard_mod, :dashboard, opts
 

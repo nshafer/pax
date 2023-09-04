@@ -2,9 +2,9 @@ defmodule Pax.Admin.Dashboard.Live do
   # import Phoenix.LiveView
   use Phoenix.Component
 
-  def render(admin_mod, assigns) do
+  def render(site_mod, assigns) do
     cond do
-      function_exported?(admin_mod, :render_dashboard, 1) -> admin_mod.render_dashboard(assigns)
+      function_exported?(site_mod, :render_dashboard, 1) -> site_mod.render_dashboard(assigns)
       true -> render_dashboard(assigns)
     end
   end
@@ -12,21 +12,21 @@ defmodule Pax.Admin.Dashboard.Live do
   def render_dashboard(assigns) do
     ~H"""
     <h1 class="text-2xl mb-3 flex justify-between">
-      <%= @admin.config.title %> <small>Pax.Admin.Dashboard.Live</small>
+      <%= @admin_site.config.title %> <small>Pax.Admin.Dashboard.Live</small>
     </h1>
 
-    <Pax.Admin.Dashboard.Components.toc admin={@admin} />
+    <Pax.Admin.Dashboard.Components.toc admin_site={@admin_site} />
     """
   end
 
-  def mount(admin_mod, params, session, socket) do
+  def mount(site_mod, params, session, socket) do
     socket =
       socket
       |> assign(page_title: "Dashboard")
-      |> assign(:admin, %{
-        mod: admin_mod,
-        config: Pax.Admin.Config.config_for(admin_mod, params, session, socket),
-        resource_tree: Pax.Admin.Config.resource_tree(admin_mod, params, session, socket)
+      |> assign(:admin_site, %{
+        mod: site_mod,
+        config: Pax.Admin.Site.config_for(site_mod, params, session, socket),
+        resource_tree: Pax.Admin.Site.resource_tree(site_mod, params, session, socket)
       })
 
     {:ok, socket}

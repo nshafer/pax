@@ -21,7 +21,13 @@ Two methods of including statics:
         - files are not cache-busted, and updates to :pax will require force reloads.
 
 
-## Admins
+## Admin Sites
 
-A loosely related collection of tools to facilitate the administration of an application, with a dashboard, hierarchial menu, and common
-configuration for resources, links and custom pages.
+Each Admin Site is a collection of resources to facilitate the administration of an application.
+
+Resources can be any of:
+- Pax.Admin.Resource    - Based on Pax.Index and Pax.Detail, allows CRUD operations on a schema or other data source.
+- Pax.Admin.Link        - Provides a link to an external resource
+- Pax.Admin.Page        - Simple markdown, html or template based page
+- Pax.Admin.Wrapper     - Wraps another URL with the admin interface.
+- Pax.Admin.View        - Custom live view that lives in the admin interface.

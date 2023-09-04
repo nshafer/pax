@@ -3,12 +3,12 @@ defmodule Pax.Admin.Index.Live do
   use Phoenix.Component
   require Logger
 
-  def render(admin_mod, assigns) do
+  def render(site_mod, assigns) do
     %{mod: resource_mod} = assigns.resource
 
     cond do
       function_exported?(resource_mod, :render_index, 1) -> resource_mod.render_index(assigns)
-      function_exported?(admin_mod, :render_index, 1) -> admin_mod.render_index(assigns)
+      function_exported?(site_mod, :render_index, 1) -> site_mod.render_index(assigns)
       true -> render_index(assigns)
     end
   end
@@ -20,20 +20,21 @@ defmodule Pax.Admin.Index.Live do
     """
   end
 
-  def pax_init(admin_mod, params, session, socket) do
+  def pax_init(site_mod, params, session, socket) do
     socket =
       socket
-      |> assign(pax_admin_mod: admin_mod)
-      |> assign_resource_info(admin_mod, params, session)
+      # TODO: make this a admin_site map like dashboard
+      |> assign(pax_site_mod: site_mod)
+      |> assign_resource_info(site_mod, params, session)
 
     {:cont, socket}
   end
 
-  defp assign_resource_info(socket, admin_mod, params, session) do
+  defp assign_resource_info(socket, site_mod, params, session) do
     section = Map.get(params, "section")
     resource = Map.get(params, "resource")
 
-    case Pax.Admin.Config.match_resource(admin_mod, params, session, socket, section, resource) do
+    case Pax.Admin.Site.match_resource(site_mod, params, session, socket, section, resource) do
       nil ->
         raise Pax.Admin.ResourceNotFoundError.exception(section: section, resource: resource)
 
@@ -44,7 +45,7 @@ defmodule Pax.Admin.Index.Live do
     end
   end
 
-  def pax_adapter(_admin_mod, params, session, socket) do
+  def pax_adapter(_site_mod, params, session, socket) do
     %{mod: resource_mod} = socket.assigns.resource
 
     # Set the resource_mod as the callback_module for the adapter if none were specified
@@ -55,7 +56,7 @@ defmodule Pax.Admin.Index.Live do
     end
   end
 
-  def pax_fields(_admin_mod, params, session, socket) do
+  def pax_fields(_site_mod, params, session, socket) do
     %{mod: resource_mod} = socket.assigns.resource
 
     if function_exported?(resource_mod, :pax_index_fields, 3) do
@@ -69,22 +70,22 @@ defmodule Pax.Admin.Index.Live do
     end
   end
 
-  def pax_link(admin_mod, object, opts \\ []) do
+  def pax_link(site_mod, object, opts \\ []) do
     resource = Keyword.get(opts, :resource)
 
     cond do
       function_exported?(resource.mod, :index_link, 2) -> resource.mod.index_link(object, resource)
       function_exported?(resource.mod, :index_link, 1) -> resource.mod.index_link(object)
-      function_exported?(admin_mod, :index_link, 2) -> admin_mod.index_link(object, resource)
-      function_exported?(admin_mod, :index_link, 1) -> admin_mod.index_link(object)
-      true -> index_link(admin_mod, object, resource)
+      function_exported?(site_mod, :index_link, 2) -> site_mod.index_link(object, resource)
+      function_exported?(site_mod, :index_link, 1) -> site_mod.index_link(object)
+      true -> index_link(site_mod, object, resource)
     end
   end
 
-  defp index_link(admin_mod, object, resource) do
+  defp index_link(site_mod, object, resource) do
     case resource.section do
-      nil -> admin_mod.resource_detail_path(resource.name, object)
-      section -> admin_mod.resource_detail_path(section.name, resource.name, object)
+      nil -> site_mod.resource_detail_path(resource.name, object)
+      section -> site_mod.resource_detail_path(section.name, resource.name, object)
     end
   end
 end

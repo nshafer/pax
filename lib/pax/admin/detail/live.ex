@@ -3,12 +3,12 @@ defmodule Pax.Admin.Detail.Live do
   use Phoenix.Component
   require Logger
 
-  def render(admin_mod, assigns) do
+  def render(site_mod, assigns) do
     %{mod: resource_mod} = assigns.resource
 
     cond do
       function_exported?(resource_mod, :render_detail, 1) -> resource_mod.render_detail(assigns)
-      function_exported?(admin_mod, :render_detail, 1) -> admin_mod.render_detail(assigns)
+      function_exported?(site_mod, :render_detail, 1) -> site_mod.render_detail(assigns)
       true -> render_detail(assigns)
     end
   end
@@ -20,20 +20,21 @@ defmodule Pax.Admin.Detail.Live do
     """
   end
 
-  def pax_init(admin_mod, params, session, socket) do
+  def pax_init(site_mod, params, session, socket) do
     socket =
       socket
-      |> assign(pax_admin_mod: admin_mod)
-      |> assign_resource_info(admin_mod, params, session)
+      # TODO: make this a admin_site map like dashboard
+      |> assign(pax_site_mod: site_mod)
+      |> assign_resource_info(site_mod, params, session)
 
     {:cont, socket}
   end
 
-  defp assign_resource_info(socket, admin_mod, params, session) do
+  defp assign_resource_info(socket, site_mod, params, session) do
     section = Map.get(params, "section")
     resource = Map.get(params, "resource")
 
-    case Pax.Admin.Config.match_resource(admin_mod, params, session, socket, section, resource) do
+    case Pax.Admin.Site.match_resource(site_mod, params, session, socket, section, resource) do
       nil ->
         raise Pax.Admin.ResourceNotFoundError.exception(section: section, resource: resource)
 
@@ -44,7 +45,7 @@ defmodule Pax.Admin.Detail.Live do
     end
   end
 
-  def pax_adapter(_admin_mod, params, session, socket) do
+  def pax_adapter(_site_mod, params, session, socket) do
     %{mod: resource_mod} = socket.assigns.resource
 
     # Set the resource_mod as the callback_module for the adapter if none were specified
@@ -55,7 +56,7 @@ defmodule Pax.Admin.Detail.Live do
     end
   end
 
-  def pax_fieldsets(_admin_mod, params, session, socket) do
+  def pax_fieldsets(_site_mod, params, session, socket) do
     %{mod: resource_mod} = socket.assigns.resource
 
     if function_exported?(resource_mod, :pax_detail_fieldsets, 3) do
@@ -69,7 +70,7 @@ defmodule Pax.Admin.Detail.Live do
     end
   end
 
-  def handle_params(_admin_mod, params, _uri, socket) do
+  def handle_params(_site_mod, params, _uri, socket) do
     socket =
       socket
       |> assign_object_title(params)

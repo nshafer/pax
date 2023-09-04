@@ -1,12 +1,20 @@
 locals_without_parens = [
-  adapter: 1,
-  adapter: 2,
+  # adapter: 1,
+  # adapter: 2,
   pax_admin: 2,
   pax_admin: 3,
   config: 1,
+  section: 2,
   section: 3,
+  resource: 2,
   resource: 3,
-  resource: 4
+  resource: 4,
+  link: 2,
+  link: 3,
+  link: 4,
+  page: 2,
+  page: 3,
+  page: 4
 ]
 
 [
