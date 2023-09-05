@@ -84,8 +84,8 @@ defmodule Pax.Admin.Index.Live do
 
   defp index_link(site_mod, object, resource) do
     case resource.section do
-      nil -> site_mod.resource_detail_path(resource.name, object)
-      section -> site_mod.resource_detail_path(section.name, resource.name, object)
+      nil -> Pax.Admin.Site.resource_detail_path(site_mod, resource.name, object)
+      section -> Pax.Admin.Site.resource_detail_path(site_mod, section.name, resource.name, object)
     end
   end
 end

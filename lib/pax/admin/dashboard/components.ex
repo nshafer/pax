@@ -21,7 +21,7 @@ defmodule Pax.Admin.Dashboard.Components do
     <%= if @entry.section == nil do %>
       <%= for resource <- @entry.resources do %>
         <li>
-          <.link navigate={@admin_site.mod.resource_index_path(nil, resource.path)}>
+          <.link navigate={Pax.Admin.Site.resource_index_path(@admin_site.mod, nil, resource)}>
             <%= resource.title %>
           </.link>
         </li>
@@ -32,7 +32,7 @@ defmodule Pax.Admin.Dashboard.Components do
         <ul class="list-disc ml-4">
           <%= for resource <- @entry.resources do %>
             <li>
-              <.link navigate={@admin_site.mod.resource_index_path(@entry.section.path, resource.path)}>
+              <.link navigate={Pax.Admin.Site.resource_index_path(@admin_site.mod, @entry.section, resource)}>
                 <%= resource.title %>
               </.link>
             </li>

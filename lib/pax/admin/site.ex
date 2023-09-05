@@ -220,24 +220,24 @@ defmodule Pax.Admin.Site do
 
   def match_resource(site_mod, params, session, socket, nil, resource_name) when is_atom(resource_name) do
     resources_for(site_mod, params, session, socket)
-    |> Enum.find(&match?(%{section: nil, name: ^resource_name}, &1))
+    |> Enum.find(&match?(%Resource{section: nil, name: ^resource_name}, &1))
   end
 
   def match_resource(site_mod, params, session, socket, nil, resource_path) when is_binary(resource_path) do
     resources_for(site_mod, params, session, socket)
-    |> Enum.find(&match?(%{section: nil, path: ^resource_path}, &1))
+    |> Enum.find(&match?(%Resource{section: nil, path: ^resource_path}, &1))
   end
 
   def match_resource(site_mod, params, session, socket, section_name, resource_name)
       when is_atom(section_name) and is_atom(resource_name) do
     resources_for(site_mod, params, session, socket)
-    |> Enum.find(&match?(%{section: %{name: ^section_name}, name: ^resource_name}, &1))
+    |> Enum.find(&match?(%Resource{section: %{name: ^section_name}, name: ^resource_name}, &1))
   end
 
   def match_resource(site_mod, params, session, socket, section_path, resource_path)
       when is_binary(section_path) and is_binary(resource_path) do
     resources_for(site_mod, params, session, socket)
-    |> Enum.find(&match?(%{section: %{path: ^section_path}, path: ^resource_path}, &1))
+    |> Enum.find(&match?(%Resource{section: %{path: ^section_path}, path: ^resource_path}, &1))
   end
 
   def resource_tree(site_mod, params, session, socket) do
@@ -314,16 +314,25 @@ defmodule Pax.Admin.Site do
     end
   end
 
-  # TODO: make this take a section and resource map as well as strings
+  defp section_path(nil), do: nil
+  defp section_path(%Section{} = section), do: section.path
+  defp section_path(section_path) when is_binary(section_path), do: section_path
+  defp section_path(section_name) when is_atom(section_name), do: to_string(section_name)
+  defp section_path(arg), do: raise("invalid section path: #{inspect(arg)}")
+
+  defp resource_path(%Resource{} = resource), do: resource.path
+  defp resource_path(resource_path) when is_binary(resource_path), do: resource_path
+  defp resource_path(resource_name) when is_atom(resource_name), do: to_string(resource_name)
+  defp resource_path(arg), do: raise("invalid resource path: #{inspect(arg)}")
+
   def resource_index_path(site_mod, section \\ nil, resource) do
     path = site_mod.__pax__(:path)
+    section_path = section_path(section)
+    resource_path = resource_path(resource)
 
     cond do
-      section ->
-        "#{path}/#{section}/#{resource}"
-
-      true ->
-        "#{path}/_/#{resource}"
+      section_path -> "#{path}/#{section_path}/r/#{resource_path}"
+      true -> "#{path}/r/#{resource_path}"
     end
   end
 
@@ -334,7 +343,8 @@ defmodule Pax.Admin.Site do
 
   def resource_detail_path(site_mod, section, resource, object, nil) when is_map(object) do
     path = site_mod.__pax__(:path)
-    section = section || "_"
+    section_path = section_path(section)
+    resource_path = resource_path(resource)
 
     case get_object_id(object) do
       nil ->
@@ -342,7 +352,10 @@ defmodule Pax.Admin.Site do
         nil
 
       id ->
-        "#{path}/#{section}/#{resource}/#{id}"
+        cond do
+          section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{id}"
+          true -> "#{path}/r/#{resource_path}/#{id}"
+        end
     end
   end
 
@@ -353,7 +366,8 @@ defmodule Pax.Admin.Site do
 
   def resource_detail_path(site_mod, section, resource, object, field) when is_map(object) do
     path = site_mod.__pax__(:path)
-    section = section || "_"
+    section_path = section_path(section)
+    resource_path = resource_path(resource)
 
     case Map.get(object, field) do
       nil ->
@@ -361,7 +375,10 @@ defmodule Pax.Admin.Site do
         nil
 
       id ->
-        "#{path}/#{section}/#{resource}/#{id}"
+        cond do
+          section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{id}"
+          true -> "#{path}/r/#{resource_path}/#{id}"
+        end
     end
   end
 

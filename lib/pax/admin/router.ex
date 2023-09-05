@@ -18,17 +18,17 @@ defmodule Pax.Admin.Router do
 
       live "#{path}", dashboard_mod, :dashboard, dashboard_opts
 
-      live "#{path}/_/:resource", index_mod, :index, index_opts
-      live "#{path}/_/:resource/new", detail_mod, :new, detail_opts
-      live "#{path}/_/:resource/:id", detail_mod, :show, detail_opts
-      live "#{path}/_/:resource/:id/edit", detail_mod, :edit, detail_opts
-      live "#{path}/_/:resource/:id/delete", detail_mod, :delete, detail_opts
+      live "#{path}/r/:resource", index_mod, :index, index_opts
+      live "#{path}/r/:resource/new", detail_mod, :new, detail_opts
+      live "#{path}/r/:resource/:id", detail_mod, :show, detail_opts
+      live "#{path}/r/:resource/:id/edit", detail_mod, :edit, detail_opts
+      live "#{path}/r/:resource/:id/delete", detail_mod, :delete, detail_opts
 
-      live "#{path}/:section/:resource", index_mod, :index, index_opts
-      live "#{path}/:section/:resource/new", detail_mod, :new, detail_opts
-      live "#{path}/:section/:resource/:id", detail_mod, :show, detail_opts
-      live "#{path}/:section/:resource/:id/edit", detail_mod, :edit, detail_opts
-      live "#{path}/:section/:resource/:id/delete", detail_mod, :delete, detail_opts
+      live "#{path}/:section/r/:resource", index_mod, :index, index_opts
+      live "#{path}/:section/r/:resource/new", detail_mod, :new, detail_opts
+      live "#{path}/:section/r/:resource/:id", detail_mod, :show, detail_opts
+      live "#{path}/:section/r/:resource/:id/edit", detail_mod, :edit, detail_opts
+      live "#{path}/:section/r/:resource/:id/delete", detail_mod, :delete, detail_opts
     end
   end
 
