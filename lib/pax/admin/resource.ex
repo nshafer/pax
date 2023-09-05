@@ -3,14 +3,13 @@ defmodule Pax.Admin.Resource do
           name: atom(),
           path: String.t(),
           title: String.t(),
-          type: atom(),
           section: Pax.Admin.Section.t(),
           mod: module(),
           opts: Keyword.t()
         }
 
-  @enforce_keys [:name, :path, :title, :type, :mod, :opts]
-  defstruct [:name, :path, :title, :type, :section, :mod, :opts]
+  @enforce_keys [:name, :path, :title, :mod, :opts]
+  defstruct [:name, :path, :title, :section, :mod, :opts]
 
   @callback pax_adapter(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,

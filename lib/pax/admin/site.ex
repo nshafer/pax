@@ -4,9 +4,6 @@ defmodule Pax.Admin.Site do
   alias Pax.Admin.Section
   alias Pax.Admin.Resource
 
-  # TODO: create a Pax.Admin.Section struct to hold section info instead of plain map
-  # TODO: create a Pax.Admin.Resource struct to hold resource info instead of plain map
-
   @callback config(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
@@ -138,11 +135,10 @@ defmodule Pax.Admin.Site do
       end
     else
       Module.put_attribute(site_mod, :pax_resources, %Resource{
-        type: :resource,
-        section: current_section,
         name: name,
         path: to_string(name),
         title: title,
+        section: current_section,
         mod: resource_mod,
         opts: opts
       })
@@ -199,11 +195,10 @@ defmodule Pax.Admin.Site do
 
   defp parse_resource({name, %{resource: resource_mod} = resource}, current_section) when is_atom(name) do
     %Resource{
-      type: :resource,
-      section: current_section,
       name: name,
       path: to_string(name),
       title: Map.get_lazy(resource, :title, fn -> name |> to_string() |> String.capitalize() end),
+      section: current_section,
       mod: resource_mod,
       opts: Map.drop(resource, [:title, :resource]) |> Keyword.new()
     }
