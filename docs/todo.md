@@ -18,6 +18,9 @@
 - [ ] More index types: table, grid, blocks, blog? (ActiveAdmin)
 
 ## Detail
+- [ ] :edit
+- [ ] :new
+- [ ] :delete or DeleteLive module?
 - [ ] Inline plugin
 - [ ] Audit log plugin with revert?
 - [ ] Collab / presence plugin
