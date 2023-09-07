@@ -89,6 +89,7 @@ defmodule Pax.Admin.Site do
   defp merge_config(conf) when is_map(conf), do: Keyword.new(conf) |> merge_config()
   defp merge_config(arg), do: raise("invalid config: #{inspect(arg)}")
 
+  # TODO: move title to opts
   defmacro section(name, title, do: context) when is_atom(name) and is_binary(title) do
     quote do
       Pax.Admin.Site.__section__(__MODULE__, unquote(name), unquote(title))
@@ -116,6 +117,7 @@ defmodule Pax.Admin.Site do
     end
   end
 
+  # TODO: move title to opts
   defmacro resource(name, title, resource_mod, opts \\ []) when is_atom(name) and is_binary(title) do
     quote do
       Pax.Admin.Site.__resource__(__MODULE__, unquote(name), unquote(title), unquote(resource_mod), unquote(opts))

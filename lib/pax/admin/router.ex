@@ -18,6 +18,7 @@ defmodule Pax.Admin.Router do
 
       live "#{path}", dashboard_mod, :dashboard, dashboard_opts
 
+      # TODO: pass full_site_mod to live view via metadata
       live "#{path}/r/:resource", index_mod, :index, index_opts
       live "#{path}/r/:resource/new", detail_mod, :new, detail_opts
       live "#{path}/r/:resource/:id", detail_mod, :show, detail_opts

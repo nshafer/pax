@@ -2,9 +2,7 @@
 
 ## General
 - [ ] Plugins
-- [ ] Rename Index to List?
 - [ ] Make stacktraces better?
-- [ ] Generators?
 
 ## Index
 - [ ] Pagination plugin
@@ -27,7 +25,7 @@
 - [ ] Action Items plugin
 
 ## Fields
-- [ ] Allow specifying just `:fieldname` and default to Field.String maybe? Or callback to adapter to figure it out?
+- [x] Allow specifying just `:fieldname` and default to Field.String maybe? Or callback to adapter to figure it out?
 
 ## Admin
 - [x] `use Pax.Admin` macros to create base admin Index/Detail modules with all settings
@@ -39,7 +37,8 @@
 - [ ] Flashes
 - [ ] Dashboard with widgets
 - [ ] Create `resources MyAppWeb.MyAdmin do` macro, which gets prefixed before resources modules, so can do `resource :name, "Title", LabelResource` to save typing. Same as Phoenix router scopes.
-- [ ] Recents - save current params as recent view, allow pinning.
+- [ ] Bookmarks - save current params as custom link in nav bar.
+- [ ] Allow configuration of sites, resources, etc with macros instead of run-time callbacks.
 
 ## Static
 - [ ] Fix/figure out phx.digest. Do it or not? (Probably not...)
