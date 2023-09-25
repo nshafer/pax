@@ -40,8 +40,9 @@ defmodule Pax.Adapters.EctoSchema do
   def init(_callback_module, opts) do
     repo = Keyword.get(opts, :repo) || raise "repo is required"
     schema = Keyword.get(opts, :schema) || raise "schema is required"
+    id_field = Keyword.get(opts, :id_field, nil)
 
-    %{repo: repo, schema: schema}
+    %{repo: repo, schema: schema, id_field: id_field}
   end
 
   @impl Pax.Adapter
@@ -72,6 +73,17 @@ defmodule Pax.Adapters.EctoSchema do
     end
   end
 
+  @impl Pax.Adapter
+  def singular_name(_callback_module, %{schema: schema}) do
+    Pax.Util.Introspection.name_from_struct(schema)
+  end
+
+  @impl Pax.Adapter
+  def plural_name(_callback_module, %{schema: schema}) do
+    Pax.Util.Introspection.name_from_struct(schema)
+    |> Pax.Util.Inflection.pluralize()
+  end
+
   @doc """
   Returns all objects of the schema.
 
@@ -80,6 +92,11 @@ defmodule Pax.Adapters.EctoSchema do
   @impl Pax.Adapter
   def list_objects(_callback_module, %{repo: repo, schema: schema}, _params, _uri, _socket) do
     repo.all(schema)
+  end
+
+  @impl Pax.Adapter
+  def new_object(_callback_module, %{schema: schema}, _params, _uri, _socket) do
+    struct(schema)
   end
 
   @doc """
@@ -122,8 +139,8 @@ defmodule Pax.Adapters.EctoSchema do
 
   defp lookup(query, callback_module, schema, params, uri, socket) do
     cond do
-      function_exported?(callback_module, :lookup, 4) ->
-        callback_module.lookup(query, params, uri, socket)
+      function_exported?(callback_module, :pax_lookup, 4) ->
+        callback_module.pax_lookup(query, params, uri, socket)
 
       lookup = lookup_by_primary_key(query, schema, params) ->
         lookup
@@ -150,5 +167,62 @@ defmodule Pax.Adapters.EctoSchema do
     matched_fields = Enum.filter(fields, &Map.has_key?(params, to_string(&1)))
     filters = Enum.map(matched_fields, &{&1, Map.get(params, to_string(&1))})
     from(q in query, where: ^filters)
+  end
+
+  @impl Pax.Adapter
+  def object_id(callback_module, %{schema: schema, id_field: id_field}, object) do
+    cond do
+      function_exported?(callback_module, :pax_object_id, 1) ->
+        callback_module.pax_object_id(object)
+
+      id_field != nil ->
+        Map.get(object, id_field)
+
+      [primary_key] = schema.__schema__(:primary_key) ->
+        Map.get(object, primary_key)
+
+      primary_keys = schema.__schema__(:primary_key) ->
+        raise ArgumentError, """
+        Composite Primary Keys are not supported for automatic object_id generation.
+        Please implement a pax_object_id/1 callback in #{inspect(callback_module)}.
+        Got primary keys #{inspect(primary_keys)} for schema #{inspect(schema)}.
+        """
+    end
+  end
+
+  @impl Pax.Adapter
+  def object_name(_callback_module, %{schema: schema}, object) do
+    name = Pax.Util.Introspection.name_from_struct(schema)
+
+    case schema.__schema__(:primary_key) do
+      # If there is only one primary key, just append the value of it to the end of the name, e.g. "User 123"
+      [primary_key] ->
+        value = Map.get(object, primary_key)
+        "#{name} #{value}"
+
+      # If there are multiple primary keys, append the names and values of each to the name, e.g. "User id:123 org:456"
+      primary_keys ->
+        for primary_key <- primary_keys, reduce: name do
+          name ->
+            value = Map.get(object, primary_key)
+            "#{name} #{primary_key}:#{value}"
+        end
+    end
+  end
+
+  @impl Pax.Adapter
+  def cast(callback_module, %{schema: schema} = opts, nil, params, fields) do
+    # Cast with a default/empty schema struct, e.g. %User{}
+    cast(callback_module, opts, struct(schema), params, fields)
+  end
+
+  def cast(_callback_module, _opts, object, params, fields) do
+    field_names = Enum.map(fields, fn {field_name, _, _} -> field_name end)
+    Ecto.Changeset.cast(object, params, field_names)
+  end
+
+  @impl Pax.Adapter
+  def update_object(_callback_module, %{repo: repo}, _object, changeset) do
+    repo.update(changeset)
   end
 end
