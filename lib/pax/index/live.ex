@@ -1,6 +1,8 @@
 defmodule Pax.Index.Live do
   use Phoenix.Component
   import Phoenix.LiveView
+  import Pax.Util.Live
+
   @type field() :: Pax.Field.field()
 
   @callback pax_init(
@@ -9,6 +11,8 @@ defmodule Pax.Index.Live do
               socket :: Phoenix.LiveView.Socket.t()
             ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
 
+  # TODO: just pass socket, no need for params and session, since that info is passed in init. The init should assign
+  # things to the socket if it's needed for these later callbacks
   @callback pax_adapter(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
@@ -21,10 +25,15 @@ defmodule Pax.Index.Live do
               socket :: Phoenix.LiveView.Socket.t()
             ) :: list(field()) | nil
 
+  @callback pax_singular_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
+  @callback pax_plural_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
+  @callback pax_new_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
+
+  # TODO: rename this to pax_field_link
   @callback pax_link(object :: map()) :: String.t()
   @callback pax_link(object :: map(), opts :: keyword()) :: String.t()
 
-  @optional_callbacks pax_link: 1, pax_link: 2
+  @optional_callbacks pax_singular_name: 1, pax_plural_name: 1, pax_new_path: 1, pax_link: 1, pax_link: 2
 
   defmacro __using__(_opts) do
     quote do
@@ -68,32 +77,42 @@ defmodule Pax.Index.Live do
     # IO.puts("#{__MODULE__}.init(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
 
     adapter = init_adapter(module, params, session, socket)
+    fields = init_fields(module, adapter, params, session, socket)
     # plugins = init_plugins(module, params, sessions, socket)
     plugins = []
-    fields = init_fields(module, adapter, params, session, socket)
-
-    handle_params_wrapper = fn params, uri, socket ->
-      on_handle_params(module, adapter, plugins, fields, params, uri, socket)
-    end
 
     socket =
       socket
-      |> assign(:pax, %{adapter: adapter, plugins: plugins, fields: fields})
-      |> attach_hook(:pax_handle_params, :handle_params, handle_params_wrapper)
+      |> assign_pax(:module, module)
+      |> assign_pax(:adapter, adapter)
+      |> assign_pax(:plugins, plugins)
+      |> assign_pax(:fields, fields)
+      |> assign_pax(:singular_name, init_singular_name(module, adapter, socket))
+      |> assign_pax(:plural_name, init_plural_name(module, adapter, socket))
+      |> assign_pax(:new_path, init_new_path(module, socket))
+      |> attach_hook(:pax_handle_params, :handle_params, fn params, uri, socket ->
+        on_handle_params(module, adapter, plugins, fields, params, uri, socket)
+      end)
 
     {:cont, socket}
   end
 
-  def on_handle_params(_module, adapter, _plugins, _fields, params, uri, socket) do
+  def on_handle_params(module, adapter, _plugins, _fields, params, uri, socket) do
     # IO.puts("#{__MODULE__}.on_handle_params(#{inspect(module)}, #{inspect(params)}, #{inspect(uri)}")
 
     socket =
       socket
+      |> assign_pax(:uri, URI.parse(uri))
       |> assign(:objects, Pax.Adapter.list_objects(adapter, params, uri, socket))
 
-    {:cont, socket}
+    if function_exported?(module, :handle_params, 3) do
+      {:cont, socket}
+    else
+      {:halt, socket}
+    end
   end
 
+  # TODO: move to a shared module
   defp init_adapter(module, params, session, socket) do
     case module.pax_adapter(params, session, socket) do
       {adapter, callback_module, opts} -> Pax.Adapter.init(adapter, callback_module, opts)

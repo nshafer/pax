@@ -1,4 +1,5 @@
 defmodule Pax.Field.Datetime do
+  use Phoenix.Component
   @behaviour Pax.Field
 
   @impl Pax.Field
@@ -14,17 +15,30 @@ defmodule Pax.Field.Datetime do
   def render(_opts, nil), do: nil
 
   def render(%{format: format}, value) when not is_nil(format) do
-    Phoenix.HTML.Tag.content_tag(:span, Calendar.strftime(value, format), style: "white-space: nowrap;")
+    Calendar.strftime(value, format)
   end
 
   def render(%{date_format: date_format, time_format: time_format}, value) do
-    date = Calendar.strftime(value, date_format)
-    time = Calendar.strftime(value, time_format)
+    assigns = %{
+      date: Calendar.strftime(value, date_format),
+      time: Calendar.strftime(value, time_format)
+    }
 
-    [
-      Phoenix.HTML.Tag.content_tag(:span, date),
-      " ",
-      Phoenix.HTML.Tag.content_tag(:span, time)
-    ]
+    ~H"""
+    <span><%= @date %></span>
+    <span><%= @time %></span>
+    """
+  end
+
+  @impl Pax.Field
+  def input(_opts, field, form_field) do
+    assigns = %{
+      field: field,
+      form_field: form_field
+    }
+
+    ~H"""
+    <Pax.Field.Components.field_control field={@field} form_field={@form_field} type="datetime-local" />
+    """
   end
 end

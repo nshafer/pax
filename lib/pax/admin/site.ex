@@ -34,15 +34,32 @@ defmodule Pax.Admin.Site do
       def resource_index_path(section \\ nil, resource),
         do: Pax.Admin.Site.resource_index_path(__MODULE__, section, resource)
 
-      def resource_detail_path(section \\ nil, resource, object, field \\ nil),
-        do: Pax.Admin.Site.resource_detail_path(__MODULE__, section, resource, object, field)
+      def resource_show_path(section \\ nil, resource, object, field \\ nil),
+        do: Pax.Admin.Site.resource_show_path(__MODULE__, section, resource, object, field)
+
+      def resource_edit_path(section \\ nil, resource, object, field \\ nil),
+        do: Pax.Admin.Site.resource_edit_path(__MODULE__, section, resource, object, field)
 
       def resource_index_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource),
         do: Pax.Admin.Site.resource_index_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource)
 
-      def resource_detail_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil),
+      def resource_new_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource),
+        do: Pax.Admin.Site.resource_new_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource)
+
+      def resource_show_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil),
         do:
-          Pax.Admin.Site.resource_detail_url(
+          Pax.Admin.Site.resource_show_url(
+            __MODULE__,
+            conn_or_socket_or_endpoint_or_uri,
+            section,
+            resource,
+            object,
+            field
+          )
+
+      def resource_edit_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil),
+        do:
+          Pax.Admin.Site.resource_edit_url(
             __MODULE__,
             conn_or_socket_or_endpoint_or_uri,
             section,
@@ -293,6 +310,10 @@ defmodule Pax.Admin.Site do
           do: Pax.Admin.Index.Live.pax_fields(unquote(env.module), params, session, socket)
 
         def pax_link(object, opts \\ []), do: Pax.Admin.Index.Live.pax_link(unquote(env.module), object, opts)
+
+        defdelegate pax_singular_name(socket), to: Pax.Admin.Index.Live
+        defdelegate pax_plural_name(socket), to: Pax.Admin.Index.Live
+        defdelegate pax_new_path(socket), to: Pax.Admin.Index.Live
       end
 
       defmodule DetailLive do
@@ -310,8 +331,11 @@ defmodule Pax.Admin.Site do
         def pax_fieldsets(params, session, socket),
           do: Pax.Admin.Detail.Live.pax_fieldsets(unquote(env.module), params, session, socket)
 
-        def handle_params(params, uri, socket),
-          do: Pax.Admin.Detail.Live.handle_params(unquote(env.module), params, uri, socket)
+        defdelegate pax_index_path(socket), to: Pax.Admin.Detail.Live
+        defdelegate pax_new_path(socket), to: Pax.Admin.Index.Live
+        defdelegate pax_show_path(socket, object), to: Pax.Admin.Detail.Live
+        defdelegate pax_edit_path(socket, object), to: Pax.Admin.Detail.Live
+        defdelegate pax_object_name(socket, object), to: Pax.Admin.Detail.Live
       end
     end
   end
@@ -338,12 +362,23 @@ defmodule Pax.Admin.Site do
     end
   end
 
-  @doc """
-  Get the path to the detail page for a resource object.
-  """
-  def resource_detail_path(site_mod, section \\ nil, resource, object, field \\ nil)
+  def resource_new_path(site_mod, section \\ nil, resource) do
+    path = site_mod.__pax__(:path)
+    section_path = section_path(section)
+    resource_path = resource_path(resource)
 
-  def resource_detail_path(site_mod, section, resource, object, nil) when is_map(object) do
+    cond do
+      section_path -> "#{path}/#{section_path}/r/#{resource_path}/new"
+      true -> "#{path}/r/#{resource_path}/new"
+    end
+  end
+
+  @doc """
+  Get the path to the show page for a resource object.
+  """
+  def resource_show_path(site_mod, section \\ nil, resource, object, field \\ nil)
+
+  def resource_show_path(site_mod, section, resource, object, nil) when is_map(object) do
     path = site_mod.__pax__(:path)
     section_path = section_path(section)
     resource_path = resource_path(resource)
@@ -362,11 +397,11 @@ defmodule Pax.Admin.Site do
   end
 
   # Special case when the call gives a field but not a section
-  def resource_detail_path(site_mod, resource, object, field, nil) when is_map(object) do
-    resource_detail_path(site_mod, nil, resource, object, field)
+  def resource_show_path(site_mod, resource, object, field, nil) when is_map(object) do
+    resource_show_path(site_mod, nil, resource, object, field)
   end
 
-  def resource_detail_path(site_mod, section, resource, object, field) when is_map(object) do
+  def resource_show_path(site_mod, section, resource, object, field) when is_map(object) do
     path = site_mod.__pax__(:path)
     section_path = section_path(section)
     resource_path = resource_path(resource)
@@ -380,6 +415,52 @@ defmodule Pax.Admin.Site do
         cond do
           section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{id}"
           true -> "#{path}/r/#{resource_path}/#{id}"
+        end
+    end
+  end
+
+  @doc """
+  Get the path to the show page for a resource object.
+  """
+  def resource_edit_path(site_mod, section \\ nil, resource, object, field \\ nil)
+
+  def resource_edit_path(site_mod, section, resource, object, nil) when is_map(object) do
+    path = site_mod.__pax__(:path)
+    section_path = section_path(section)
+    resource_path = resource_path(resource)
+
+    case get_object_id(object) do
+      nil ->
+        Logger.warning("could not find unique id for object #{inspect(object)}")
+        nil
+
+      id ->
+        cond do
+          section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{id}/edit"
+          true -> "#{path}/r/#{resource_path}/#{id}/edit"
+        end
+    end
+  end
+
+  # Special case when the call gives a field but not a section
+  def resource_edit_path(site_mod, resource, object, field, nil) when is_map(object) do
+    resource_show_path(site_mod, nil, resource, object, field)
+  end
+
+  def resource_edit_path(site_mod, section, resource, object, field) when is_map(object) do
+    path = site_mod.__pax__(:path)
+    section_path = section_path(section)
+    resource_path = resource_path(resource)
+
+    case Map.get(object, field) do
+      nil ->
+        Logger.warning("could not get unique id field #{inspect(field)} for object #{inspect(object)}")
+        nil
+
+      id ->
+        cond do
+          section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{id}/edit"
+          true -> "#{path}/r/#{resource_path}/#{id}/edit"
         end
     end
   end
@@ -432,8 +513,22 @@ defmodule Pax.Admin.Site do
     Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
   end
 
-  def resource_detail_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil) do
-    path = resource_detail_path(site_mod, section, resource, object, field)
+  def resource_new_url(site_mod, conn_or_socket_or_endpoint_or_uri, section, resource) do
+    path = resource_new_path(site_mod, section, resource)
+    Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
+  end
+
+  def resource_show_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil) do
+    path = resource_show_path(site_mod, section, resource, object, field)
+
+    case path do
+      nil -> nil
+      path -> Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
+    end
+  end
+
+  def resource_edit_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil) do
+    path = resource_edit_path(site_mod, section, resource, object, field)
 
     case path do
       nil -> nil

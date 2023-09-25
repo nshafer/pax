@@ -1,3 +1,36 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Fix checkbox alignment instead of Tailwind's naive `vertical-align: middle` */
+input[type="checkbox"] {
+    vertical-align: top;
+    height: 1em;
+    width: 1em;
+    margin-top: 0.25em;
+}
+
+/* TODO: rewrite components to use tailwind classes directly. Probably once the components stabilize. */
+@layer components {
+    .pax {
+        @apply text-sm;
+    }
+
+    .pax .pax-field-control-input {
+        @apply py-[0.5em] px-[0.5em] leading-normal border border-zinc-300 bg-inherit text-black dark:bg-inherit dark:text-white dark:border-zinc-700;
+        font-size: inherit;
+    }
+
+    .pax .pax-field-control-input.has-errors:not(.phx-no-feedback) {
+        @apply bg-red-200 dark:bg-red-900 ring-red-400 dark:ring-red-700;
+    }
+
+    /* Tailwind resets buttons and submits to be unstyled, so we have to apply the same style as pax.css */
+    .pax .pax-button {
+        @apply py-1 px-2 bg-black text-white dark:bg-white dark:text-black;
+    }
+
+    .pax .pax-button-secondary {
+        @apply bg-transparent text-black dark:text-white;
+    }
+}

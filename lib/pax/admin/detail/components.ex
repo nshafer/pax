@@ -1,49 +1,92 @@
 defmodule Pax.Admin.Detail.Components do
   use Phoenix.Component
+  import Pax.Components
+  import Pax.Field.Components
+  import Pax.Detail.Components, except: [show: 1, edit: 1]
 
   attr :pax, :map, required: true
-  attr :resource, :map, required: true
-  attr(:object, :map, required: true)
-  attr(:class, :string, default: nil)
+  attr :object, :map, required: true
+  attr :class, :string, default: nil
 
-  def detail(assigns) do
+  def show(assigns) do
     ~H"""
-    <div class={["pax-detail", @class]}>
-      <%= for {name, fields} <- @pax.fieldsets do %>
-        <Pax.Admin.Detail.Components.fieldset pax={@pax} resource={@resource} name={name} fields={fields} object={@object} />
+    <div class={["pax pax-detail pax-detail-show", @class]}>
+      <.pax_header pax={@pax}>
+        <:title>
+          <%= @pax.object_name %>
+        </:title>
+
+        <:action :if={@pax.edit_path}>
+          <.pax_button patch={@pax.edit_path}>Edit</.pax_button>
+        </:action>
+      </.pax_header>
+
+      <%= for fieldset <- @pax.fieldsets do %>
+        <.fieldset :let={fieldgroup} fieldset={fieldset}>
+          <.fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
+            <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
+              <.field_label field={field} />
+              <.field_text field={field} object={@object} />
+            </div>
+          </.fieldgroup>
+        </.fieldset>
       <% end %>
+
+      <div class="pax-button-group">
+        <.pax_button :if={@pax.edit_path} patch={@pax.edit_path}>Edit</.pax_button>
+        <.pax_button :if={@pax.index_path} navigate={@pax.index_path} secondary={true}>
+          Back
+        </.pax_button>
+      </div>
     </div>
     """
   end
 
   attr :pax, :map, required: true
-  attr :resource, :map, required: true
-  attr :name, :string, required: true
-  attr :fields, :list, required: true
   attr :object, :map, required: true
+  attr :form, :any, required: true
+  attr :class, :string, default: nil
 
-  def fieldset(assigns) do
+  def edit(assigns) do
     ~H"""
-    <div class="pax-detail-fieldset">
-      <div :if={@name != :default} class="pax-detail-fieldset-heading">
-        <%= @name |> to_string() |> String.capitalize() %>
-      </div>
-      <div class="pax-detail-fieldset-body">
-        <%= for row <- @fields do %>
-          <div class={["pax-detail-fieldset-row", "pax-field-count-#{Enum.count(row)}"]}>
-            <%= for {field, i} <- Enum.with_index(row) do %>
+    <div class={["pax pax-detail pax-detail-edit", @class]}>
+      <.form :let={f} for={@form} as={:detail} phx-change="pax_validate" phx-submit="pax_save">
+        <.pax_header pax={@pax}>
+          <:title>
+            Edit <%= @pax.object_name %>
+          </:title>
+
+          <:action :if={@pax.show_path}>
+            <.pax_button patch={@pax.show_path} secondary={true}>Cancel</.pax_button>
+          </:action>
+
+          <:action>
+            <.pax_button type="submit" phx-disable-with="Saving...">Save</.pax_button>
+          </:action>
+        </.pax_header>
+
+        <%= for fieldset <- @pax.fieldsets do %>
+          <.fieldset :let={fieldgroup} fieldset={fieldset}>
+            <.fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
               <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
-                <div class="pax-detail-field-title">
-                  <Pax.Field.Components.title field={field} />
-                </div>
-                <div class="pax-detail-field-text">
-                  <Pax.Field.Components.display_as_text field={field} object={@object} />
-                </div>
+                <.field_label field={field} form={f} />
+                <.field_input field={field} form={f} object={@object} />
               </div>
-            <% end %>
-          </div>
+            </.fieldgroup>
+          </.fieldset>
         <% end %>
-      </div>
+        <div class="pax-button-group">
+          <.pax_button type="submit" phx-disable-with="Saving..." name="detail[save]" value="save">
+            Save
+          </.pax_button>
+          <.pax_button :if={@pax.show_path} patch={@pax.show_path} secondary={true}>
+            Cancel
+          </.pax_button>
+          <.pax_button :if={@pax.index_path} navigate={@pax.index_path} secondary={true}>
+            Back
+          </.pax_button>
+        </div>
+      </.form>
     </div>
     """
   end

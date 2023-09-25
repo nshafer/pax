@@ -7,28 +7,83 @@
 /* Pax Variables */
 /*****************/
 
+/* TODO: remove stupid single-use variables, and instead generalize as much as possible. For example, use a single
+         `--pax-spacing: 1px` to base all margins, padding, widths, etc on. */
+
+
 .pax {
-    /* 14px when body is 16px */
-    --pax-table-font-size: .875em;
-    --pax-fieldset-font-size: .875em;
-
+    /* Generic colors used in a few places */
     --pax-header-bg: rgba(0, 0, 0, 0.1);
-    --pax-border-color: rgba(0, 0, 0, 0.1);
-    --pax-odd-row-bg: rgba(0, 0, 0, 0.05);
+    --pax-border-color: rgba(0, 0, 0, 0.2);
+    
+    --pax-button-bg: #000;
+    --pax-button-bg-disabled: #333;
+    --pax-button-color: #fff;
+    --pax-button-color-disabled: #ccc;
+    
+    --pax-button-secondary-bg: none;
+    --pax-button-secondary-bg-disabled: none;
+    --pax-button-secondary-color: #000;
+    --pax-button-secondary-color-disabled: #888;
+    
+    --pax-even-row-bg: rgba(0, 0, 0, 0.05);
+    
+    --pax-link-color: inherit;
 
-    --pax-table-header-padding: 1em .5em;
-    --pax-table-cell-padding: .2em .5em;
+    --pax-spacing: 1em;
 
-    --pax-fieldset-header-padding: 0.75em 1em;
-    --pax-fieldset-gap: 0.5em 1em;
-    --pax-fieldset-title-width: 10em;
+    /* Index settings */
+    --pax-index-table-header-padding: 1em .5em;
+    --pax-index-table-cell-padding: .2em .5em;
+
+    /* Detail settings */
+    --pax-detail-fieldset-header-padding: 0.75em 1em;
+    --pax-detail-fieldset-gap: 0.5em 1em;
+    --pax-detail-field-label-width: 12em;
+    --pax-detail-field-label-padding: 0;
+    --pax-detail-field-input-width: 100%;
+    --pax-detail-field-input-padding: .5em;
+    --pax-detail-field-input-line-height: 1.5;
+    --pax-detail-field-text-padding: 0;
+    --pax-detail-field-text-border: 1px solid transparent;
+    --pax-detail-field-checkbox-padding: 0;
+    --pax-detail-field-checkbox-border: 1px solid transparent;
+
+    /* Field settings */
+    --pax-field-input-width: 100%;
+    --pax-field-error-color: rgb(170, 19, 19);
+    --pax-field-error-padding: .5em 0;
 }
 
+/* Dark mode */
 @media (prefers-color-scheme: dark) {
     .pax {
         --pax-header-bg: rgba(255, 255, 255, 0.1);
-        --pax-border-color: rgba(255, 255, 255, 0.1);
+        --pax-border-color: rgba(255, 255, 255, 0.2);
+
+        --pax-button-bg: #fff;
+        --pax-button-bg-disabled: #aaa;
+        --pax-button-color: #000;
+        --pax-button-color-disabled: #333;
+
+        --pax-button-secondary-bg: none;
+        --pax-button-secondary-bg-disabled: none;
+        --pax-button-secondary-color: #fff;
+        --pax-button-secondary-color-disabled: #aaa;
+        
         --pax-odd-row-bg: rgba(255, 255, 255, 0.05);
+
+        --pax-field-error-color: rgb(255, 117, 117);
+    }
+}
+
+/* Larger viewports than typical mobile */
+@media (min-width: 640px) {
+    .pax {
+        --pax-detail-field-label-padding: .5em 0;
+        --pax-detail-field-input-padding: .5em;
+        --pax-detail-field-text-padding: .5em;
+        --pax-detail-field-checkbox-padding: .5em 0;
     }
 }
 
@@ -43,9 +98,113 @@
     box-sizing: border-box;
 }
 
-/*************/
-/* Pax Index */
-/*************/
+/*******************/
+/* Misc Components */
+/*******************/
+
+.pax-link {
+    color: var(--pax-link-color);
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.pax-button-group {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.pax-button {
+    display: inline-block;
+    padding: calc(var(--pax-spacing) * .25) calc(var(--pax-spacing) * .5);
+    border: 1px solid var(--pax-border-color);
+    border-radius: 2px;
+    background: var(--pax-button-bg);
+    color: var(--pax-button-color);
+    text-decoration: none;
+    font-weight: bold;
+    line-height: 1.5;
+}
+
+.pax-button[disabled] {
+    background: var(--pax-button-bg-disabled);
+    color: var(--pax-button-color-disabled);
+    /* Prevent links masquerading as buttons from being clickable */
+    pointer-events: none;
+}
+
+.pax-button-secondary {
+    background: var(--pax-button-secondary-bg);
+    color: var(--pax-button-secondary-color);
+}
+
+.pax-button-secondary[disabled] {
+    background: var(--pax-button-secondary-bg-disabled);
+    color: var(--pax-button-secondary-color-disabled);
+}
+
+/* Increase the size of the button */
+.pax-button-large {
+    font-size: 1.5em;
+}
+
+/* Increase the size of the contents inside the button, but use smaller padding to maintain the overall size */
+.pax-button-icon {
+    display: block;
+    font-size: 1.5em;
+    line-height: 1;
+    /* Get the same padding by multiplying the button padding by the inverse of 1.5 */
+    padding: calc(var(--pax-spacing) * (1/1.5) * .25) calc(var(--pax-spacing) * (1/1.5) * .5);
+}
+
+/**************/
+/* Pax Header */
+/**************/
+
+.pax-header {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1em;
+    margin-bottom: 1em;
+    background: var(--pax-header-bg);
+    padding: 1em;
+}
+
+.pax-header-leading, .pax-header-trailing {
+    flex: 0 1 min-content;
+}
+
+.pax-header-title {
+    flex: 1 1 0%;
+    font-size: 1.75em;
+    margin-right: auto;
+    line-height: 1.2;
+}
+
+.pax-header-marquee {
+    flex: 1 1 0%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.pax-header-actions {
+    flex: 1 1 0%;
+    margin-left: auto;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    gap: 0.5em;
+}
+
+/* .pax-header-tool {} */
+
+/************************/
+/* Pax Index Components */
+/************************/
 
 /* .pax-index {} */
 
@@ -57,47 +216,47 @@
     border-collapse: collapse;
     table-layout: auto;
     width: 100%;
-    font-size: var(--pax-table-font-size);
 }
 
 /* .pax-index-table-head {} */
 
-.pax-index-table-head::after {
+/* .pax-index-table-head::after {
     content: '';
     display: table-row;
     height: .5em;
-}
+} */
 
 /* .pax-index-table-head-row {} */
 
 .pax-index-table-header {
     font-weight: bold;
-    padding: var(--pax-table-header-padding);
+    padding: var(--pax-index-table-header-padding);
     text-align: left;
     vertical-align: bottom;
-    background: var(--pax-header-bg);
 }
 
 /* .pax-index-table-row {} */
 
-.pax-index-table-row:nth-child(2n) {
+.pax-index-table-row:nth-child(even) {
+    background: var(--pax-even-row-bg);
+}
+
+.pax-index-table-row:nth-child(odd) {
     background: var(--pax-odd-row-bg);
 }
 
 .pax-index-table-datacell {
-    padding: var(--pax-table-cell-padding);
+    padding: var(--pax-index-table-cell-padding);
     vertical-align: top;
 }
 
-/**************/
-/* Pax Detail */
-/**************/
+/*************************/
+/* Pax Detail Components */
+/*************************/
 
 /* .pax-detail {} */
 
-.pax-detail-fieldset {
-    font-size: var(--pax-fieldset-font-size);
-}
+/* .pax-detail-fieldset {} */
 
 .pax-detail-fieldset:not(:last-child) {
     margin-bottom: 2em;
@@ -105,28 +264,27 @@
 
 .pax-detail-fieldset-heading {
     font-weight: bold;
-    padding: var(--pax-fieldset-header-padding);
+    padding: var(--pax-detail-fieldset-header-padding);
     margin-bottom: 1em;
     background: var(--pax-header-bg);
 }
 
-.pax-detail-fieldset-row {
+.pax-detail-fieldgroup {
     display: flex;
     flex-flow: column nowrap;
 }
 
 @media (min-width: 640px) {
-    .pax-detail-fieldset-row {
+    .pax-detail-fieldgroup {
         flex-flow: row wrap;
-        gap: var(--pax-fieldset-gap);
+        gap: var(--pax-detail-fieldset-gap);
         padding: 0.5em 0;
     }
 
-    .pax-detail-fieldset-row:not(:last-child) {
+    .pax-detail-fieldgroup:not(:last-child) {
         border-bottom: 1px solid var(--pax-border-color);
     }
 }
-
 
 .pax-detail-field {
     flex: 1 0 0%;
@@ -141,23 +299,88 @@
     }
 }
 
-.pax-detail-field-title {
+.pax-detail-field {
+    margin-bottom: 1em;
+}
+
+@media (min-width: 640px) {
+    .pax-detail-field {
+        margin-bottom: 0;
+    }
+}
+
+.pax-detail .pax-field-label {
+    display: block;
+    width: var(--pax-detail-field-label-width);
+    padding: var(--pax-detail-field-label-padding);
+}
+
+.pax-detail .pax-field-text {
+    /* This makes the text field have the same properties as an input field, so switching is seamless */
+    display: block;
+    padding: var(--pax-detail-field-text-padding);
+    line-height: var(--pax-detail-field-input-line-height);
+    border: var(--pax-detail-field-text-border);
+}
+
+.pax-detail .pax-field-input {
+    flex: 1;
+}
+
+.pax-detail .pax-field-control-input {
+    display: block;
+    padding: var(--pax-detail-field-input-padding);
+    width: var(--pax-detail-field-input-width);
+    border: 1px solid var(--pax-border-color);
+}
+
+.pax-detail .pax-field-control-checkbox-label {
+    display: block;
+    padding: var(--pax-detail-field-checkbox-padding);
+    line-height: var(--pax-detail-field-input-line-height);
+    border: var(--pax-detail-field-checkbox-border);
+}
+
+/************************/
+/* Pax Field Components */
+/************************/
+
+.pax-field-label {
     font-weight: bold;
 }
 
-@media (min-width: 640px) {
-    .pax-detail-field-title {
-        font-weight: bold;
-        width: var(--pax-fieldset-title-width);
-    }
+.pax-field-control-input {
+    width: var(--pax-field-input-width);
 }
 
-.pax-detail-field-text {
-    margin-bottom: 0.5em;
+.pax-field-control-checkbox {
+    vertical-align: top;
+    height: 1em;
+    width: 1em;
+    margin-top: 0.25em;
 }
 
-@media (min-width: 640px) {
-    .pax-detail-field-text {
-        margin-bottom: 0;
-    }
+.pax-field-control-checkbox~.pax-field-control-checkbox-true {
+    display: none;
+}
+
+.pax-field-control-checkbox~.pax-field-control-checkbox-false {
+    display: inline;
+}
+
+.pax-field-control-checkbox:checked~.pax-field-control-checkbox-true {
+    display: inline;
+}
+
+.pax-field-control-checkbox:checked~.pax-field-control-checkbox-false {
+    display: none;
+}
+
+.pax-field-error {
+    color: var(--pax-field-error-color);
+    padding: var(--pax-field-error-padding);
+}
+
+.phx-no-feedback .pax-field-error {
+    display: none;
 }

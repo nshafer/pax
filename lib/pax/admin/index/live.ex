@@ -15,7 +15,6 @@ defmodule Pax.Admin.Index.Live do
 
   def render_index(assigns) do
     ~H"""
-    <h1 class="text-2xl mb-3 flex justify-between"><%= @resource.title %> <small>Pax.Admin.Index.Live</small></h1>
     <Pax.Admin.Index.Components.index pax={@pax} resource={@resource} objects={@objects} />
     """
   end
@@ -70,6 +69,23 @@ defmodule Pax.Admin.Index.Live do
     end
   end
 
+  def pax_singular_name(socket) do
+    socket.assigns.resource.title
+  end
+
+  def pax_plural_name(socket) do
+    socket.assigns.resource.title
+  end
+
+  def pax_new_path(socket) do
+    site_mod = socket.assigns.pax_site_mod
+    resource = socket.assigns.resource
+
+    Pax.Admin.Site.resource_new_path(site_mod, resource.section, resource)
+  end
+
+  # TODO: remove the ability to set index_link callback, and instead just configure name of field to use in links
+  # both here and in the detail view.
   def pax_link(site_mod, object, opts \\ []) do
     resource = Keyword.get(opts, :resource)
 
@@ -84,8 +100,8 @@ defmodule Pax.Admin.Index.Live do
 
   defp index_link(site_mod, object, resource) do
     case resource.section do
-      nil -> Pax.Admin.Site.resource_detail_path(site_mod, resource.name, object)
-      section -> Pax.Admin.Site.resource_detail_path(site_mod, section.name, resource.name, object)
+      nil -> Pax.Admin.Site.resource_show_path(site_mod, resource.name, object)
+      section -> Pax.Admin.Site.resource_show_path(site_mod, section.name, resource.name, object)
     end
   end
 end

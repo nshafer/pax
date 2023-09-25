@@ -1,4 +1,5 @@
 defmodule Pax.Field.Date do
+  use Phoenix.Component
   @behaviour Pax.Field
 
   @impl Pax.Field
@@ -13,5 +14,17 @@ defmodule Pax.Field.Date do
 
   def render(%{format: format}, value) do
     Calendar.strftime(value, format)
+  end
+
+  @impl Pax.Field
+  def input(_opts, field, form_field) do
+    assigns = %{
+      field: field,
+      form_field: form_field
+    }
+
+    ~H"""
+    <Pax.Field.Components.field_control field={@field} form_field={@form_field} type="date" />
+    """
   end
 end

@@ -1,4 +1,5 @@
 defmodule Pax.Field.Integer do
+  use Phoenix.Component
   @behaviour Pax.Field
 
   @impl Pax.Field
@@ -13,5 +14,23 @@ defmodule Pax.Field.Integer do
 
   def render(_opts, value) do
     Integer.to_string(value)
+  end
+
+  @impl Pax.Field
+  def input(_opts, field, form_field) do
+    assigns = %{
+      field: field,
+      form_field: form_field
+    }
+
+    ~H"""
+    <Pax.Field.Components.field_control
+      field={@field}
+      form_field={@form_field}
+      type="text"
+      inputmode="numeric"
+      pattern="[0-9]*"
+    />
+    """
   end
 end

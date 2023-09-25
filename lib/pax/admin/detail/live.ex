@@ -2,6 +2,7 @@ defmodule Pax.Admin.Detail.Live do
   # import Phoenix.LiveView
   use Phoenix.Component
   require Logger
+  import Pax.Admin.Detail.Components
 
   def render(site_mod, assigns) do
     %{mod: resource_mod} = assigns.resource
@@ -15,8 +16,8 @@ defmodule Pax.Admin.Detail.Live do
 
   def render_detail(assigns) do
     ~H"""
-    <h1 class="text-2xl mb-3 flex justify-between"><%= @object_title %> <small>Pax.Admin.Detail.Live</small></h1>
-    <Pax.Admin.Detail.Components.detail pax={@pax} resource={@resource} object={@object} />
+    <.show :if={@live_action == :show} pax={@pax} object={@object} />
+    <.edit :if={@live_action in [:edit, :new]} pax={@pax} object={@object} form={@form} />
     """
   end
 
@@ -70,47 +71,43 @@ defmodule Pax.Admin.Detail.Live do
     end
   end
 
-  def handle_params(_site_mod, params, _uri, socket) do
-    socket =
-      socket
-      |> assign_object_title(params)
-
-    {:noreply, socket}
-  end
-
-  def assign_object_title(socket, params) do
+  def pax_object_name(socket, object) do
     %{mod: resource_mod} = socket.assigns.resource
-    object_title = get_object_title(resource_mod, socket.assigns.object, params)
+    %{adapter: adapter} = socket.assigns.pax
 
-    socket
-    |> assign(page_title: object_title)
-    |> assign(object_title: object_title)
-  end
-
-  def get_object_title(resource_mod, object, params) do
-    cond do
-      function_exported?(resource_mod, :detail_title, 1) -> resource_mod.detail_title(object)
-      true -> detail_title(object, params)
+    if function_exported?(resource_mod, :object_name, 2) do
+      resource_mod.object_name(socket, object)
+    else
+      Pax.Adapter.object_name(adapter, object)
     end
   end
 
-  # Treat object as a struct
-  defp detail_title(%{__struct__: struct_mod}, params) do
-    struct_name =
-      struct_mod
-      |> Module.split()
-      |> List.last()
-      |> String.replace("_", " ")
-      |> String.capitalize()
+  def pax_index_path(socket) do
+    site_mod = socket.assigns.pax_site_mod
+    resource = socket.assigns.resource
 
-    id = Map.get(params, "id")
-
-    "#{struct_name} #{id}"
+    Pax.Admin.Site.resource_index_path(site_mod, resource.section, resource)
   end
 
-  # Everything else, just call it an Object
-  defp detail_title(_object, params) do
-    id = Map.get(params, "id")
-    "Object #{id}"
+  def pax_new_path(socket) do
+    site_mod = socket.assigns.pax_site_mod
+    resource = socket.assigns.resource
+
+    Pax.Admin.Site.resource_new_path(site_mod, resource.section, resource)
+  end
+
+  def pax_show_path(socket, object) do
+    site_mod = socket.assigns.pax_site_mod
+    resource = socket.assigns.resource
+
+    Pax.Admin.Site.resource_show_path(site_mod, resource.section, resource, object)
+  end
+
+  def pax_edit_path(socket, object) do
+    site_mod = socket.assigns.pax_site_mod
+    resource = socket.assigns.resource
+
+    # TODO: make this work with custom fields? like :uuid
+    Pax.Admin.Site.resource_edit_path(site_mod, resource.section, resource, object)
   end
 end
