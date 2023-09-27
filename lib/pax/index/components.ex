@@ -20,28 +20,34 @@ defmodule Pax.Index.Components do
         </:action>
       </.pax_header>
 
-      <.table pax={@pax} objects={@objects} />
+      <.table fields={@pax.fields} objects={@objects}>
+        <:header :let={field}>
+          <.field_label field={field} />
+        </:header>
+        <:cell :let={{field, object}}>
+          <.field_link_or_text field={field} object={object} />
+        </:cell>
+      </.table>
     </div>
     """
   end
 
-  attr :pax, :map, required: true
+  attr :fields, :list, required: true
   attr :objects, :list, required: true
   attr :class, :string, default: nil
 
-  # TODO: refactor this to not take pax, and instead take fields and use slots for the headers and cells
+  slot :header, required: true
+  slot :cell, required: true
+
   def table(assigns) do
     ~H"""
     <div class="pax-table-wrapper">
-      <table class={[
-        "pax-index-table",
-        @class
-      ]}>
+      <table class={["pax-index-table", @class]}>
         <thead class="pax-index-table-head">
           <tr class="pax-index-table-head-row">
-            <%= for field <- @pax.fields do %>
+            <%= for field <- @fields do %>
               <th class="pax-index-table-header">
-                <.field_label field={field} />
+                <%= render_slot(@header, field) %>
               </th>
             <% end %>
           </tr>
@@ -49,9 +55,9 @@ defmodule Pax.Index.Components do
         <tbody>
           <%= for object <- @objects do %>
             <tr class="pax-index-table-row">
-              <%= for field <- @pax.fields do %>
+              <%= for field <- @fields do %>
                 <td class="pax-index-table-datacell">
-                  <.field_link_or_text field={field} object={object} />
+                  <%= render_slot(@cell, {field, object}) %>
                 </td>
               <% end %>
             </tr>

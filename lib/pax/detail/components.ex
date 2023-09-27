@@ -21,14 +21,14 @@ defmodule Pax.Detail.Components do
       </.pax_header>
 
       <%= for fieldset <- @pax.fieldsets do %>
-        <Pax.Detail.Components.fieldset :let={fieldgroup} fieldset={fieldset}>
-          <Pax.Detail.Components.fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
+        <.fieldset :let={fieldgroup} fieldset={fieldset}>
+          <.fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
             <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
-              <Pax.Field.Components.field_label field={field} />
-              <Pax.Field.Components.field_text field={field} object={@object} />
+              <.field_label field={field} />
+              <.field_text field={field} object={@object} />
             </div>
-          </Pax.Detail.Components.fieldgroup>
-        </Pax.Detail.Components.fieldset>
+          </.fieldgroup>
+        </.fieldset>
       <% end %>
 
       <div class="pax-button-group">
