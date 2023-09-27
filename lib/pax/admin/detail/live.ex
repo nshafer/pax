@@ -22,35 +22,37 @@ defmodule Pax.Admin.Detail.Live do
   end
 
   def pax_init(site_mod, params, session, socket) do
+    resource = get_resource(socket, site_mod, params, session)
+
     socket =
       socket
       # TODO: make this a admin_site map like dashboard
       |> assign(pax_site_mod: site_mod)
-      |> assign_resource_info(site_mod, params, session)
+      |> assign(:page_title, resource.title)
+      |> assign(:resource, resource)
 
-    {:cont, socket}
+    if function_exported?(resource.mod, :pax_init, 3) do
+      resource.mod.pax_init(params, session, socket)
+    else
+      {:cont, socket}
+    end
   end
 
-  defp assign_resource_info(socket, site_mod, params, session) do
+  defp get_resource(socket, site_mod, params, session) do
     section = Map.get(params, "section")
     resource = Map.get(params, "resource")
 
     case Pax.Admin.Site.match_resource(site_mod, params, session, socket, section, resource) do
-      nil ->
-        raise Pax.Admin.ResourceNotFoundError.exception(section: section, resource: resource)
-
-      %{} = resource ->
-        socket
-        |> assign(:page_title, resource.title)
-        |> assign(:resource, resource)
+      nil -> raise Pax.Admin.ResourceNotFoundError.exception(section: section, resource: resource)
+      %{} = resource -> resource
     end
   end
 
-  def pax_adapter(_site_mod, params, session, socket) do
+  def pax_adapter(_site_mod, socket) do
     %{mod: resource_mod} = socket.assigns.resource
 
     # Set the resource_mod as the callback_module for the adapter if none were specified
-    case resource_mod.pax_adapter(params, session, socket) do
+    case resource_mod.pax_adapter(socket) do
       {adapter, callback_module, adapter_opts} -> {adapter, callback_module, adapter_opts}
       {adapter, adapter_opts} -> {adapter, resource_mod, adapter_opts}
       adapter when is_atom(adapter) -> {adapter, resource_mod, []}

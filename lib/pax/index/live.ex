@@ -11,14 +11,11 @@ defmodule Pax.Index.Live do
               socket :: Phoenix.LiveView.Socket.t()
             ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
 
+  @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
+              module() | {module(), keyword()} | {module(), module(), keyword()}
+
   # TODO: just pass socket, no need for params and session, since that info is passed in init. The init should assign
   # things to the socket if it's needed for these later callbacks
-  @callback pax_adapter(
-              params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
-              session :: map(),
-              socket :: Phoenix.LiveView.Socket.t()
-            ) :: module() | {module(), keyword()} | {module(), module(), keyword()}
-
   @callback pax_fields(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
@@ -47,12 +44,12 @@ defmodule Pax.Index.Live do
 
       def pax_init(_params, _session, socket), do: {:cont, socket}
 
-      def pax_adapter(_params, _session, _socket) do
+      def pax_adapter(_socket) do
         raise """
-        No pax_adapter/3 callback found for #{__MODULE__}.
+        No pax_adapter/1 callback found for #{__MODULE__}.
         Please configure an adapter by defining a pax_adapter function, for example:
 
-            def pax_adapter(_params, _session, _socket),
+            def pax_adapter(_socket),
               do: {Pax.Adapters.EctoSchema, repo: MyAppWeb.Repo, schema: MyApp.MyContext.MySchema}
 
         """
@@ -60,7 +57,7 @@ defmodule Pax.Index.Live do
 
       def pax_fields(_params, _session, _socket), do: nil
 
-      defoverridable pax_init: 3, pax_adapter: 3, pax_fields: 3
+      defoverridable pax_init: 3, pax_adapter: 1, pax_fields: 3
     end
   end
 
@@ -76,7 +73,7 @@ defmodule Pax.Index.Live do
   defp init(module, params, session, socket) do
     # IO.puts("#{__MODULE__}.init(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
 
-    adapter = init_adapter(module, params, session, socket)
+    adapter = init_adapter(module, socket)
     fields = init_fields(module, adapter, params, session, socket)
     # plugins = init_plugins(module, params, sessions, socket)
     plugins = []
@@ -113,12 +110,12 @@ defmodule Pax.Index.Live do
   end
 
   # TODO: move to a shared module
-  defp init_adapter(module, params, session, socket) do
-    case module.pax_adapter(params, session, socket) do
+  defp init_adapter(module, socket) do
+    case module.pax_adapter(socket) do
       {adapter, callback_module, opts} -> Pax.Adapter.init(adapter, callback_module, opts)
       {adapter, opts} -> Pax.Adapter.init(adapter, module, opts)
       adapter when is_atom(adapter) -> Pax.Adapter.init(adapter, module, [])
-      _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.pax_adapter/3"
+      _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.pax_adapter/1"
     end
   end
 

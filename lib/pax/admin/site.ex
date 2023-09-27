@@ -303,8 +303,8 @@ defmodule Pax.Admin.Site do
         def pax_init(params, session, socket),
           do: Pax.Admin.Index.Live.pax_init(unquote(env.module), params, session, socket)
 
-        def pax_adapter(params, session, socket),
-          do: Pax.Admin.Index.Live.pax_adapter(unquote(env.module), params, session, socket)
+        def pax_adapter(socket),
+          do: Pax.Admin.Index.Live.pax_adapter(unquote(env.module), socket)
 
         def pax_fields(params, session, socket),
           do: Pax.Admin.Index.Live.pax_fields(unquote(env.module), params, session, socket)
@@ -325,8 +325,8 @@ defmodule Pax.Admin.Site do
         def pax_init(params, session, socket),
           do: Pax.Admin.Detail.Live.pax_init(unquote(env.module), params, session, socket)
 
-        def pax_adapter(params, session, socket),
-          do: Pax.Admin.Detail.Live.pax_adapter(unquote(env.module), params, session, socket)
+        def pax_adapter(socket),
+          do: Pax.Admin.Detail.Live.pax_adapter(unquote(env.module), socket)
 
         def pax_fieldsets(params, session, socket),
           do: Pax.Admin.Detail.Live.pax_fieldsets(unquote(env.module), params, session, socket)

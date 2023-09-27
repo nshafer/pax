@@ -12,11 +12,14 @@ defmodule Pax.Admin.Resource do
   @enforce_keys [:name, :path, :title, :mod, :opts]
   defstruct [:name, :path, :title, :section, :mod, :opts]
 
-  @callback pax_adapter(
+  @callback pax_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: {module(), keyword()}
+            ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
+
+  @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
+              module() | {module(), keyword()} | {module(), module(), keyword()}
 
   @callback pax_index_fields(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
@@ -42,7 +45,8 @@ defmodule Pax.Admin.Resource do
   @callback detail_title(object :: map()) :: String.t()
   @callback object_name(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
 
-  @optional_callbacks pax_index_fields: 3,
+  @optional_callbacks pax_init: 3,
+                      pax_index_fields: 3,
                       pax_detail_fieldsets: 3,
                       index_link: 1,
                       index_link: 2,
