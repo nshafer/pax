@@ -57,11 +57,11 @@ defmodule Pax.Admin.Index.Live do
     end
   end
 
-  def pax_fields(_site_mod, params, session, socket) do
+  def pax_fields(socket) do
     %{mod: resource_mod} = socket.assigns.resource
 
-    if function_exported?(resource_mod, :pax_index_fields, 3) do
-      case resource_mod.pax_index_fields(params, session, socket) do
+    if function_exported?(resource_mod, :pax_index_fields, 1) do
+      case resource_mod.pax_index_fields(socket) do
         fields when is_list(fields) -> fields |> Pax.Field.Util.maybe_set_default_link_field()
         nil -> nil
         _ -> raise ArgumentError, "Invalid fields returned from #{inspect(resource_mod)}.pax_index_fields/3"

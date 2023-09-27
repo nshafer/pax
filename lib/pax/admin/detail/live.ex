@@ -59,11 +59,11 @@ defmodule Pax.Admin.Detail.Live do
     end
   end
 
-  def pax_fieldsets(_site_mod, params, session, socket) do
+  def pax_fieldsets(socket) do
     %{mod: resource_mod} = socket.assigns.resource
 
-    if function_exported?(resource_mod, :pax_detail_fieldsets, 3) do
-      case resource_mod.pax_detail_fieldsets(params, session, socket) do
+    if function_exported?(resource_mod, :pax_detail_fieldsets, 1) do
+      case resource_mod.pax_detail_fieldsets(socket) do
         fieldsets when is_list(fieldsets) -> fieldsets
         nil -> nil
         _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(resource_mod)}.pax_detail_fieldsets/3"

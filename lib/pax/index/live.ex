@@ -14,14 +14,7 @@ defmodule Pax.Index.Live do
   @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               module() | {module(), keyword()} | {module(), module(), keyword()}
 
-  # TODO: just pass socket, no need for params and session, since that info is passed in init. The init should assign
-  # things to the socket if it's needed for these later callbacks
-  @callback pax_fields(
-              params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
-              session :: map(),
-              socket :: Phoenix.LiveView.Socket.t()
-            ) :: list(field()) | nil
-
+  @callback pax_fields(socket :: Phoenix.LiveView.Socket.t()) :: list(field()) | nil
   @callback pax_singular_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
   @callback pax_plural_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
   @callback pax_new_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
@@ -55,9 +48,9 @@ defmodule Pax.Index.Live do
         """
       end
 
-      def pax_fields(_params, _session, _socket), do: nil
+      def pax_fields(_socket), do: nil
 
-      defoverridable pax_init: 3, pax_adapter: 1, pax_fields: 3
+      defoverridable pax_init: 3, pax_adapter: 1, pax_fields: 1
     end
   end
 
@@ -65,16 +58,16 @@ defmodule Pax.Index.Live do
     # IO.puts("#{__MODULE__}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
 
     case module.pax_init(params, session, socket) do
-      {:cont, socket} -> init(module, params, session, socket)
+      {:cont, socket} -> init(module, socket)
       {:halt, socket} -> {:halt, socket}
     end
   end
 
-  defp init(module, params, session, socket) do
+  defp init(module, socket) do
     # IO.puts("#{__MODULE__}.init(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
 
     adapter = init_adapter(module, socket)
-    fields = init_fields(module, adapter, params, session, socket)
+    fields = init_fields(module, adapter, socket)
     # plugins = init_plugins(module, params, sessions, socket)
     plugins = []
 
@@ -119,17 +112,17 @@ defmodule Pax.Index.Live do
     end
   end
 
-  defp init_fields(module, adapter, params, session, socket) do
-    get_fields(module, adapter, params, session, socket)
+  defp init_fields(module, adapter, socket) do
+    get_fields(module, adapter, socket)
     |> set_link_field_if_link_callback(module)
     |> Enum.map(&Pax.Field.init(module, adapter, &1))
   end
 
-  defp get_fields(module, adapter, params, session, socket) do
-    case module.pax_fields(params, session, socket) do
+  defp get_fields(module, adapter, socket) do
+    case module.pax_fields(socket) do
       fields when is_list(fields) -> fields
       nil -> Pax.Adapter.default_index_fields(adapter)
-      _ -> raise ArgumentError, "Invalid fields returned from #{inspect(module)}.pax_fields/3"
+      _ -> raise ArgumentError, "Invalid fields returned from #{inspect(module)}.pax_fields/1"
     end
   end
 

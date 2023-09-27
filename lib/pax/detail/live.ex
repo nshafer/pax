@@ -14,13 +14,8 @@ defmodule Pax.Detail.Live do
   @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               module() | {module(), keyword()} | {module(), module(), keyword()}
 
-  # TODO: just pass socket, no need for params and session, since that info is passed in init. The init should assign
-  # things to the socket if it's needed for these later callbacks
-  @callback pax_fieldsets(
-              params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
-              session :: map(),
-              socket :: Phoenix.LiveView.Socket.t()
-            ) :: list(field()) | list(list(field) | field()) | keyword(list(field)) | nil
+  @callback pax_fieldsets(socket :: Phoenix.LiveView.Socket.t()) ::
+              list(field()) | list(list(field) | field()) | keyword(list(field)) | nil
 
   @callback pax_object_name(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
   @callback pax_index_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
@@ -53,9 +48,9 @@ defmodule Pax.Detail.Live do
         """
       end
 
-      def pax_fieldsets(_params, _session, _socket), do: nil
+      def pax_fieldsets(_socket), do: nil
 
-      defoverridable pax_init: 3, pax_adapter: 1, pax_fieldsets: 3
+      defoverridable pax_init: 3, pax_adapter: 1, pax_fieldsets: 1
     end
   end
 
@@ -63,14 +58,14 @@ defmodule Pax.Detail.Live do
     IO.puts("#{inspect(__MODULE__)}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
 
     case module.pax_init(params, session, socket) do
-      {:cont, socket} -> init(module, params, session, socket)
+      {:cont, socket} -> init(module, socket)
       {:halt, socket} -> {:halt, socket}
     end
   end
 
-  defp init(module, params, session, socket) do
+  defp init(module, socket) do
     adapter = init_adapter(module, socket)
-    fieldsets = init_fieldsets(module, adapter, params, session, socket)
+    fieldsets = init_fieldsets(module, adapter, socket)
     # plugins = init_plugins(module, params, sessions, socket)
     plugins = []
 
@@ -258,9 +253,9 @@ defmodule Pax.Detail.Live do
   #   ] = fieldgroups2
   # ] = fieldsets
 
-  defp init_fieldsets(module, adapter, params, session, socket) do
+  defp init_fieldsets(module, adapter, socket) do
     fieldsets =
-      case module.pax_fieldsets(params, session, socket) do
+      case module.pax_fieldsets(socket) do
         fieldsets when is_list(fieldsets) -> fieldsets
         nil -> Pax.Adapter.default_detail_fieldsets(adapter)
         _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(module)}.fieldsets/3"
