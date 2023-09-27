@@ -222,6 +222,11 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
+  def create_object(_callback_module, %{repo: repo}, _object, changeset) do
+    repo.insert(changeset)
+  end
+
+  @impl Pax.Adapter
   def update_object(_callback_module, %{repo: repo}, _object, changeset) do
     repo.update(changeset)
   end

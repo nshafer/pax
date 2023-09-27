@@ -43,6 +43,9 @@ defmodule Pax.Adapter do
   @callback cast(callback_module(), opts :: map(), object :: map(), unsigned_params(), fields :: list(field())) ::
               Ecto.Changeset.t()
 
+  @callback create_object(callback_module(), opts :: map(), object :: map(), Ecto.Changeset.t()) ::
+              {:ok, map()} | {:error, Ecto.Changeset.t()}
+
   @callback update_object(callback_module(), opts :: map(), object :: map(), Ecto.Changeset.t()) ::
               {:ok, map()} | {:error, Ecto.Changeset.t()}
 
@@ -113,6 +116,11 @@ defmodule Pax.Adapter do
   @spec cast(t(), object :: any(), unsigned_params(), fields :: list(field())) :: Ecto.Changeset.t()
   def cast(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, object, params, fields) do
     adapter.cast(callback_module, opts, object, params, fields)
+  end
+
+  @spec update_object(t(), object :: any(), Ecto.Changeset.t()) :: {:ok, any()} | {:error, Ecto.Changeset.t()}
+  def create_object(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, object, changeset) do
+    adapter.create_object(callback_module, opts, object, changeset)
   end
 
   @spec update_object(t(), object :: any(), Ecto.Changeset.t()) :: {:ok, any()} | {:error, Ecto.Changeset.t()}

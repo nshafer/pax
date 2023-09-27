@@ -107,8 +107,7 @@ defmodule Pax.Detail.Live do
     socket =
       socket
       |> assign_pax(:uri, URI.parse(uri))
-      |> assign_pax(:show_path, init_show_path(module, socket, object))
-      |> assign_pax(:edit_path, init_edit_path(module, socket, object))
+      |> maybe_init_edit_paths(module, object)
       |> assign(:object, object)
       |> assign_pax(:object_name, object_name)
       |> maybe_assign_form(adapter, fieldsets)
@@ -117,6 +116,18 @@ defmodule Pax.Detail.Live do
       {:cont, socket}
     else
       {:halt, socket}
+    end
+  end
+
+  defp maybe_init_edit_paths(socket, module, object) do
+    if socket.assigns.live_action in [:show, :edit] do
+      socket
+      |> assign_pax(:show_path, init_show_path(module, socket, object))
+      |> assign_pax(:edit_path, init_edit_path(module, socket, object))
+    else
+      socket
+      |> assign_pax(:show_path, nil)
+      |> assign_pax(:edit_path, nil)
     end
   end
 
@@ -183,12 +194,22 @@ defmodule Pax.Detail.Live do
 
     changeset = changeset(adapter, fieldsets, socket.assigns.object, params)
 
-    case Pax.Adapter.update_object(adapter, socket.assigns.object, changeset) do
+    save_object(socket, socket.assigns.live_action, adapter, socket.assigns.object, changeset)
+  end
+
+  # Catch-all for all other events that we don't care about
+  defp on_handle_event(_module, _adapter, _plugins, _fieldsets, event, params, socket) do
+    IO.puts("IGNORED: #{inspect(__MODULE__)}.on_handle_event(#{inspect(event)}, #{inspect(params)})")
+    {:cont, socket}
+  end
+
+  defp save_object(socket, :new, adapter, object, changeset) do
+    case Pax.Adapter.create_object(adapter, object, changeset) do
       {:ok, _object} ->
         {
           :halt,
           socket
-          |> put_flash(:info, "Saved successfully.")
+          |> put_flash(:info, "Created successfully.")
           |> maybe_redir_after_save()
         }
 
@@ -197,10 +218,19 @@ defmodule Pax.Detail.Live do
     end
   end
 
-  # Catch-all for all other events that we don't care about
-  defp on_handle_event(_module, _adapter, _plugins, _fieldsets, event, params, socket) do
-    IO.puts("IGNORED: #{inspect(__MODULE__)}.on_handle_event(#{inspect(event)}, #{inspect(params)})")
-    {:cont, socket}
+  defp save_object(socket, :edit, adapter, object, changeset) do
+    case Pax.Adapter.update_object(adapter, object, changeset) do
+      {:ok, _object} ->
+        {
+          :halt,
+          socket
+          |> put_flash(:info, "Updated successfully.")
+          |> maybe_redir_after_save()
+        }
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:halt, assign_form(socket, changeset)}
+    end
   end
 
   defp maybe_redir_after_save(socket) do
