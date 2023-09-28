@@ -2,7 +2,7 @@ defmodule Pax.Admin.Detail.Components do
   use Phoenix.Component
   import Pax.Components
   import Pax.Field.Components
-  import Pax.Detail.Components, except: [show: 1, edit: 1]
+  import Pax.Detail.Components
 
   attr :pax, :map, required: true
   attr :object, :map, required: true
