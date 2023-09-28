@@ -1,21 +1,21 @@
 defmodule Pax.Field.String do
   use Phoenix.Component
-  @behaviour Pax.Field
+  @behaviour Pax.Field.Type
 
-  @impl Pax.Field
+  @impl Pax.Field.Type
   def init(_mod, _opts) do
     # TODO: add length limit
     %{}
   end
 
-  @impl Pax.Field
+  @impl Pax.Field.Type
   def render(_opts, nil), do: nil
 
   def render(_opts, value) do
     to_string(value)
   end
 
-  @impl Pax.Field
+  @impl Pax.Field.Type
   def input(_opts, field, form_field) do
     assigns = %{
       field: field,

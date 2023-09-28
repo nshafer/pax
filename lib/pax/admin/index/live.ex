@@ -88,7 +88,7 @@ defmodule Pax.Admin.Index.Live do
 
   # TODO: remove the ability to set index_link callback, and instead just configure name of field to use in links
   # both here and in the detail view.
-  def pax_link(site_mod, object, opts \\ []) do
+  def pax_field_link(site_mod, object, opts \\ []) do
     resource = Keyword.get(opts, :resource)
 
     cond do

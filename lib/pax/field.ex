@@ -11,105 +11,109 @@ defmodule Pax.Field do
           | {atom(), atom() | module()}
           | {atom(), atom() | module(), keyword()}
 
-  @callback init(live_module :: module(), opts :: keyword()) :: map()
-  @callback render(opts :: map(), value :: any()) :: String.t() | Phoenix.LiveView.Rendered.t() | nil
-  @callback input(opts :: map(), field(), form_field :: Phoenix.HTML.FormField.t()) ::
-              String.t() | Phoenix.LiveView.Rendered.t() | nil
-  @callback immutable?(opts :: map()) :: boolean()
+  @callback pax_field_link(object :: map()) :: String.t()
+  @callback pax_field_link(object :: map(), opts :: keyword()) :: String.t()
 
-  @optional_callbacks input: 3, immutable?: 1
+  @optional_callbacks pax_field_link: 1, pax_field_link: 2
 
   alias Pax.Field
   require Logger
 
   @global_opts [:label, :link, :value, :immutable, :required]
 
-  def init(mod, adapter, name) when is_atom(name) do
+  @doc false
+  def init(callback_mod, adapter, name) when is_atom(name) do
     type = Pax.Adapter.field_type!(adapter, name)
-    init(mod, adapter, name, type, [])
+    init(callback_mod, adapter, name, type, [])
   end
 
-  def init(mod, adapter, {name, opts}) when is_atom(name) and is_list(opts) do
+  def init(callback_mod, adapter, {name, opts}) when is_atom(name) and is_list(opts) do
     type = Pax.Adapter.field_type!(adapter, name)
-    init(mod, adapter, name, type, opts)
+    init(callback_mod, adapter, name, type, opts)
   end
 
-  def init(mod, adapter, {name, type}) when is_atom(name) and is_atom(type) do
-    init(mod, adapter, name, type, [])
+  def init(callback_mod, adapter, {name, type}) when is_atom(name) and is_atom(type) do
+    init(callback_mod, adapter, name, type, [])
   end
 
-  def init(mod, adapter, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
-    init(mod, adapter, name, type, opts)
+  def init(callback_mod, adapter, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
+    init(callback_mod, adapter, name, type, opts)
   end
 
-  def init(_mod, _adapter, arg) do
+  def init(_callback_mod, _adapter, arg) do
     raise ArgumentError, """
     Invalid field #{inspect(arg)}. Must be {:name, :type, [opts]} or {:name, MyType, [opts]} where MyType
     implements the Pax.Field behaviour.
     """
   end
 
-  def init(mod, adapter, name, :boolean, opts) do
-    init(mod, adapter, name, Field.Boolean, opts)
+  def init(callback_mod, adapter, name, :boolean, opts) do
+    init(callback_mod, adapter, name, Field.Boolean, opts)
   end
 
-  def init(mod, adapter, name, :date, opts) do
-    init(mod, adapter, name, Field.Date, opts)
+  def init(callback_mod, adapter, name, :date, opts) do
+    init(callback_mod, adapter, name, Field.Date, opts)
   end
 
-  def init(mod, adapter, name, :datetime, opts) do
-    init(mod, adapter, name, Field.Datetime, opts)
+  def init(callback_mod, adapter, name, :datetime, opts) do
+    init(callback_mod, adapter, name, Field.Datetime, opts)
   end
 
-  def init(mod, adapter, name, :time, opts) do
-    init(mod, adapter, name, Field.Time, opts)
+  def init(callback_mod, adapter, name, :time, opts) do
+    init(callback_mod, adapter, name, Field.Time, opts)
   end
 
   # TODO: :decimal
 
-  def init(mod, adapter, name, :float, opts) do
-    init(mod, adapter, name, Field.Float, opts)
+  def init(callback_mod, adapter, name, :float, opts) do
+    init(callback_mod, adapter, name, Field.Float, opts)
   end
 
-  def init(mod, adapter, name, :integer, opts) do
-    init(mod, adapter, name, Field.Integer, opts)
+  def init(callback_mod, adapter, name, :integer, opts) do
+    init(callback_mod, adapter, name, Field.Integer, opts)
   end
 
   # TODO: :list
   # TODO: :map ?
 
-  def init(mod, adapter, name, :string, opts) do
-    init(mod, adapter, name, Field.String, opts)
+  def init(callback_mod, adapter, name, :string, opts) do
+    init(callback_mod, adapter, name, Field.String, opts)
   end
 
-  def init(mod, _adapter, name, type, opts) do
+  def init(callback_mod, _adapter, name, type, opts) do
     if Code.ensure_loaded?(type) and function_exported?(type, :init, 2) do
-      global = init_global_opts(opts, mod)
-      opts = type.init(mod, opts)
+      global = init_global_opts(callback_mod, opts)
+      opts = type.init(callback_mod, opts)
       {name, type, Map.merge(opts, global)}
     else
       raise ArgumentError, "Invalid field type: #{inspect(type)}."
     end
   end
 
-  defp init_global_opts(opts, mod) do
+  defp init_global_opts(callback_mod, opts) do
     Keyword.take(opts, @global_opts)
     |> Map.new()
-    |> resolve_link_opt(mod)
+    |> resolve_link_opt(callback_mod)
   end
 
-  defp resolve_link_opt(opts, mod) do
-    # Make sure the link option is properly set. Mainly, if it's set to true, make sure the pax_link/1 or pax_link/2
-    # function is implemented in the module.
+  defp resolve_link_opt(opts, callback_mod) do
+    # Make sure the link option is properly set. Mainly, if it's set to true, make sure the pax_field_link/1
+    # or pax_field_link/2 function is implemented in the module.
     case Map.get(opts, :link) do
       nil ->
         opts
 
       true ->
         cond do
-          function_exported?(mod, :pax_link, 2) -> Map.put(opts, :link, {mod, :pax_link})
-          function_exported?(mod, :pax_link, 1) -> Map.put(opts, :link, {mod, :pax_link})
-          true -> raise "You must implement a pax_link/1 or pax_link/2 function in #{inspect(mod)} to set link: true"
+          function_exported?(callback_mod, :pax_field_link, 2) ->
+            Map.put(opts, :link, {callback_mod, :pax_field_link})
+
+          function_exported?(callback_mod, :pax_field_link, 1) ->
+            Map.put(opts, :link, {callback_mod, :pax_field_link})
+
+          true ->
+            raise "You must implement a pax_field_link/1 or pax_field_link/2 " <>
+                    "function in #{inspect(callback_mod)} in order to set link: true for a field"
         end
 
       {mod, fun} when is_atom(mod) and is_atom(fun) ->

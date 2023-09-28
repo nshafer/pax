@@ -19,16 +19,13 @@ defmodule Pax.Index.Live do
   @callback pax_plural_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
   @callback pax_new_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
 
-  # TODO: rename this to pax_field_link
-  @callback pax_link(object :: map()) :: String.t()
-  @callback pax_link(object :: map(), opts :: keyword()) :: String.t()
-
-  @optional_callbacks pax_singular_name: 1, pax_plural_name: 1, pax_new_path: 1, pax_link: 1, pax_link: 2
+  @optional_callbacks pax_singular_name: 1, pax_plural_name: 1, pax_new_path: 1
 
   defmacro __using__(_opts) do
     quote do
       # IO.puts("Pax.Index.Live.__using__ for #{inspect(__MODULE__)}")
       @behaviour Pax.Index.Live
+      @behaviour Pax.Field
 
       def on_mount(:pax_index, params, session, socket),
         do: Pax.Index.Live.on_mount(__MODULE__, params, session, socket)
@@ -127,10 +124,10 @@ defmodule Pax.Index.Live do
   end
 
   defp set_link_field_if_link_callback(fields, module) do
-    # If a pax_link callback is defined, set the link field to the first field unless at least one field is already set
-    # to link. This is so that if not fields are defined to link, but pax_link() is provided, then make the first field
-    # linked by default.
-    if function_exported?(module, :pax_link, 1) do
+    # If a pax_field_link callback is defined, set the link field to the first field unless at least one field is
+    # already set to link. This is so that if no fields are defined to link, but pax_field_link() is provided,
+    # then make the first field linked by default.
+    if function_exported?(module, :pax_field_link, 1) do
       fields |> Pax.Field.Util.maybe_set_default_link_field()
     else
       fields

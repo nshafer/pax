@@ -1,8 +1,8 @@
 defmodule Pax.Field.Boolean do
   use Phoenix.Component
-  @behaviour Pax.Field
+  @behaviour Pax.Field.Type
 
-  @impl Pax.Field
+  @impl Pax.Field.Type
   def init(_mod, opts) do
     # TODO: add formatting options: human, scientific, etc
     %{
@@ -11,12 +11,12 @@ defmodule Pax.Field.Boolean do
     }
   end
 
-  @impl Pax.Field
+  @impl Pax.Field.Type
   def render(%{true: true_value, false: false_value}, value) do
     (value && true_value) || false_value
   end
 
-  @impl Pax.Field
+  @impl Pax.Field.Type
   def input(%{true: true_value, false: false_value}, field, form_field) do
     assigns = %{
       field: field,

@@ -306,7 +306,8 @@ defmodule Pax.Admin.Site do
         defdelegate pax_adapter(socket), to: Pax.Admin.Index.Live
         defdelegate pax_fields(socket), to: Pax.Admin.Index.Live
 
-        def pax_link(object, opts \\ []), do: Pax.Admin.Index.Live.pax_link(unquote(env.module), object, opts)
+        def pax_field_link(object, opts \\ []),
+          do: Pax.Admin.Index.Live.pax_field_link(unquote(env.module), object, opts)
 
         defdelegate pax_singular_name(socket), to: Pax.Admin.Index.Live
         defdelegate pax_plural_name(socket), to: Pax.Admin.Index.Live

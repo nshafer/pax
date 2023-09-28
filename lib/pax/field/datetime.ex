@@ -1,8 +1,8 @@
 defmodule Pax.Field.Datetime do
   use Phoenix.Component
-  @behaviour Pax.Field
+  @behaviour Pax.Field.Type
 
-  @impl Pax.Field
+  @impl Pax.Field.Type
   def init(_mod, opts) do
     %{
       format: Keyword.get(opts, :format, nil),
@@ -11,7 +11,7 @@ defmodule Pax.Field.Datetime do
     }
   end
 
-  @impl Pax.Field
+  @impl Pax.Field.Type
   def render(_opts, nil), do: nil
 
   def render(%{format: format}, value) when not is_nil(format) do
@@ -30,7 +30,7 @@ defmodule Pax.Field.Datetime do
     """
   end
 
-  @impl Pax.Field
+  @impl Pax.Field.Type
   def input(_opts, field, form_field) do
     assigns = %{
       field: field,
