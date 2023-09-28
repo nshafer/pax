@@ -27,13 +27,13 @@ defmodule Pax.Detail.Live do
 
   defmacro __using__(_opts) do
     quote do
-      IO.puts("Pax.Detail.Live.__using__ for #{inspect(__MODULE__)}")
+      # IO.puts("Pax.Detail.Live.__using__ for #{inspect(__MODULE__)}")
       @behaviour Pax.Detail.Live
 
-      def on_mount(:default, params, session, socket),
+      def on_mount(:pax_detail, params, session, socket),
         do: Pax.Detail.Live.on_mount(__MODULE__, params, session, socket)
 
-      on_mount __MODULE__
+      on_mount {__MODULE__, :pax_detail}
 
       def pax_init(_params, _session, socket), do: {:cont, socket}
 
