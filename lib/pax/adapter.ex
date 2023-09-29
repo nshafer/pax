@@ -12,16 +12,14 @@ defmodule Pax.Adapter do
           opts: map()
         }
 
-  @type field :: Pax.Field.field()
   @type unsigned_params :: Phoenix.LiveView.unsigned_params()
   @type socket :: Phoenix.LiveView.Socket.t()
 
   @callback init(callback_module, opts :: []) :: map()
 
-  @callback default_index_fields(callback_module(), opts :: map()) :: [field()]
+  @callback default_index_fields(callback_module(), opts :: map()) :: Pax.Index.fields()
 
-  @callback default_detail_fieldsets(callback_module(), opts :: map()) ::
-              list(field()) | list(list(field) | field()) | keyword(list(field))
+  @callback default_detail_fieldsets(callback_module(), opts :: map()) :: Pax.Detail.fieldsets()
 
   @callback field_type(callback_module(), opts :: map(), field_name :: atom()) ::
               {:ok, atom() | module()} | {:error, term()}
@@ -40,7 +38,7 @@ defmodule Pax.Adapter do
 
   @callback object_name(callback_module(), opts :: map(), object :: map()) :: String.t()
 
-  @callback cast(callback_module(), opts :: map(), object :: map(), unsigned_params(), fields :: list(field())) ::
+  @callback cast(callback_module(), opts :: map(), object :: map(), unsigned_params(), fields :: list(Pax.Field.t())) ::
               Ecto.Changeset.t()
 
   @callback create_object(callback_module(), opts :: map(), object :: map(), Ecto.Changeset.t()) ::
@@ -58,12 +56,12 @@ defmodule Pax.Adapter do
     }
   end
 
-  @spec default_index_fields(t()) :: [field()]
+  @spec default_index_fields(t()) :: Pax.Index.fields()
   def default_index_fields(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}) do
     adapter.default_index_fields(callback_module, opts)
   end
 
-  @spec default_detail_fieldsets(t()) :: list(field()) | list(list(field) | field()) | keyword(list(field))
+  @spec default_detail_fieldsets(t()) :: Pax.Detail.fieldsets()
   def default_detail_fieldsets(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}) do
     adapter.default_detail_fieldsets(callback_module, opts)
   end
@@ -113,7 +111,7 @@ defmodule Pax.Adapter do
 
   # TODO: rename to cast() which gets a list of fields that are not dynamic/computed or marked immutable, and it returns
   # a changeset with those fields cast from params, but no validation is done (yet.)
-  @spec cast(t(), object :: any(), unsigned_params(), fields :: list(field())) :: Ecto.Changeset.t()
+  @spec cast(t(), object :: any(), unsigned_params(), fields :: list(Pax.Field.t())) :: Ecto.Changeset.t()
   def cast(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, object, params, fields) do
     adapter.cast(callback_module, opts, object, params, fields)
   end

@@ -3,7 +3,7 @@ defmodule Pax.Index.Live do
   import Phoenix.LiveView
   import Pax.Util.Live
 
-  @type field() :: Pax.Field.field()
+  @type fields() :: list(Pax.Field.fieldspec())
 
   @callback pax_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
@@ -14,7 +14,7 @@ defmodule Pax.Index.Live do
   @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               module() | {module(), keyword()} | {module(), module(), keyword()}
 
-  @callback pax_fields(socket :: Phoenix.LiveView.Socket.t()) :: list(field()) | nil
+  @callback pax_fields(socket :: Phoenix.LiveView.Socket.t()) :: fields() | nil
   @callback pax_singular_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
   @callback pax_plural_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
   @callback pax_new_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
@@ -25,7 +25,7 @@ defmodule Pax.Index.Live do
     quote do
       # IO.puts("Pax.Index.Live.__using__ for #{inspect(__MODULE__)}")
       @behaviour Pax.Index.Live
-      @behaviour Pax.Field
+      @behaviour Pax.Field.Callback
 
       def on_mount(:pax_index, params, session, socket),
         do: Pax.Index.Live.on_mount(__MODULE__, params, session, socket)

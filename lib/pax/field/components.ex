@@ -210,11 +210,11 @@ defmodule Pax.Field.Components do
     ~H"""
     <input
       type={@type}
-      name={@name || Pax.Field.field_name(@field)}
+      name={@name || @field.name}
       id={@id}
       value={Phoenix.HTML.Form.normalize_value(@type, @value)}
       class={["pax-field-control-input", @has_errors && "has-errors"]}
-      phx-feedback-for={@name || Pax.Field.field_name(@field)}
+      phx-feedback-for={@name || @field.name}
       {@rest}
     />
     """

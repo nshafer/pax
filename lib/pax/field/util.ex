@@ -1,9 +1,8 @@
 defmodule Pax.Field.Util do
   @doc """
-  Sets the first field to be a link if no other field is a link.
+  Sets the first fieldspec to have `link: true` if no fieldspec has a link option set.
   """
-  @type field :: Pax.Field.field()
-  @spec maybe_set_default_link_field([field()]) :: [field()]
+  @spec maybe_set_default_link_field([Pax.Field.fieldspec()]) :: [Pax.Field.fieldspec()]
   def maybe_set_default_link_field([]), do: []
 
   def maybe_set_default_link_field(fields) when is_list(fields) do

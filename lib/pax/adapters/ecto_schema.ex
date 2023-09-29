@@ -217,7 +217,7 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   def cast(_callback_module, _opts, object, params, fields) do
-    field_names = Enum.map(fields, fn {field_name, _, _} -> field_name end)
+    field_names = Enum.map(fields, fn %Pax.Field{name: name} -> name end)
     Ecto.Changeset.cast(object, params, field_names)
   end
 

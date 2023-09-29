@@ -3,7 +3,10 @@ defmodule Pax.Detail.Live do
   import Phoenix.LiveView
   import Pax.Util.Live
 
-  @type field() :: Pax.Field.field()
+  @type fieldsets ::
+          list(Pax.Field.fieldspec())
+          | list(list(Pax.Field.fieldspec()) | Pax.Field.fieldspec())
+          | keyword(list(Pax.Field.fieldspec()))
 
   @callback pax_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
@@ -14,8 +17,7 @@ defmodule Pax.Detail.Live do
   @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               module() | {module(), keyword()} | {module(), module(), keyword()}
 
-  @callback pax_fieldsets(socket :: Phoenix.LiveView.Socket.t()) ::
-              list(field()) | list(list(field) | field()) | keyword(list(field)) | nil
+  @callback pax_fieldsets(socket :: Phoenix.LiveView.Socket.t()) :: fieldsets() | nil
 
   @callback pax_object_name(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
   @callback pax_index_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
@@ -29,6 +31,7 @@ defmodule Pax.Detail.Live do
     quote do
       # IO.puts("Pax.Detail.Live.__using__ for #{inspect(__MODULE__)}")
       @behaviour Pax.Detail.Live
+      @behaviour Pax.Field.Callback
 
       def on_mount(:pax_detail, params, session, socket),
         do: Pax.Detail.Live.on_mount(__MODULE__, params, session, socket)
@@ -155,8 +158,8 @@ defmodule Pax.Detail.Live do
   defp validate_required(changeset, fields) do
     required_field_names =
       fields
-      |> Stream.filter(fn {_, _, opts} -> Map.get(opts, :required, true) end)
-      |> Enum.map(fn {field_name, _, _} -> field_name end)
+      |> Stream.filter(&Pax.Field.required?/1)
+      |> Enum.map(fn %Pax.Field{name: name} -> name end)
 
     Ecto.Changeset.validate_required(changeset, required_field_names)
   end
