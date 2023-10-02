@@ -300,8 +300,8 @@ defmodule Pax.Admin.Site do
 
         def render(assigns), do: Pax.Admin.Index.Live.render(unquote(env.module), assigns)
 
-        def pax_init(params, session, socket),
-          do: Pax.Admin.Index.Live.pax_init(unquote(env.module), params, session, socket)
+        def pax_pre_init(params, session, socket),
+          do: Pax.Admin.Index.Live.pax_pre_init(unquote(env.module), params, session, socket)
 
         defdelegate pax_adapter(socket), to: Pax.Admin.Index.Live
         defdelegate pax_fields(socket), to: Pax.Admin.Index.Live
@@ -320,8 +320,8 @@ defmodule Pax.Admin.Site do
 
         def render(assigns), do: Pax.Admin.Detail.Live.render(unquote(env.module), assigns)
 
-        def pax_init(params, session, socket),
-          do: Pax.Admin.Detail.Live.pax_init(unquote(env.module), params, session, socket)
+        def pax_pre_init(params, session, socket),
+          do: Pax.Admin.Detail.Live.pax_pre_init(unquote(env.module), params, session, socket)
 
         defdelegate pax_adapter(socket), to: Pax.Admin.Detail.Live
         defdelegate pax_fieldsets(socket), to: Pax.Admin.Detail.Live

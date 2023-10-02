@@ -21,7 +21,7 @@ defmodule Pax.Admin.Detail.Live do
     """
   end
 
-  def pax_init(site_mod, params, session, socket) do
+  def pax_pre_init(site_mod, params, session, socket) do
     resource = get_resource(socket, site_mod, params, session)
 
     socket =
@@ -31,8 +31,8 @@ defmodule Pax.Admin.Detail.Live do
       |> assign(:page_title, resource.title)
       |> assign(:resource, resource)
 
-    if function_exported?(resource.mod, :pax_init, 3) do
-      resource.mod.pax_init(params, session, socket)
+    if function_exported?(resource.mod, :pax_pre_init, 3) do
+      resource.mod.pax_pre_init(params, session, socket)
     else
       {:cont, socket}
     end

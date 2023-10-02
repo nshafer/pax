@@ -1,96 +1,53 @@
 defmodule Pax.Detail.Live do
-  use Phoenix.Component
+  @moduledoc """
+  Implements a live view for a detail page, built on top of Pax.LiveView.
+  """
+
+  import Phoenix.Component, only: [assign: 3, to_form: 1]
   import Phoenix.LiveView
-  import Pax.Util.Live
+  import Pax.LiveView
 
   @type fieldsets ::
           list(Pax.Field.fieldspec())
           | list(list(Pax.Field.fieldspec()) | Pax.Field.fieldspec())
           | keyword(list(Pax.Field.fieldspec()))
 
-  @callback pax_init(
-              params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
-              session :: map(),
-              socket :: Phoenix.LiveView.Socket.t()
-            ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
-
-  @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
-              module() | {module(), keyword()} | {module(), module(), keyword()}
-
   @callback pax_fieldsets(socket :: Phoenix.LiveView.Socket.t()) :: fieldsets() | nil
-
-  @callback pax_object_name(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
-  @callback pax_index_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback pax_new_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback pax_show_path(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
-  @callback pax_edit_path(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
-
-  @optional_callbacks pax_object_name: 2, pax_index_path: 1, pax_new_path: 1, pax_show_path: 2, pax_edit_path: 2
 
   defmacro __using__(_opts) do
     quote do
       # IO.puts("Pax.Detail.Live.__using__ for #{inspect(__MODULE__)}")
+      use Pax.LiveView
       @behaviour Pax.Detail.Live
       @behaviour Pax.Field.Callback
 
-      def on_mount(:pax_detail, params, session, socket),
-        do: Pax.Detail.Live.on_mount(__MODULE__, params, session, socket)
-
-      on_mount {__MODULE__, :pax_detail}
-
-      def pax_init(_params, _session, socket), do: {:cont, socket}
-
-      def pax_adapter(_socket) do
-        raise """
-        No pax_adapter/1 callback found for #{__MODULE__}.
-        Please configure an adapter by defining a pax_adapter function, for example:
-
-            def pax_adapter(_socket),
-              do: {Pax.Adapters.EctoSchema, repo: MyAppWeb.Repo, schema: MyApp.MyContext.MySchema}
-
-        """
-      end
+      defdelegate pax_internal_init(module, socket), to: Pax.Detail.Live
 
       def pax_fieldsets(_socket), do: nil
 
-      defoverridable pax_init: 3, pax_adapter: 1, pax_fieldsets: 1
+      defoverridable pax_fieldsets: 1
     end
   end
 
-  def on_mount(module, params, session, socket) do
-    IO.puts("#{inspect(__MODULE__)}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
-
-    case module.pax_init(params, session, socket) do
-      {:cont, socket} -> init(module, socket)
-      {:halt, socket} -> {:halt, socket}
-    end
-  end
-
-  defp init(module, socket) do
-    adapter = init_adapter(module, socket)
+  def pax_internal_init(module, socket) do
+    IO.puts("#{inspect(__MODULE__)}.pax_internal_init(#{inspect(module)})")
+    adapter = socket.assigns.pax.adapter
     fieldsets = init_fieldsets(module, adapter, socket)
-    # plugins = init_plugins(module, params, sessions, socket)
-    plugins = []
 
     socket =
       socket
-      |> assign_pax(:module, module)
-      |> assign_pax(:adapter, adapter)
-      |> assign_pax(:plugins, plugins)
       |> assign_pax(:fieldsets, fieldsets)
-      |> assign_pax(:index_path, init_index_path(module, socket))
-      |> assign_pax(:new_path, init_new_path(module, socket))
       |> attach_hook(:pax_handle_params, :handle_params, fn params, uri, socket ->
-        on_handle_params(module, adapter, plugins, fieldsets, params, uri, socket)
+        on_handle_params(module, adapter, fieldsets, params, uri, socket)
       end)
       |> attach_hook(:pax_handle_event, :handle_event, fn event, params, socket ->
-        on_handle_event(module, adapter, plugins, fieldsets, event, params, socket)
+        on_handle_event(module, adapter, fieldsets, event, params, socket)
       end)
 
     {:cont, socket}
   end
 
-  def on_handle_params(module, adapter, _plugins, fieldsets, params, uri, socket) do
+  def on_handle_params(module, adapter, fieldsets, params, uri, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_handle_params(#{module}, #{inspect(params)}, #{inspect(uri)}")
     object = init_object(module, adapter, params, uri, socket)
     object_name = init_object_name(module, adapter, socket, object)
@@ -140,11 +97,11 @@ defmodule Pax.Detail.Live do
   end
 
   defp assign_form(socket, nil) do
-    assign(socket, form: nil)
+    assign(socket, :form, nil)
   end
 
   defp assign_form(socket, changeset) do
-    assign(socket, form: to_form(changeset))
+    assign(socket, :form, to_form(changeset))
   end
 
   defp changeset(adapter, fieldsets, object, params \\ %{}) do
@@ -170,7 +127,7 @@ defmodule Pax.Detail.Live do
     end
   end
 
-  defp on_handle_event(_module, adapter, _plugins, fieldsets, "pax_validate", %{"detail" => params}, socket) do
+  defp on_handle_event(_module, adapter, fieldsets, "pax_validate", %{"detail" => params}, socket) do
     IO.puts("#{inspect(__MODULE__)}.on_handle_event(:pax_validate, #{inspect(params)})")
 
     changeset =
@@ -180,7 +137,7 @@ defmodule Pax.Detail.Live do
     {:halt, assign_form(socket, changeset)}
   end
 
-  defp on_handle_event(_module, adapter, _plugins, fieldsets, "pax_save", %{"detail" => params}, socket) do
+  defp on_handle_event(_module, adapter, fieldsets, "pax_save", %{"detail" => params}, socket) do
     IO.puts("#{inspect(__MODULE__)}.on_handle_event(:pax_save, #{inspect(params)})")
 
     changeset = changeset(adapter, fieldsets, socket.assigns.object, params)
@@ -189,7 +146,7 @@ defmodule Pax.Detail.Live do
   end
 
   # Catch-all for all other events that we don't care about
-  defp on_handle_event(_module, _adapter, _plugins, _fieldsets, event, params, socket) do
+  defp on_handle_event(_module, _adapter, _fieldsets, event, params, socket) do
     IO.puts("IGNORED: #{inspect(__MODULE__)}.on_handle_event(#{inspect(event)}, #{inspect(params)})")
     {:cont, socket}
   end
@@ -229,15 +186,6 @@ defmodule Pax.Detail.Live do
       socket.assigns.pax.show_path != nil -> push_patch(socket, to: socket.assigns.pax.show_path)
       socket.assigns.pax.index_path != nil -> push_navigate(socket, to: socket.assigns.pax.index_path)
       true -> socket
-    end
-  end
-
-  defp init_adapter(module, socket) do
-    case module.pax_adapter(socket) do
-      {adapter, callback_module, opts} -> Pax.Adapter.init(adapter, callback_module, opts)
-      {adapter, opts} -> Pax.Adapter.init(adapter, module, opts)
-      adapter when is_atom(adapter) -> Pax.Adapter.init(adapter, module, [])
-      _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.pax_adapter/1"
     end
   end
 

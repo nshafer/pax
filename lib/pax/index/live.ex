@@ -1,91 +1,47 @@
 defmodule Pax.Index.Live do
-  use Phoenix.Component
+  @moduledoc """
+  Implements a live view for an index page, built on top of Pax.LiveView.
+  """
+
+  import Phoenix.Component, only: [assign: 3]
   import Phoenix.LiveView
-  import Pax.Util.Live
+  import Pax.LiveView
 
-  @type fields() :: list(Pax.Field.fieldspec())
-
-  @callback pax_init(
-              params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
-              session :: map(),
-              socket :: Phoenix.LiveView.Socket.t()
-            ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
-
-  @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
-              module() | {module(), keyword()} | {module(), module(), keyword()}
-
-  @callback pax_fields(socket :: Phoenix.LiveView.Socket.t()) :: fields() | nil
-  @callback pax_singular_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback pax_plural_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback pax_new_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-
-  @optional_callbacks pax_singular_name: 1, pax_plural_name: 1, pax_new_path: 1
+  @callback pax_fields(socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Field.fieldspec()] | nil
 
   defmacro __using__(_opts) do
     quote do
       # IO.puts("Pax.Index.Live.__using__ for #{inspect(__MODULE__)}")
+      use Pax.LiveView
       @behaviour Pax.Index.Live
       @behaviour Pax.Field.Callback
 
-      def on_mount(:pax_index, params, session, socket),
-        do: Pax.Index.Live.on_mount(__MODULE__, params, session, socket)
-
-      on_mount {__MODULE__, :pax_index}
-
-      def pax_init(_params, _session, socket), do: {:cont, socket}
-
-      def pax_adapter(_socket) do
-        raise """
-        No pax_adapter/1 callback found for #{__MODULE__}.
-        Please configure an adapter by defining a pax_adapter function, for example:
-
-            def pax_adapter(_socket),
-              do: {Pax.Adapters.EctoSchema, repo: MyAppWeb.Repo, schema: MyApp.MyContext.MySchema}
-
-        """
-      end
+      defdelegate pax_internal_init(module, socket), to: Pax.Index.Live
 
       def pax_fields(_socket), do: nil
 
-      defoverridable pax_init: 3, pax_adapter: 1, pax_fields: 1
+      defoverridable pax_fields: 1
     end
   end
 
-  def on_mount(module, params, session, socket) do
-    # IO.puts("#{__MODULE__}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
-
-    case module.pax_init(params, session, socket) do
-      {:cont, socket} -> init(module, socket)
-      {:halt, socket} -> {:halt, socket}
-    end
-  end
-
-  defp init(module, socket) do
-    # IO.puts("#{__MODULE__}.init(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
-
-    adapter = init_adapter(module, socket)
+  def pax_internal_init(module, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.pax_internal_init(#{inspect(module)})")
+    adapter = socket.assigns.pax.adapter
     fields = init_fields(module, adapter, socket)
-    # plugins = init_plugins(module, params, sessions, socket)
-    plugins = []
 
     socket =
       socket
-      |> assign_pax(:module, module)
-      |> assign_pax(:adapter, adapter)
-      |> assign_pax(:plugins, plugins)
       |> assign_pax(:fields, fields)
-      |> assign_pax(:singular_name, init_singular_name(module, adapter, socket))
-      |> assign_pax(:plural_name, init_plural_name(module, adapter, socket))
-      |> assign_pax(:new_path, init_new_path(module, socket))
       |> attach_hook(:pax_handle_params, :handle_params, fn params, uri, socket ->
-        on_handle_params(module, adapter, plugins, fields, params, uri, socket)
+        on_handle_params(module, fields, params, uri, socket)
       end)
 
     {:cont, socket}
   end
 
-  def on_handle_params(module, adapter, _plugins, _fields, params, uri, socket) do
-    # IO.puts("#{__MODULE__}.on_handle_params(#{inspect(module)}, #{inspect(params)}, #{inspect(uri)}")
+  def on_handle_params(module, _fields, params, uri, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.on_handle_params(#{inspect(module)}, #{inspect(params)}, #{inspect(uri)}")
+    adapter = socket.assigns.pax.adapter
 
     socket =
       socket
@@ -96,16 +52,6 @@ defmodule Pax.Index.Live do
       {:cont, socket}
     else
       {:halt, socket}
-    end
-  end
-
-  # TODO: move to a shared module
-  defp init_adapter(module, socket) do
-    case module.pax_adapter(socket) do
-      {adapter, callback_module, opts} -> Pax.Adapter.init(adapter, callback_module, opts)
-      {adapter, opts} -> Pax.Adapter.init(adapter, module, opts)
-      adapter when is_atom(adapter) -> Pax.Adapter.init(adapter, module, [])
-      _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.pax_adapter/1"
     end
   end
 

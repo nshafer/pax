@@ -12,7 +12,7 @@ defmodule Pax.Admin.Resource do
   @enforce_keys [:name, :path, :title, :mod, :opts]
   defstruct [:name, :path, :title, :section, :mod, :opts]
 
-  @callback pax_init(
+  @callback pax_pre_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
@@ -37,7 +37,7 @@ defmodule Pax.Admin.Resource do
   @callback detail_title(object :: map()) :: String.t()
   @callback object_name(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
 
-  @optional_callbacks pax_init: 3,
+  @optional_callbacks pax_pre_init: 3,
                       pax_index_fields: 1,
                       pax_detail_fieldsets: 1,
                       index_link: 1,
