@@ -30,6 +30,7 @@ defmodule Pax.Components do
       <.button>Send!</.button>
       <.button phx-click="go" class="ml-2">Send!</.button>
       <.button navigate="/to/somewhere">Go somewhere</.button>
+      <.button patch="/my/liveview">Edit</.button>
   """
   @doc type: :component
   attr :type, :string, default: nil

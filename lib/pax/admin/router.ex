@@ -11,7 +11,7 @@ defmodule Pax.Admin.Router do
     site_mod = Macro.expand(site_mod, __CALLER__)
 
     quote bind_quoted: binding() do
-      {full_path, full_site_mod, dashboard_mod, dashboard_opts, index_mod, index_opts, detail_mod, detail_opts} =
+      {full_path, full_site_mod, dashboard_mod, dashboard_opts, resource_mod, resource_opts} =
         Pax.Admin.Router.__pax_admin__(__MODULE__, path, site_mod, opts)
 
       @pax_paths Map.put(@pax_paths, full_site_mod, full_path)
@@ -19,17 +19,17 @@ defmodule Pax.Admin.Router do
       live "#{path}", dashboard_mod, :dashboard, dashboard_opts
 
       # TODO: pass full_site_mod to live view via metadata
-      live "#{path}/r/:resource", index_mod, :index, index_opts
-      live "#{path}/r/:resource/new", detail_mod, :new, detail_opts
-      live "#{path}/r/:resource/:id", detail_mod, :show, detail_opts
-      live "#{path}/r/:resource/:id/edit", detail_mod, :edit, detail_opts
-      live "#{path}/r/:resource/:id/delete", detail_mod, :delete, detail_opts
+      live "#{path}/r/:resource", resource_mod, :index, resource_opts
+      live "#{path}/r/:resource/new", resource_mod, :new, resource_opts
+      live "#{path}/r/:resource/:id", resource_mod, :show, resource_opts
+      live "#{path}/r/:resource/:id/edit", resource_mod, :edit, resource_opts
+      live "#{path}/r/:resource/:id/delete", resource_mod, :delete, resource_opts
 
-      live "#{path}/:section/r/:resource", index_mod, :index, index_opts
-      live "#{path}/:section/r/:resource/new", detail_mod, :new, detail_opts
-      live "#{path}/:section/r/:resource/:id", detail_mod, :show, detail_opts
-      live "#{path}/:section/r/:resource/:id/edit", detail_mod, :edit, detail_opts
-      live "#{path}/:section/r/:resource/:id/delete", detail_mod, :delete, detail_opts
+      live "#{path}/:section/r/:resource", resource_mod, :index, resource_opts
+      live "#{path}/:section/r/:resource/new", resource_mod, :new, resource_opts
+      live "#{path}/:section/r/:resource/:id", resource_mod, :show, resource_opts
+      live "#{path}/:section/r/:resource/:id/edit", resource_mod, :edit, resource_opts
+      live "#{path}/:section/r/:resource/:id/delete", resource_mod, :delete, resource_opts
     end
   end
 
@@ -47,13 +47,10 @@ defmodule Pax.Admin.Router do
     dashboard_mod = Module.concat(site_mod, DashboardLive)
     dashboard_opts = Keyword.put(opts, :as, :"#{base_as}_dashboard")
 
-    index_mod = Module.concat(site_mod, IndexLive)
-    index_opts = Keyword.put(opts, :as, :"#{base_as}_index")
+    resource_mod = Module.concat(site_mod, ResourceLive)
+    resource_opts = Keyword.put(opts, :as, :"#{base_as}_resource")
 
-    detail_mod = Module.concat(site_mod, DetailLive)
-    detail_opts = Keyword.put(opts, :as, :"#{base_as}_detail")
-
-    {full_path, full_site_mod, dashboard_mod, dashboard_opts, index_mod, index_opts, detail_mod, detail_opts}
+    {full_path, full_site_mod, dashboard_mod, dashboard_opts, resource_mod, resource_opts}
   end
 
   defp as_from_site_mod(nil, site_mod) do

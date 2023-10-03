@@ -1,21 +1,20 @@
-defmodule Pax.Admin.Detail.Live do
-  # import Phoenix.LiveView
+defmodule Pax.Admin.Resource.Live do
   use Phoenix.Component
-  require Logger
-  import Pax.Admin.Detail.Components
+  import Pax.Admin.Resource.Components
 
   def render(site_mod, assigns) do
-    %{mod: resource_mod} = assigns.resource
+    resource_mod = assigns.resource.mod
 
     cond do
-      function_exported?(resource_mod, :render_detail, 1) -> resource_mod.render_detail(assigns)
-      function_exported?(site_mod, :render_detail, 1) -> site_mod.render_detail(assigns)
-      true -> render_detail(assigns)
+      function_exported?(resource_mod, :render, 1) -> resource_mod.render_index(assigns)
+      function_exported?(site_mod, :render, 1) -> site_mod.render_index(assigns)
+      true -> render(assigns)
     end
   end
 
-  def render_detail(assigns) do
+  def render(assigns) do
     ~H"""
+    <.index :if={@live_action == :index} pax={@pax} resource={@resource} objects={@objects} />
     <.show :if={@live_action == :show} pax={@pax} object={@object} />
     <.edit :if={@live_action in [:edit, :new]} pax={@pax} object={@object} form={@form} />
     """
@@ -49,7 +48,7 @@ defmodule Pax.Admin.Detail.Live do
   end
 
   def pax_adapter(socket) do
-    %{mod: resource_mod} = socket.assigns.resource
+    resource_mod = socket.assigns.resource.mod
 
     # Set the resource_mod as the callback_module for the adapter if none were specified
     case resource_mod.pax_adapter(socket) do
@@ -59,18 +58,12 @@ defmodule Pax.Admin.Detail.Live do
     end
   end
 
-  def pax_fieldsets(socket) do
-    %{mod: resource_mod} = socket.assigns.resource
+  def pax_singular_name(socket) do
+    socket.assigns.resource.title
+  end
 
-    if function_exported?(resource_mod, :pax_detail_fieldsets, 1) do
-      case resource_mod.pax_detail_fieldsets(socket) do
-        fieldsets when is_list(fieldsets) -> fieldsets
-        nil -> nil
-        _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(resource_mod)}.pax_detail_fieldsets/3"
-      end
-    else
-      nil
-    end
+  def pax_plural_name(socket) do
+    socket.assigns.resource.title
   end
 
   def pax_object_name(socket, object) do
@@ -111,5 +104,54 @@ defmodule Pax.Admin.Detail.Live do
 
     # TODO: make this work with custom fields? like :uuid
     Pax.Admin.Site.resource_edit_path(site_mod, resource.section, resource, object)
+  end
+
+  def pax_fields(socket) do
+    %{mod: resource_mod} = socket.assigns.resource
+
+    if function_exported?(resource_mod, :pax_index_fields, 1) do
+      case resource_mod.pax_index_fields(socket) do
+        fields when is_list(fields) -> fields |> Pax.Field.Util.maybe_set_default_link_field()
+        nil -> nil
+        _ -> raise ArgumentError, "Invalid fields returned from #{inspect(resource_mod)}.pax_index_fields/3"
+      end
+    else
+      nil
+    end
+  end
+
+  def pax_fieldsets(socket) do
+    %{mod: resource_mod} = socket.assigns.resource
+
+    if function_exported?(resource_mod, :pax_detail_fieldsets, 1) do
+      case resource_mod.pax_detail_fieldsets(socket) do
+        fieldsets when is_list(fieldsets) -> fieldsets
+        nil -> nil
+        _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(resource_mod)}.pax_detail_fieldsets/3"
+      end
+    else
+      nil
+    end
+  end
+
+  # TODO: remove the ability to set index_link callback, and instead just configure name of field to use in links
+  # both here and in the detail view.
+  def pax_field_link(site_mod, object, opts \\ []) do
+    resource = Keyword.get(opts, :resource)
+
+    cond do
+      function_exported?(resource.mod, :index_link, 2) -> resource.mod.index_link(object, resource)
+      function_exported?(resource.mod, :index_link, 1) -> resource.mod.index_link(object)
+      function_exported?(site_mod, :index_link, 2) -> site_mod.index_link(object, resource)
+      function_exported?(site_mod, :index_link, 1) -> site_mod.index_link(object)
+      true -> index_link(site_mod, object, resource)
+    end
+  end
+
+  defp index_link(site_mod, object, resource) do
+    case resource.section do
+      nil -> Pax.Admin.Site.resource_show_path(site_mod, resource.name, object)
+      section -> Pax.Admin.Site.resource_show_path(site_mod, section.name, resource.name, object)
+    end
   end
 end

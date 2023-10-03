@@ -294,42 +294,30 @@ defmodule Pax.Admin.Site do
           do: Pax.Admin.Dashboard.Live.mount(unquote(env.module), params, session, socket)
       end
 
-      defmodule IndexLive do
+      defmodule ResourceLive do
         use Phoenix.LiveView, layout: {Pax.Admin.Layouts, :app}
-        use Pax.Index.Live
+        use Pax.Interface
 
-        def render(assigns), do: Pax.Admin.Index.Live.render(unquote(env.module), assigns)
+        def render(assigns), do: Pax.Admin.Resource.Live.render(unquote(env.module), assigns)
 
         def pax_pre_init(params, session, socket),
-          do: Pax.Admin.Index.Live.pax_pre_init(unquote(env.module), params, session, socket)
+          do: Pax.Admin.Resource.Live.pax_pre_init(unquote(env.module), params, session, socket)
 
-        defdelegate pax_adapter(socket), to: Pax.Admin.Index.Live
-        defdelegate pax_fields(socket), to: Pax.Admin.Index.Live
+        defdelegate pax_adapter(socket), to: Pax.Admin.Resource.Live
+        defdelegate pax_singular_name(socket), to: Pax.Admin.Resource.Live
+        defdelegate pax_plural_name(socket), to: Pax.Admin.Resource.Live
+        defdelegate pax_object_name(socket, object), to: Pax.Admin.Resource.Live
+
+        defdelegate pax_index_path(socket), to: Pax.Admin.Resource.Live
+        defdelegate pax_new_path(socket), to: Pax.Admin.Resource.Live
+        defdelegate pax_show_path(socket, object), to: Pax.Admin.Resource.Live
+        defdelegate pax_edit_path(socket, object), to: Pax.Admin.Resource.Live
+
+        defdelegate pax_fields(socket), to: Pax.Admin.Resource.Live
+        defdelegate pax_fieldsets(socket), to: Pax.Admin.Resource.Live
 
         def pax_field_link(object, opts \\ []),
-          do: Pax.Admin.Index.Live.pax_field_link(unquote(env.module), object, opts)
-
-        defdelegate pax_singular_name(socket), to: Pax.Admin.Index.Live
-        defdelegate pax_plural_name(socket), to: Pax.Admin.Index.Live
-        defdelegate pax_new_path(socket), to: Pax.Admin.Index.Live
-      end
-
-      defmodule DetailLive do
-        use Phoenix.LiveView, layout: {Pax.Admin.Layouts, :app}
-        use Pax.Detail.Live
-
-        def render(assigns), do: Pax.Admin.Detail.Live.render(unquote(env.module), assigns)
-
-        def pax_pre_init(params, session, socket),
-          do: Pax.Admin.Detail.Live.pax_pre_init(unquote(env.module), params, session, socket)
-
-        defdelegate pax_adapter(socket), to: Pax.Admin.Detail.Live
-        defdelegate pax_fieldsets(socket), to: Pax.Admin.Detail.Live
-        defdelegate pax_index_path(socket), to: Pax.Admin.Detail.Live
-        defdelegate pax_new_path(socket), to: Pax.Admin.Index.Live
-        defdelegate pax_show_path(socket, object), to: Pax.Admin.Detail.Live
-        defdelegate pax_edit_path(socket, object), to: Pax.Admin.Detail.Live
-        defdelegate pax_object_name(socket, object), to: Pax.Admin.Detail.Live
+          do: Pax.Admin.Resource.Live.pax_field_link(unquote(env.module), object, opts)
       end
     end
   end

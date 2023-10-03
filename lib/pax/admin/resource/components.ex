@@ -1,8 +1,38 @@
-defmodule Pax.Admin.Detail.Components do
+defmodule Pax.Admin.Resource.Components do
   use Phoenix.Component
+  import Pax.Interface.Components, only: [table: 1, fieldset: 1, fieldgroup: 1]
   import Pax.Components
   import Pax.Field.Components
-  import Pax.Detail.Components
+
+  attr :pax, :map, required: true
+  attr :resource, :map, required: true
+  attr :objects, :list, required: true
+  attr :class, :string, default: nil
+
+  def index(assigns) do
+    ~H"""
+    <div class={["pax pax-index", @class]}>
+      <.pax_header pax={@pax}>
+        <:title>
+          <%= @pax.plural_name %>
+        </:title>
+
+        <:action :if={@pax.new_path}>
+          <.pax_button patch={@pax.new_path}>New</.pax_button>
+        </:action>
+      </.pax_header>
+
+      <.table fields={@pax.fields} objects={@objects}>
+        <:header :let={field}>
+          <.field_label field={field} />
+        </:header>
+        <:cell :let={{field, object}}>
+          <.field_link_or_text field={field} object={object} opts={[resource: @resource]} />
+        </:cell>
+      </.table>
+    </div>
+    """
+  end
 
   attr :pax, :map, required: true
   attr :object, :map, required: true
@@ -34,7 +64,7 @@ defmodule Pax.Admin.Detail.Components do
 
       <div class="pax-button-group">
         <.pax_button :if={@pax.edit_path} patch={@pax.edit_path}>Edit</.pax_button>
-        <.pax_button :if={@pax.index_path} navigate={@pax.index_path} secondary={true}>
+        <.pax_button :if={@pax.index_path} patch={@pax.index_path} secondary={true}>
           Back
         </.pax_button>
       </div>
@@ -82,7 +112,7 @@ defmodule Pax.Admin.Detail.Components do
           <.pax_button :if={@pax.show_path} patch={@pax.show_path} secondary={true}>
             Cancel
           </.pax_button>
-          <.pax_button :if={@pax.index_path} navigate={@pax.index_path} secondary={true}>
+          <.pax_button :if={@pax.index_path} patch={@pax.index_path} secondary={true}>
             Back
           </.pax_button>
         </div>

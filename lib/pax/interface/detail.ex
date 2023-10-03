@@ -1,60 +1,19 @@
-defmodule Pax.Detail.Live do
-  @moduledoc """
-  Implements a live view for a detail page, built on top of Pax.LiveView.
-  """
-
+defmodule Pax.Interface.Detail do
+  @moduledoc false
   import Phoenix.Component, only: [assign: 3, to_form: 1]
   import Phoenix.LiveView
-  import Pax.LiveView
+  import Pax.Interface.Util
+  require Logger
 
-  @type fieldsets ::
-          list(Pax.Field.fieldspec())
-          | list(list(Pax.Field.fieldspec()) | Pax.Field.fieldspec())
-          | keyword(list(Pax.Field.fieldspec()))
-
-  @callback pax_fieldsets(socket :: Phoenix.LiveView.Socket.t()) :: fieldsets() | nil
-
-  defmacro __using__(_opts) do
-    quote do
-      # IO.puts("Pax.Detail.Live.__using__ for #{inspect(__MODULE__)}")
-      use Pax.LiveView
-      @behaviour Pax.Detail.Live
-      @behaviour Pax.Field.Callback
-
-      defdelegate pax_internal_init(module, socket), to: Pax.Detail.Live
-
-      def pax_fieldsets(_socket), do: nil
-
-      defoverridable pax_fieldsets: 1
-    end
-  end
-
-  def pax_internal_init(module, socket) do
-    IO.puts("#{inspect(__MODULE__)}.pax_internal_init(#{inspect(module)})")
-    adapter = socket.assigns.pax.adapter
-    fieldsets = init_fieldsets(module, adapter, socket)
-
-    socket =
-      socket
-      |> assign_pax(:fieldsets, fieldsets)
-      |> attach_hook(:pax_handle_params, :handle_params, fn params, uri, socket ->
-        on_handle_params(module, adapter, fieldsets, params, uri, socket)
-      end)
-      |> attach_hook(:pax_handle_event, :handle_event, fn event, params, socket ->
-        on_handle_event(module, adapter, fieldsets, event, params, socket)
-      end)
-
-    {:cont, socket}
-  end
-
-  def on_handle_params(module, adapter, fieldsets, params, uri, socket) do
+  def on_handle_params(module, adapter, params, uri, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_handle_params(#{module}, #{inspect(params)}, #{inspect(uri)}")
+    fieldsets = init_fieldsets(module, adapter, socket)
     object = init_object(module, adapter, params, uri, socket)
     object_name = init_object_name(module, adapter, socket, object)
 
     socket =
       socket
-      |> assign_pax(:uri, URI.parse(uri))
+      |> assign_pax(:fieldsets, fieldsets)
       |> maybe_init_edit_paths(module, object)
       |> assign(:object, object)
       |> assign_pax(:object_name, object_name)
@@ -65,6 +24,32 @@ defmodule Pax.Detail.Live do
     else
       {:halt, socket}
     end
+  end
+
+  def on_handle_event(_module, adapter, "pax_validate", %{"detail" => params}, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.on_handle_event(:pax_validate, #{inspect(params)})")
+    fieldsets = socket.assigns.pax.fieldsets
+
+    changeset =
+      changeset(adapter, fieldsets, socket.assigns.object, params)
+      |> Map.put(:action, :validate)
+
+    {:halt, assign_form(socket, changeset)}
+  end
+
+  def on_handle_event(_module, adapter, "pax_save", %{"detail" => params}, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.on_handle_event(:pax_save, #{inspect(params)})")
+    fieldsets = socket.assigns.pax.fieldsets
+
+    changeset = changeset(adapter, fieldsets, socket.assigns.object, params)
+
+    save_object(socket, socket.assigns.live_action, adapter, socket.assigns.object, changeset)
+  end
+
+  # Catch-all for all other events that we don't care about
+  def on_handle_event(_module, _adapter, event, params, socket) do
+    Logger.info("IGNORED: #{inspect(__MODULE__)}.on_handle_event(#{inspect(event)}, #{inspect(params)})")
+    {:cont, socket}
   end
 
   defp maybe_init_edit_paths(socket, module, object) do
@@ -125,30 +110,6 @@ defmodule Pax.Detail.Live do
     for {_, fieldgroups} <- fieldsets, fields <- fieldgroups, field <- fields do
       field
     end
-  end
-
-  defp on_handle_event(_module, adapter, fieldsets, "pax_validate", %{"detail" => params}, socket) do
-    IO.puts("#{inspect(__MODULE__)}.on_handle_event(:pax_validate, #{inspect(params)})")
-
-    changeset =
-      changeset(adapter, fieldsets, socket.assigns.object, params)
-      |> Map.put(:action, :validate)
-
-    {:halt, assign_form(socket, changeset)}
-  end
-
-  defp on_handle_event(_module, adapter, fieldsets, "pax_save", %{"detail" => params}, socket) do
-    IO.puts("#{inspect(__MODULE__)}.on_handle_event(:pax_save, #{inspect(params)})")
-
-    changeset = changeset(adapter, fieldsets, socket.assigns.object, params)
-
-    save_object(socket, socket.assigns.live_action, adapter, socket.assigns.object, changeset)
-  end
-
-  # Catch-all for all other events that we don't care about
-  defp on_handle_event(_module, _adapter, _fieldsets, event, params, socket) do
-    IO.puts("IGNORED: #{inspect(__MODULE__)}.on_handle_event(#{inspect(event)}, #{inspect(params)})")
-    {:cont, socket}
   end
 
   defp save_object(socket, :new, adapter, object, changeset) do
