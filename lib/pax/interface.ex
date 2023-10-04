@@ -5,6 +5,7 @@ defmodule Pax.Interface do
   import Phoenix.LiveView
   require Logger
 
+  import Pax.Interface.Init
   import Pax.Interface.Util
   alias Pax.Interface.Index
   alias Pax.Interface.Detail

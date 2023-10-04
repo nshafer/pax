@@ -2,6 +2,7 @@ defmodule Pax.Interface.Detail do
   @moduledoc false
   import Phoenix.Component, only: [assign: 3, to_form: 1]
   import Phoenix.LiveView
+  import Pax.Interface.Init
   import Pax.Interface.Util
   require Logger
 
@@ -69,6 +70,16 @@ defmodule Pax.Interface.Detail do
       action when action in [:show, :edit] -> Pax.Adapter.get_object(adapter, params, uri, socket)
       :new -> Pax.Adapter.new_object(adapter, params, uri, socket)
       _ -> nil
+    end
+  end
+
+  def init_object_name(_module, _adapter, _socket, nil), do: "Object"
+
+  def init_object_name(module, adapter, socket, object) do
+    if function_exported?(module, :pax_object_name, 2) do
+      module.pax_object_name(socket, object)
+    else
+      Pax.Adapter.object_name(adapter, object)
     end
   end
 
