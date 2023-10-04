@@ -146,6 +146,7 @@ defmodule Pax.Interface do
       :new -> Detail.on_handle_params(module, adapter, params, uri, socket)
       :show -> Detail.on_handle_params(module, adapter, params, uri, socket)
       :edit -> Detail.on_handle_params(module, adapter, params, uri, socket)
+      _ -> {:cont, socket}
     end
   end
 
