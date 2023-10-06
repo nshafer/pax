@@ -3,7 +3,7 @@ defmodule Pax.Field.String do
   @behaviour Pax.Field.Type
 
   @impl Pax.Field.Type
-  def init(_mod, _opts) do
+  def init(_opts) do
     # TODO: add length limit
     %{}
   end

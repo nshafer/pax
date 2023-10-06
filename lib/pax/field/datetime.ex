@@ -3,7 +3,7 @@ defmodule Pax.Field.Datetime do
   @behaviour Pax.Field.Type
 
   @impl Pax.Field.Type
-  def init(_mod, opts) do
+  def init(opts) do
     %{
       format: Keyword.get(opts, :format, nil),
       date_format: Keyword.get(opts, :format, "%a, %B %d, %Y"),

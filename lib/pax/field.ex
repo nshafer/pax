@@ -18,25 +18,26 @@ defmodule Pax.Field do
   @global_opts [:label, :link, :value, :immutable, :required]
 
   @doc false
-  def init(callback_mod, adapter, name) when is_atom(name) do
+  @spec init(Pax.Adapter.t(), fieldspec()) :: t()
+  def init(adapter, name) when is_atom(name) do
     type = Pax.Adapter.field_type!(adapter, name)
-    do_init(callback_mod, adapter, name, type, [])
+    do_init(adapter, name, type, [])
   end
 
-  def init(callback_mod, adapter, {name, opts}) when is_atom(name) and is_list(opts) do
+  def init(adapter, {name, opts}) when is_atom(name) and is_list(opts) do
     type = Pax.Adapter.field_type!(adapter, name)
-    do_init(callback_mod, adapter, name, type, opts)
+    do_init(adapter, name, type, opts)
   end
 
-  def init(callback_mod, adapter, {name, type}) when is_atom(name) and is_atom(type) do
-    do_init(callback_mod, adapter, name, type, [])
+  def init(adapter, {name, type}) when is_atom(name) and is_atom(type) do
+    do_init(adapter, name, type, [])
   end
 
-  def init(callback_mod, adapter, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
-    do_init(callback_mod, adapter, name, type, opts)
+  def init(adapter, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
+    do_init(adapter, name, type, opts)
   end
 
-  def init(_callback_mod, _adapter, arg) do
+  def init(_adapter, arg) do
     raise ArgumentError, """
     Invalid fieldspec #{inspect(arg)}. Must be one of:
       - `:name`
@@ -47,43 +48,43 @@ defmodule Pax.Field do
     """
   end
 
-  defp do_init(callback_mod, adapter, name, :boolean, opts) do
-    do_init(callback_mod, adapter, name, Field.Boolean, opts)
+  defp do_init(adapter, name, :boolean, opts) do
+    do_init(adapter, name, Field.Boolean, opts)
   end
 
-  defp do_init(callback_mod, adapter, name, :date, opts) do
-    do_init(callback_mod, adapter, name, Field.Date, opts)
+  defp do_init(adapter, name, :date, opts) do
+    do_init(adapter, name, Field.Date, opts)
   end
 
-  defp do_init(callback_mod, adapter, name, :datetime, opts) do
-    do_init(callback_mod, adapter, name, Field.Datetime, opts)
+  defp do_init(adapter, name, :datetime, opts) do
+    do_init(adapter, name, Field.Datetime, opts)
   end
 
-  defp do_init(callback_mod, adapter, name, :time, opts) do
-    do_init(callback_mod, adapter, name, Field.Time, opts)
+  defp do_init(adapter, name, :time, opts) do
+    do_init(adapter, name, Field.Time, opts)
   end
 
   # TODO: :decimal
 
-  defp do_init(callback_mod, adapter, name, :float, opts) do
-    do_init(callback_mod, adapter, name, Field.Float, opts)
+  defp do_init(adapter, name, :float, opts) do
+    do_init(adapter, name, Field.Float, opts)
   end
 
-  defp do_init(callback_mod, adapter, name, :integer, opts) do
-    do_init(callback_mod, adapter, name, Field.Integer, opts)
+  defp do_init(adapter, name, :integer, opts) do
+    do_init(adapter, name, Field.Integer, opts)
   end
 
   # TODO: :list
   # TODO: :map ?
 
-  defp do_init(callback_mod, adapter, name, :string, opts) do
-    do_init(callback_mod, adapter, name, Field.String, opts)
+  defp do_init(adapter, name, :string, opts) do
+    do_init(adapter, name, Field.String, opts)
   end
 
-  defp do_init(callback_mod, _adapter, name, type, opts) do
-    if Code.ensure_loaded?(type) and function_exported?(type, :init, 2) do
-      global = init_global_opts(callback_mod, opts)
-      opts = type.init(callback_mod, opts)
+  defp do_init(_adapter, name, type, opts) do
+    if Code.ensure_loaded?(type) and function_exported?(type, :init, 1) do
+      global = init_global_opts(opts)
+      opts = type.init(opts)
 
       %Field{
         name: name,
@@ -95,46 +96,20 @@ defmodule Pax.Field do
     end
   end
 
-  defp init_global_opts(callback_mod, opts) do
+  defp init_global_opts(opts) do
     Keyword.take(opts, @global_opts)
     |> Map.new()
-    |> resolve_link_opt(callback_mod)
+    |> resolve_link_opt()
   end
 
-  defp resolve_link_opt(opts, callback_mod) do
-    # Make sure the link option is properly set. Mainly, if it's set to true, make sure the pax_field_link/1
-    # or pax_field_link/2 function is implemented in the module.
+  defp resolve_link_opt(opts) do
     case Map.get(opts, :link) do
-      nil ->
-        opts
-
-      true ->
-        cond do
-          function_exported?(callback_mod, :pax_field_link, 2) ->
-            Map.put(opts, :link, {callback_mod, :pax_field_link})
-
-          function_exported?(callback_mod, :pax_field_link, 1) ->
-            Map.put(opts, :link, {callback_mod, :pax_field_link})
-
-          true ->
-            raise "You must implement a pax_field_link/1 or pax_field_link/2 " <>
-                    "function in #{inspect(callback_mod)} in order to set link: true for a field"
-        end
-
-      {mod, fun} when is_atom(mod) and is_atom(fun) ->
-        opts
-
-      fun when is_function(fun) ->
-        opts
-
-      link when is_atom(link) or is_binary(link) ->
-        opts
-
-      %URI{} ->
-        opts
-
-      _ ->
-        raise "Invalid link option: #{inspect(opts[:link])}"
+      nil -> opts
+      {mod, fun} when is_atom(mod) and is_atom(fun) -> opts
+      fun when is_function(fun) -> opts
+      link when is_atom(link) or is_binary(link) -> opts
+      %URI{} -> opts
+      _ -> raise "Invalid link option: #{inspect(opts[:link])}"
     end
   end
 
@@ -145,29 +120,27 @@ defmodule Pax.Field do
     end
   end
 
-  def link(%Field{opts: opts}, object, fun_opts \\ []) do
+  def link(%Field{opts: opts}, object) do
     case Map.get(opts, :link, nil) do
       nil -> nil
-      {mod, fun} when is_atom(mod) and is_atom(fun) -> resolve_link_from_mod_fun(object, mod, fun, fun_opts)
-      fun when is_function(fun) -> resolve_link_from_function(object, fun, fun_opts)
+      {mod, fun} when is_atom(mod) and is_atom(fun) -> resolve_link_from_mod_fun(object, mod, fun)
+      fun when is_function(fun) -> resolve_link_from_function(object, fun)
       %URI{} = link -> URI.to_string(link)
       link -> link
     end
   end
 
-  defp resolve_link_from_mod_fun(object, mod, fun, fun_opts) do
+  defp resolve_link_from_mod_fun(object, mod, fun) do
     cond do
-      function_exported?(mod, fun, 2) -> apply(mod, fun, [object, fun_opts]) |> resolve_returned_link()
       function_exported?(mod, fun, 1) -> apply(mod, fun, [object]) |> resolve_returned_link()
-      true -> raise UndefinedFunctionError, "functions #{mod}.#{fun}/1 or #{mod}.#{fun}/1 are undefined or private"
+      true -> raise UndefinedFunctionError, "function #{mod}.#{fun}/1 is undefined or private"
     end
   end
 
-  defp resolve_link_from_function(object, fun, fun_opts) do
+  defp resolve_link_from_function(object, fun) do
     case Function.info(fun, :arity) do
-      {:arity, 2} -> fun.(object, fun_opts) |> resolve_returned_link()
       {:arity, 1} -> fun.(object) |> resolve_returned_link()
-      _ -> raise ArgumentError, "Invalid function arity: #{inspect(fun)}. Must be a fn/1 or fn/2."
+      _ -> raise ArgumentError, "Invalid function arity: #{inspect(fun)}. Must be a fn/1."
     end
   end
 
@@ -195,6 +168,10 @@ defmodule Pax.Field do
 
         nil
     end
+  end
+
+  def set_link(field, link_spec) do
+    %{field | opts: Map.put(field.opts, :link, link_spec)}
   end
 
   def render(%Field{name: name, type: type, opts: opts}, object) do

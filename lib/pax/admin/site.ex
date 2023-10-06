@@ -315,9 +315,6 @@ defmodule Pax.Admin.Site do
 
         defdelegate pax_fields(socket), to: Pax.Admin.Resource.Live
         defdelegate pax_fieldsets(socket), to: Pax.Admin.Resource.Live
-
-        def pax_field_link(object, opts \\ []),
-          do: Pax.Admin.Resource.Live.pax_field_link(unquote(env.module), object, opts)
       end
     end
   end

@@ -29,20 +29,11 @@ defmodule Pax.Admin.Resource do
               | keyword(list(Pax.Field.field()))
               | nil
 
-  # TODO: rename this to pax_field_link to show it's a passthrough
-  @callback index_link(object :: map()) :: String.t()
-  @callback index_link(object :: map(), resource :: map()) :: String.t()
-
-  # TODO: remove this in favor of singular, plural, object names
-  @callback detail_title(object :: map()) :: String.t()
   @callback object_name(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
 
   @optional_callbacks pax_pre_init: 3,
                       pax_index_fields: 1,
                       pax_detail_fieldsets: 1,
-                      index_link: 1,
-                      index_link: 2,
-                      detail_title: 1,
                       object_name: 2
 
   defmacro __using__(_opts) do

@@ -3,7 +3,7 @@ defmodule Pax.Field.Integer do
   @behaviour Pax.Field.Type
 
   @impl Pax.Field.Type
-  def init(_mod, _opts) do
+  def init(_opts) do
     # TODO: add formatting options: human, scientific, etc
     # TODO: add base option
     %{}

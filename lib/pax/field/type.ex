@@ -4,7 +4,7 @@ defmodule Pax.Field.Type do
   and other related behavior
   """
 
-  @callback init(live_module :: module(), opts :: keyword()) :: map()
+  @callback init(opts :: keyword()) :: map()
   @callback render(opts :: map(), value :: any()) :: String.t() | Phoenix.LiveView.Rendered.t() | nil
   @callback input(opts :: map(), Pax.Field.field(), form_field :: Phoenix.HTML.FormField.t()) ::
               String.t() | Phoenix.LiveView.Rendered.t() | nil

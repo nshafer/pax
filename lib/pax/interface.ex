@@ -50,7 +50,6 @@ defmodule Pax.Interface do
   defmacro __using__(_opts) do
     quote do
       @behaviour Pax.Interface
-      @behaviour Pax.Field.Callback
 
       def on_mount(:pax_live_view, params, session, socket),
         do: Pax.Interface.on_mount(__MODULE__, params, session, socket)

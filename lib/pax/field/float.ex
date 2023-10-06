@@ -3,7 +3,7 @@ defmodule Pax.Field.Float do
   @behaviour Pax.Field.Type
 
   @impl Pax.Field.Type
-  def init(_mod, opts) do
+  def init(opts) do
     # TODO: add formatting options: human, scientific, etc
     %{
       round: Keyword.get(opts, :round, 5)

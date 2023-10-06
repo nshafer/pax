@@ -3,7 +3,7 @@ defmodule Pax.Field.Boolean do
   @behaviour Pax.Field.Type
 
   @impl Pax.Field.Type
-  def init(_mod, opts) do
+  def init(opts) do
     # TODO: add formatting options: human, scientific, etc
     %{
       true: Keyword.get(opts, true, "True"),

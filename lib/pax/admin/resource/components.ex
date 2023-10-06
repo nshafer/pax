@@ -27,7 +27,7 @@ defmodule Pax.Admin.Resource.Components do
           <.field_label field={field} />
         </:header>
         <:cell :let={{field, object}}>
-          <.field_link_or_text field={field} object={object} opts={[resource: @resource]} />
+          <.field_link_or_text field={field} object={object} />
         </:cell>
       </.table>
     </div>

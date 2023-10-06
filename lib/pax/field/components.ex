@@ -17,10 +17,9 @@ defmodule Pax.Field.Components do
 
   attr :field, :any, required: true
   attr :object, :map, required: true
-  attr :opts, :any, default: []
 
   def field_link_or_text(assigns) do
-    case Pax.Field.link(assigns.field, assigns.object, assigns.opts) do
+    case Pax.Field.link(assigns.field, assigns.object) do
       nil -> field_text(assigns)
       link -> field_link(assign(assigns, link: link))
     end

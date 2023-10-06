@@ -186,9 +186,9 @@ defmodule Pax.Interface.Detail do
 
     # Check if the user returned a keyword list of fieldset name -> fieldgroups, and if not, make it :default
     if is_fieldsets?(fieldsets) do
-      Enum.map(fieldsets, &init_fieldset(module, adapter, &1))
+      Enum.map(fieldsets, &init_fieldset(adapter, &1))
     else
-      [init_fieldset(module, adapter, {:default, fieldsets})]
+      [init_fieldset(adapter, {:default, fieldsets})]
     end
   end
 
@@ -199,16 +199,16 @@ defmodule Pax.Interface.Detail do
     end)
   end
 
-  defp init_fieldset(module, adapter, {name, fields}) when is_atom(name) and is_list(fields) do
-    {name, Enum.map(fields, &init_fieldgroup(module, adapter, &1))}
+  defp init_fieldset(adapter, {name, fields}) when is_atom(name) and is_list(fields) do
+    {name, Enum.map(fields, &init_fieldgroup(adapter, &1))}
   end
 
   # A fieldgroup can be a list of fields to display on one line, or just one field to display by itself
-  defp init_fieldgroup(module, adapter, groups) when is_list(groups) do
-    Enum.map(groups, &Pax.Field.init(module, adapter, &1))
+  defp init_fieldgroup(adapter, groups) when is_list(groups) do
+    Enum.map(groups, &Pax.Field.init(adapter, &1))
   end
 
-  defp init_fieldgroup(module, adapter, field) do
-    [Pax.Field.init(module, adapter, field)]
+  defp init_fieldgroup(adapter, field) do
+    [Pax.Field.init(adapter, field)]
   end
 end

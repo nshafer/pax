@@ -67,8 +67,8 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def pax_object_name(socket, object) do
-    %{mod: resource_mod} = socket.assigns.resource
-    %{adapter: adapter} = socket.assigns.pax
+    resource_mod = socket.assigns.resource.mod
+    adapter = socket.assigns.pax.adapter
 
     if function_exported?(resource_mod, :object_name, 2) do
       resource_mod.object_name(socket, object)
@@ -93,25 +93,28 @@ defmodule Pax.Admin.Resource.Live do
 
   def pax_show_path(socket, object) do
     site_mod = socket.assigns.pax_site_mod
+    adapter = socket.assigns.pax.adapter
     resource = socket.assigns.resource
+    id_field = Pax.Adapter.id_field(adapter)
 
-    Pax.Admin.Site.resource_show_path(site_mod, resource.section, resource, object)
+    Pax.Admin.Site.resource_show_path(site_mod, resource.section, resource, object, id_field)
   end
 
   def pax_edit_path(socket, object) do
     site_mod = socket.assigns.pax_site_mod
+    adapter = socket.assigns.pax.adapter
     resource = socket.assigns.resource
+    id_field = Pax.Adapter.id_field(adapter)
 
-    # TODO: make this work with custom fields? like :uuid
-    Pax.Admin.Site.resource_edit_path(site_mod, resource.section, resource, object)
+    Pax.Admin.Site.resource_edit_path(site_mod, resource.section, resource, object, id_field)
   end
 
   def pax_fields(socket) do
-    %{mod: resource_mod} = socket.assigns.resource
+    resource_mod = socket.assigns.resource.mod
 
     if function_exported?(resource_mod, :pax_index_fields, 1) do
       case resource_mod.pax_index_fields(socket) do
-        fields when is_list(fields) -> fields |> Pax.Field.Util.maybe_set_default_link_field()
+        fields when is_list(fields) -> fields
         nil -> nil
         _ -> raise ArgumentError, "Invalid fields returned from #{inspect(resource_mod)}.pax_index_fields/3"
       end
@@ -121,7 +124,7 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def pax_fieldsets(socket) do
-    %{mod: resource_mod} = socket.assigns.resource
+    resource_mod = socket.assigns.resource.mod
 
     if function_exported?(resource_mod, :pax_detail_fieldsets, 1) do
       case resource_mod.pax_detail_fieldsets(socket) do
@@ -131,27 +134,6 @@ defmodule Pax.Admin.Resource.Live do
       end
     else
       nil
-    end
-  end
-
-  # TODO: remove the ability to set index_link callback, and instead just configure name of field to use in links
-  # both here and in the detail view.
-  def pax_field_link(site_mod, object, opts \\ []) do
-    resource = Keyword.get(opts, :resource)
-
-    cond do
-      function_exported?(resource.mod, :index_link, 2) -> resource.mod.index_link(object, resource)
-      function_exported?(resource.mod, :index_link, 1) -> resource.mod.index_link(object)
-      function_exported?(site_mod, :index_link, 2) -> site_mod.index_link(object, resource)
-      function_exported?(site_mod, :index_link, 1) -> site_mod.index_link(object)
-      true -> index_link(site_mod, object, resource)
-    end
-  end
-
-  defp index_link(site_mod, object, resource) do
-    case resource.section do
-      nil -> Pax.Admin.Site.resource_show_path(site_mod, resource.name, object)
-      section -> Pax.Admin.Site.resource_show_path(site_mod, section.name, resource.name, object)
     end
   end
 end
