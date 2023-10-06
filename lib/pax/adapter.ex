@@ -34,6 +34,8 @@ defmodule Pax.Adapter do
 
   @callback get_object(callback_module(), opts :: map(), unsigned_params(), uri :: String.t(), socket()) :: map()
 
+  @callback id_field(callback_module(), opts :: map()) :: atom() | binary()
+
   @callback object_id(callback_module(), opts :: map(), object :: map()) :: String.Chars.t()
 
   @callback object_name(callback_module(), opts :: map(), object :: map()) :: String.t()
@@ -97,6 +99,11 @@ defmodule Pax.Adapter do
   @spec get_object(t(), unsigned_params(), String.t(), socket()) :: map()
   def get_object(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, params, uri, socket) do
     adapter.get_object(callback_module, opts, params, uri, socket)
+  end
+
+  @spec id_field(t()) :: atom() | binary()
+  def id_field(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}) do
+    adapter.id_field(callback_module, opts)
   end
 
   @spec object_id(t(), object :: map()) :: String.Chars.t()

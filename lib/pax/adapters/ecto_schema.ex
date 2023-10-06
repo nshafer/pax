@@ -129,31 +129,48 @@ defmodule Pax.Adapters.EctoSchema do
 
   """
   @impl Pax.Adapter
-  def get_object(callback_module, %{repo: repo, schema: schema}, params, uri, socket) do
+  def get_object(callback_module, %{repo: repo, schema: schema} = opts, params, uri, socket) do
     query =
       from(s in schema)
-      |> lookup(callback_module, schema, params, uri, socket)
+      |> lookup(callback_module, opts, schema, params, uri, socket)
 
     repo.one!(query)
   end
 
-  defp lookup(query, callback_module, schema, params, uri, socket) do
+  defp lookup(query, callback_module, opts, schema, params, uri, socket) do
     cond do
+      # First option: an explicit callback to lookup the object
       function_exported?(callback_module, :pax_lookup, 4) ->
         callback_module.pax_lookup(query, params, uri, socket)
 
-      lookup = lookup_by_primary_key(query, schema, params) ->
+      # Second option: try to find based on the "id" param, and match to our discovered id_field
+      lookup = lookup_by_id_field(query, callback_module, opts, params) ->
         lookup
 
+      # Third option: try to match all of the primary keys if they are all present in params
+      lookup = lookup_by_primary_keys(query, schema, params) ->
+        lookup
+
+      # Fourth option: try to match any of the fields passed in as params
       lookup = lookup_by_fields(query, schema, params) ->
         lookup
 
+      # Fifth option: no lookup possible, so raise an error
       true ->
-        nil
+        raise "Could not figure out how to perform lookup. Please implement a pax_lookup/4 callback in #{inspect(callback_module)}"
     end
   end
 
-  defp lookup_by_primary_key(query, schema, params) do
+  defp lookup_by_id_field(query, callback_module, opts, params) do
+    id_field = id_field(callback_module, opts)
+    id = Map.get(params, "id")
+
+    if id_field && id do
+      from(q in query, where: ^[{id_field, id}])
+    end
+  end
+
+  defp lookup_by_primary_keys(query, schema, params) do
     primary_keys = schema.__schema__(:primary_key)
 
     if Enum.all?(primary_keys, &Map.has_key?(params, to_string(&1))) do
@@ -170,23 +187,33 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def object_id(callback_module, %{schema: schema, id_field: id_field}, object) do
+  def id_field(callback_module, %{schema: schema, id_field: id_field}) do
     cond do
-      function_exported?(callback_module, :pax_object_id, 1) ->
-        callback_module.pax_object_id(object)
+      function_exported?(callback_module, :pax_id_field, 1) ->
+        callback_module.pax_id_field()
 
       id_field != nil ->
-        Map.get(object, id_field)
+        id_field
 
       [primary_key] = schema.__schema__(:primary_key) ->
-        Map.get(object, primary_key)
+        primary_key
 
       primary_keys = schema.__schema__(:primary_key) ->
         raise ArgumentError, """
-        Composite Primary Keys are not supported for automatic object_id generation.
-        Please implement a pax_object_id/1 callback in #{inspect(callback_module)}.
+        Composite Primary Keys are not supported for automatic id_field generation.
+        Please implement a pax_id_field/1 callback in #{inspect(callback_module)}.
         Got primary keys #{inspect(primary_keys)} for schema #{inspect(schema)}.
         """
+    end
+  end
+
+  @impl Pax.Adapter
+  def object_id(callback_module, opts, object) do
+    if function_exported?(callback_module, :pax_object_id, 1) do
+      callback_module.pax_object_id(object)
+    else
+      id_field = id_field(callback_module, opts)
+      Map.get(object, id_field)
     end
   end
 
