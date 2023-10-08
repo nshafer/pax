@@ -76,8 +76,8 @@ defmodule Pax.Interface.Detail do
   def init_object_name(_module, _adapter, _socket, nil), do: "Object"
 
   def init_object_name(module, adapter, socket, object) do
-    if function_exported?(module, :pax_object_name, 2) do
-      module.pax_object_name(socket, object)
+    if function_exported?(module, :object_name, 2) do
+      module.object_name(socket, object)
     else
       Pax.Adapter.object_name(adapter, object)
     end
@@ -178,7 +178,7 @@ defmodule Pax.Interface.Detail do
 
   defp init_fieldsets(module, adapter, socket) do
     fieldsets =
-      case module.pax_fieldsets(socket) do
+      case module.fieldsets(socket) do
         fieldsets when is_list(fieldsets) -> fieldsets
         nil -> Pax.Adapter.default_detail_fieldsets(adapter)
         _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(module)}.fieldsets/3"

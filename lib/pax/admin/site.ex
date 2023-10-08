@@ -303,18 +303,18 @@ defmodule Pax.Admin.Site do
         def pax_init(params, session, socket),
           do: Pax.Admin.Resource.Live.pax_init(unquote(env.module), params, session, socket)
 
-        defdelegate pax_adapter(socket), to: Pax.Admin.Resource.Live
-        defdelegate pax_singular_name(socket), to: Pax.Admin.Resource.Live
-        defdelegate pax_plural_name(socket), to: Pax.Admin.Resource.Live
-        defdelegate pax_object_name(socket, object), to: Pax.Admin.Resource.Live
+        defdelegate adapter(socket), to: Pax.Admin.Resource.Live
+        defdelegate singular_name(socket), to: Pax.Admin.Resource.Live
+        defdelegate plural_name(socket), to: Pax.Admin.Resource.Live
+        defdelegate object_name(socket, object), to: Pax.Admin.Resource.Live
 
-        defdelegate pax_index_path(socket), to: Pax.Admin.Resource.Live
-        defdelegate pax_new_path(socket), to: Pax.Admin.Resource.Live
-        defdelegate pax_show_path(socket, object), to: Pax.Admin.Resource.Live
-        defdelegate pax_edit_path(socket, object), to: Pax.Admin.Resource.Live
+        defdelegate index_path(socket), to: Pax.Admin.Resource.Live
+        defdelegate new_path(socket), to: Pax.Admin.Resource.Live
+        defdelegate show_path(socket, object), to: Pax.Admin.Resource.Live
+        defdelegate edit_path(socket, object), to: Pax.Admin.Resource.Live
 
-        defdelegate pax_fields(socket), to: Pax.Admin.Resource.Live
-        defdelegate pax_fieldsets(socket), to: Pax.Admin.Resource.Live
+        defdelegate index_fields(socket), to: Pax.Admin.Resource.Live
+        defdelegate fieldsets(socket), to: Pax.Admin.Resource.Live
       end
     end
   end

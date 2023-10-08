@@ -22,27 +22,27 @@ defmodule Pax.Interface do
               socket :: Phoenix.LiveView.Socket.t()
             ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
 
-  @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
+  @callback adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               module() | {module(), keyword()} | {module(), module(), keyword()}
 
-  @callback pax_singular_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback pax_plural_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback pax_object_name(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
+  @callback singular_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
+  @callback plural_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
+  @callback object_name(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
 
-  @optional_callbacks pax_singular_name: 1, pax_plural_name: 1, pax_object_name: 2
+  @optional_callbacks singular_name: 1, plural_name: 1, object_name: 2
 
-  @callback pax_index_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback pax_new_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback pax_show_path(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
-  @callback pax_edit_path(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
+  @callback index_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
+  @callback new_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
+  @callback show_path(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
+  @callback edit_path(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
 
-  @optional_callbacks pax_index_path: 1, pax_new_path: 1, pax_show_path: 2, pax_edit_path: 2
+  @optional_callbacks index_path: 1, new_path: 1, show_path: 2, edit_path: 2
 
   # Index callbacks
-  @callback pax_fields(socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Field.fieldspec()] | nil
+  @callback index_fields(socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Field.fieldspec()] | nil
 
   # Detail callbacks
-  @callback pax_fieldsets(socket :: Phoenix.LiveView.Socket.t()) :: fieldsets() | nil
+  @callback fieldsets(socket :: Phoenix.LiveView.Socket.t()) :: fieldsets() | nil
 
   defmacro __using__(_opts) do
     quote do
@@ -54,26 +54,26 @@ defmodule Pax.Interface do
 
       def pax_init(_params, _session, socket), do: {:cont, socket}
 
-      def pax_adapter(_socket) do
+      def adapter(_socket) do
         raise """
-        No pax_adapter/1 callback found for #{inspect(__MODULE__)}.
-        Please configure an adapter by defining a pax_adapter function, for example:
+        No adapter/1 callback found for #{inspect(__MODULE__)}.
+        Please configure an adapter by defining a adapter function, for example:
 
-            def pax_adapter(_socket),
+            def adapter(_socket),
               do: {Pax.Adapters.EctoSchema, repo: MyAppWeb.Repo, schema: MyApp.MyContext.MySchema}
 
         """
       end
 
-      defoverridable pax_init: 3, pax_adapter: 1
+      defoverridable pax_init: 3, adapter: 1
 
       # Default :index callbacks
-      def pax_fields(_socket), do: nil
-      defoverridable pax_fields: 1
+      def index_fields(_socket), do: nil
+      defoverridable index_fields: 1
 
       # Default :new, :show, :edit callbacks
-      def pax_fieldsets(_socket), do: nil
-      defoverridable pax_fieldsets: 1
+      def fieldsets(_socket), do: nil
+      defoverridable fieldsets: 1
     end
   end
 
