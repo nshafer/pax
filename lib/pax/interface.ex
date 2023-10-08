@@ -16,14 +16,11 @@ defmodule Pax.Interface do
           | keyword(list(Pax.Field.fieldspec()))
 
   # Common callbacks
-  @callback pax_pre_init(
+  @callback pax_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
             ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
-
-  @callback pax_post_init(socket :: Phoenix.LiveView.Socket.t()) ::
-              {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
 
   @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               module() | {module(), keyword()} | {module(), module(), keyword()}
@@ -50,15 +47,12 @@ defmodule Pax.Interface do
   defmacro __using__(_opts) do
     quote do
       @behaviour Pax.Interface
-
-      def on_mount(:pax_live_view, params, session, socket),
+      def on_mount(:pax_interface, params, session, socket),
         do: Pax.Interface.on_mount(__MODULE__, params, session, socket)
 
-      on_mount {__MODULE__, :pax_live_view}
+      on_mount {__MODULE__, :pax_interface}
 
-      # IO.puts("Pax.Interface.__using__ for #{inspect(__MODULE__)}")
-      def pax_pre_init(_params, _session, socket), do: {:cont, socket}
-      def pax_post_init(socket), do: {:cont, socket}
+      def pax_init(_params, _session, socket), do: {:cont, socket}
 
       def pax_adapter(_socket) do
         raise """
@@ -71,7 +65,7 @@ defmodule Pax.Interface do
         """
       end
 
-      defoverridable pax_pre_init: 3, pax_post_init: 1, pax_adapter: 1
+      defoverridable pax_init: 3, pax_adapter: 1
 
       # Default :index callbacks
       def pax_fields(_socket), do: nil
@@ -84,16 +78,19 @@ defmodule Pax.Interface do
   end
 
   def on_mount(module, params, session, socket) do
-    IO.puts("#{inspect(__MODULE__)}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
+    # IO.puts("#{inspect(__MODULE__)}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
+
+    # module.pax_init can return {:halt, socket} to halt the pax initialization process, but we don't want to halt the
+    # mount process, so we will always return {:cont, socket}. If the user wants to halt the mount after calling
+    # a redirect, then they will need to do so in their own mount callback.
 
     with(
-      {:cont, socket} <- module.pax_pre_init(params, session, socket),
-      {:cont, socket} <- init(module, socket),
-      {:cont, socket} <- module.pax_post_init(socket)
+      {:cont, socket} <- module.pax_init(params, session, socket),
+      {:cont, socket} <- init(module, socket)
     ) do
       {:cont, socket}
     else
-      {:halt, socket} -> {:halt, socket}
+      {:halt, socket} -> {:cont, socket}
     end
   end
 

@@ -300,8 +300,8 @@ defmodule Pax.Admin.Site do
 
         def render(assigns), do: Pax.Admin.Resource.Live.render(unquote(env.module), assigns)
 
-        def pax_pre_init(params, session, socket),
-          do: Pax.Admin.Resource.Live.pax_pre_init(unquote(env.module), params, session, socket)
+        def pax_init(params, session, socket),
+          do: Pax.Admin.Resource.Live.pax_init(unquote(env.module), params, session, socket)
 
         defdelegate pax_adapter(socket), to: Pax.Admin.Resource.Live
         defdelegate pax_singular_name(socket), to: Pax.Admin.Resource.Live
