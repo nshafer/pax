@@ -67,12 +67,12 @@ defmodule Pax.Admin.Resource.Live do
     socket.assigns.resource.title
   end
 
-  def object_name(socket, object) do
+  def object_name(object, socket) do
     resource_mod = socket.assigns.resource.mod
     adapter = socket.assigns.pax.adapter
 
     if function_exported?(resource_mod, :object_name, 2) do
-      resource_mod.object_name(socket, object)
+      resource_mod.object_name(object, socket)
     else
       Pax.Adapter.object_name(adapter, object)
     end
@@ -92,7 +92,7 @@ defmodule Pax.Admin.Resource.Live do
     Pax.Admin.Site.resource_new_path(site_mod, resource.section, resource)
   end
 
-  def show_path(socket, object) do
+  def show_path(object, socket) do
     site_mod = socket.assigns.pax_site_mod
     adapter = socket.assigns.pax.adapter
     resource = socket.assigns.resource
@@ -101,7 +101,7 @@ defmodule Pax.Admin.Resource.Live do
     Pax.Admin.Site.resource_show_path(site_mod, resource.section, resource, object, id_field)
   end
 
-  def edit_path(socket, object) do
+  def edit_path(object, socket) do
     site_mod = socket.assigns.pax_site_mod
     adapter = socket.assigns.pax.adapter
     resource = socket.assigns.resource

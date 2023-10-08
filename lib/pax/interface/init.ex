@@ -42,17 +42,17 @@ defmodule Pax.Interface.Init do
     end
   end
 
-  def init_show_path(module, socket, object) do
+  def init_show_path(module, object, socket) do
     if function_exported?(module, :show_path, 2) do
-      module.show_path(socket, object)
+      module.show_path(object, socket)
     else
       nil
     end
   end
 
-  def init_edit_path(module, socket, object) do
+  def init_edit_path(module, object, socket) do
     if function_exported?(module, :edit_path, 2) do
-      module.edit_path(socket, object)
+      module.edit_path(object, socket)
     else
       nil
     end

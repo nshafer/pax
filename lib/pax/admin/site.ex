@@ -306,12 +306,12 @@ defmodule Pax.Admin.Site do
         defdelegate adapter(socket), to: Pax.Admin.Resource.Live
         defdelegate singular_name(socket), to: Pax.Admin.Resource.Live
         defdelegate plural_name(socket), to: Pax.Admin.Resource.Live
-        defdelegate object_name(socket, object), to: Pax.Admin.Resource.Live
+        defdelegate object_name(object, socket), to: Pax.Admin.Resource.Live
 
         defdelegate index_path(socket), to: Pax.Admin.Resource.Live
         defdelegate new_path(socket), to: Pax.Admin.Resource.Live
-        defdelegate show_path(socket, object), to: Pax.Admin.Resource.Live
-        defdelegate edit_path(socket, object), to: Pax.Admin.Resource.Live
+        defdelegate show_path(object, socket), to: Pax.Admin.Resource.Live
+        defdelegate edit_path(object, socket), to: Pax.Admin.Resource.Live
 
         defdelegate index_fields(socket), to: Pax.Admin.Resource.Live
         defdelegate fieldsets(socket), to: Pax.Admin.Resource.Live

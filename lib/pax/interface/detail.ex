@@ -15,7 +15,7 @@ defmodule Pax.Interface.Detail do
     socket =
       socket
       |> assign_pax(:fieldsets, fieldsets)
-      |> maybe_init_edit_paths(module, object)
+      |> maybe_init_detail_paths(module, object)
       |> assign(:object, object)
       |> assign_pax(:object_name, object_name)
       |> maybe_assign_form(adapter, fieldsets)
@@ -53,11 +53,11 @@ defmodule Pax.Interface.Detail do
     {:cont, socket}
   end
 
-  defp maybe_init_edit_paths(socket, module, object) do
+  defp maybe_init_detail_paths(socket, module, object) do
     if socket.assigns.live_action in [:show, :edit] do
       socket
-      |> assign_pax(:show_path, init_show_path(module, socket, object))
-      |> assign_pax(:edit_path, init_edit_path(module, socket, object))
+      |> assign_pax(:show_path, init_show_path(module, object, socket))
+      |> assign_pax(:edit_path, init_edit_path(module, object, socket))
     else
       socket
       |> assign_pax(:show_path, nil)
@@ -77,7 +77,7 @@ defmodule Pax.Interface.Detail do
 
   def init_object_name(module, adapter, socket, object) do
     if function_exported?(module, :object_name, 2) do
-      module.object_name(socket, object)
+      module.object_name(object, socket)
     else
       Pax.Adapter.object_name(adapter, object)
     end

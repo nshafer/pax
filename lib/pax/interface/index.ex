@@ -38,9 +38,9 @@ defmodule Pax.Interface.Index do
 
   defp init_fields_with_link(fields, module, adapter, socket) do
     # Iterate through the list of fieldspecs, initializing them with Pax.Field.init, then for any field
-    # with `link: true` set it to the proper callback (show_path/1) or (edit_path/1). If there
+    # with `link: true` set it to the proper callback (show_path/2) or (edit_path/2). If there
     # are no fields with a link set, we'll make the first field a link if there is a callback defined, first
-    # show_path/1, then edit_path/1.
+    # show_path/2, then edit_path/2.
     has_show_path = function_exported?(module, :show_path, 2)
     has_edit_path = function_exported?(module, :edit_path, 2)
 
@@ -66,8 +66,8 @@ defmodule Pax.Interface.Index do
     case Map.get(field.opts, :link) do
       true ->
         cond do
-          has_show_path -> Pax.Field.set_link(field, fn object -> module.show_path(socket, object) end)
-          has_edit_path -> Pax.Field.set_link(field, fn object -> module.edit_path(socket, object) end)
+          has_show_path -> Pax.Field.set_link(field, fn object -> module.show_path(object, socket) end)
+          has_edit_path -> Pax.Field.set_link(field, fn object -> module.edit_path(object, socket) end)
           true -> raise "You must implement either show_path/2 or edit_path/2 to use link: true"
         end
 
@@ -85,8 +85,8 @@ defmodule Pax.Interface.Index do
 
     first_field =
       cond do
-        has_show_path -> Pax.Field.set_link(first_field, fn object -> module.show_path(socket, object) end)
-        has_edit_path -> Pax.Field.set_link(first_field, fn object -> module.edit_path(socket, object) end)
+        has_show_path -> Pax.Field.set_link(first_field, fn object -> module.show_path(object, socket) end)
+        has_edit_path -> Pax.Field.set_link(first_field, fn object -> module.edit_path(object, socket) end)
         true -> first_field
       end
 

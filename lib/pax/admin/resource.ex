@@ -33,7 +33,7 @@ defmodule Pax.Admin.Resource do
               | keyword(list(Pax.Field.field()))
               | nil
 
-  @callback object_name(socket :: Phoenix.LiveView.Socket.t(), object :: map()) :: String.t()
+  @callback object_name(object :: map(), socket :: Phoenix.LiveView.Socket.t()) :: String.t()
 
   @optional_callbacks pax_init: 3,
                       index_fields: 1,
