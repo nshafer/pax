@@ -18,7 +18,7 @@ defmodule Pax.Admin.Resource.Components do
         </:title>
 
         <:action :if={@pax.new_path}>
-          <.pax_button patch={@pax.new_path}>New</.pax_button>
+          <.pax_button navigate={@pax.new_path}>New</.pax_button>
         </:action>
       </.pax_header>
 
@@ -64,7 +64,7 @@ defmodule Pax.Admin.Resource.Components do
 
       <div class="pax-button-group">
         <.pax_button :if={@pax.edit_path} patch={@pax.edit_path}>Edit</.pax_button>
-        <.pax_button :if={@pax.index_path} patch={@pax.index_path} secondary={true}>
+        <.pax_button :if={@pax.index_path} navigate={@pax.index_path} secondary={true}>
           Back
         </.pax_button>
       </div>
@@ -112,7 +112,7 @@ defmodule Pax.Admin.Resource.Components do
           <.pax_button :if={@pax.show_path} patch={@pax.show_path} secondary={true}>
             Cancel
           </.pax_button>
-          <.pax_button :if={@pax.index_path} patch={@pax.index_path} secondary={true}>
+          <.pax_button :if={@pax.index_path} navigate={@pax.index_path} secondary={true}>
             Back
           </.pax_button>
         </div>
