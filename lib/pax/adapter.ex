@@ -116,8 +116,6 @@ defmodule Pax.Adapter do
     adapter.object_name(callback_module, opts, object)
   end
 
-  # TODO: rename to cast() which gets a list of fields that are not dynamic/computed or marked immutable, and it returns
-  # a changeset with those fields cast from params, but no validation is done (yet.)
   @spec cast(t(), object :: any(), unsigned_params(), fields :: list(Pax.Field.t())) :: Ecto.Changeset.t()
   def cast(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, object, params, fields) do
     adapter.cast(callback_module, opts, object, params, fields)

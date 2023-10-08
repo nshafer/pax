@@ -12,21 +12,17 @@ defmodule Pax.Admin.Resource do
   @enforce_keys [:name, :path, :title, :mod, :opts]
   defstruct [:name, :path, :title, :section, :mod, :opts]
 
-  # rename to just pre_init?
   @callback pax_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
             ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
 
-  # rename to just adapter?
   @callback adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               module() | {module(), keyword()} | {module(), module(), keyword()}
 
-  # rename to just fields?
   @callback index_fields(socket :: Phoenix.LiveView.Socket.t()) :: list(Pax.Field.field()) | nil
 
-  # rename to just fieldsets?
   @callback fieldsets(socket :: Phoenix.LiveView.Socket.t()) ::
               list(Pax.Field.field())
               | list(list(Pax.Field.field()) | Pax.Field.field())

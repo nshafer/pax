@@ -204,7 +204,6 @@ defmodule Pax.Field.Components do
   # end
 
   # All other inputs text, datetime-local, url, password, etc. are handled here...
-  # TODO: required
   def field_control(assigns) do
     ~H"""
     <input
