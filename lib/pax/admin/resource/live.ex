@@ -16,7 +16,8 @@ defmodule Pax.Admin.Resource.Live do
     ~H"""
     <.index :if={@live_action == :index} pax={@pax} resource={@resource} objects={@objects} />
     <.show :if={@live_action == :show} pax={@pax} object={@object} />
-    <.edit :if={@live_action in [:edit, :new]} pax={@pax} object={@object} form={@form} />
+    <.new :if={@live_action == :new} pax={@pax} object={@object} form={@form} />
+    <.edit :if={@live_action == :edit} pax={@pax} object={@object} form={@form} />
     """
   end
 

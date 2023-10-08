@@ -77,12 +77,28 @@ defmodule Pax.Admin.Resource.Components do
   attr :form, :any, required: true
   attr :class, :string, default: nil
 
+  def new(assigns) do
+    assigns
+    |> assign(new: true)
+    |> edit()
+  end
+
+  attr :pax, :map, required: true
+  attr :object, :map, required: true
+  attr :form, :any, required: true
+  attr :class, :string, default: nil
+  attr :new, :boolean, default: false
+
   def edit(assigns) do
     ~H"""
     <div class={["pax pax-detail pax-detail-edit", @class]}>
       <.form :let={f} for={@form} as={:detail} phx-change="pax_validate" phx-submit="pax_save">
         <.pax_header pax={@pax}>
-          <:title>
+          <:title :if={@new}>
+            New <%= @pax.singular_name %>
+          </:title>
+
+          <:title :if={not @new}>
             Edit <%= @pax.object_name %>
           </:title>
 
