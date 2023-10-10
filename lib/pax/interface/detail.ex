@@ -73,16 +73,6 @@ defmodule Pax.Interface.Detail do
     end
   end
 
-  def init_object_name(_module, _adapter, _socket, nil), do: "Object"
-
-  def init_object_name(module, adapter, socket, object) do
-    if function_exported?(module, :object_name, 2) do
-      module.object_name(object, socket)
-    else
-      Pax.Adapter.object_name(adapter, object)
-    end
-  end
-
   defp maybe_assign_form(socket, adapter, fieldsets) do
     if socket.assigns.live_action in [:edit, :new] do
       changeset = changeset(adapter, fieldsets, socket.assigns.object)

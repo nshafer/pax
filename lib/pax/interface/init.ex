@@ -11,50 +11,51 @@ defmodule Pax.Interface.Init do
   end
 
   def init_singular_name(module, adapter, socket) do
-    if function_exported?(module, :singular_name, 1) do
-      module.singular_name(socket)
-    else
+    init_optional_callback(module, :singular_name, [socket], fn ->
       Pax.Adapter.singular_name(adapter)
-    end
+    end)
   end
 
   def init_plural_name(module, adapter, socket) do
-    if function_exported?(module, :plural_name, 1) do
-      module.plural_name(socket)
-    else
+    init_optional_callback(module, :plural_name, [socket], fn ->
       Pax.Adapter.plural_name(adapter)
-    end
+    end)
+  end
+
+  def init_object_name(_module, _adapter, _socket, nil), do: "Object"
+
+  def init_object_name(module, adapter, socket, object) do
+    init_optional_callback(module, :object_name, [object, socket], fn ->
+      Pax.Adapter.object_name(adapter, object)
+    end)
   end
 
   def init_index_path(module, socket) do
-    if function_exported?(module, :index_path, 1) do
-      module.index_path(socket)
-    else
-      nil
-    end
+    init_optional_callback(module, :index_path, [socket], fn -> nil end)
   end
 
   def init_new_path(module, socket) do
-    if function_exported?(module, :new_path, 1) do
-      module.new_path(socket)
-    else
-      nil
-    end
+    init_optional_callback(module, :new_path, [socket], fn -> nil end)
   end
 
   def init_show_path(module, object, socket) do
-    if function_exported?(module, :show_path, 2) do
-      module.show_path(object, socket)
-    else
-      nil
-    end
+    init_optional_callback(module, :show_path, [object, socket], fn -> nil end)
   end
 
   def init_edit_path(module, object, socket) do
-    if function_exported?(module, :edit_path, 2) do
-      module.edit_path(object, socket)
+    init_optional_callback(module, :edit_path, [object, socket], fn -> nil end)
+  end
+
+  # If the module defines a callback that will take the args, call it. If it isn't defined, or
+  # returns null, run the fallback instead.
+  defp init_optional_callback(module, callback, args, fallback) do
+    if function_exported?(module, callback, length(args)) do
+      case apply(module, callback, args) do
+        nil -> fallback.()
+        value -> value
+      end
     else
-      nil
+      fallback.()
     end
   end
 end
