@@ -1,16 +1,15 @@
 defmodule Pax.Admin.Resource do
-  # TODO: rename "name" to "key" and add singular and plural names
   @type t() :: %__MODULE__{
           name: atom(),
           path: String.t(),
-          title: String.t(),
+          label: String.t(),
           section: Pax.Admin.Section.t(),
           mod: module(),
           opts: Keyword.t()
         }
 
-  @enforce_keys [:name, :path, :title, :mod, :opts]
-  defstruct [:name, :path, :title, :section, :mod, :opts]
+  @enforce_keys [:name, :path, :label, :mod, :opts]
+  defstruct [:name, :path, :label, :section, :mod, :opts]
 
   @callback pax_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
@@ -21,6 +20,10 @@ defmodule Pax.Admin.Resource do
   @callback adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               module() | {module(), keyword()} | {module(), module(), keyword()}
 
+  @callback singular_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
+  @callback plural_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
+  @callback object_name(object :: map(), socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
+
   @callback index_fields(socket :: Phoenix.LiveView.Socket.t()) :: list(Pax.Field.field()) | nil
 
   @callback fieldsets(socket :: Phoenix.LiveView.Socket.t()) ::
@@ -29,16 +32,20 @@ defmodule Pax.Admin.Resource do
               | keyword(list(Pax.Field.field()))
               | nil
 
-  @callback object_name(object :: map(), socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-
-  @optional_callbacks pax_init: 3,
-                      index_fields: 1,
-                      fieldsets: 1,
-                      object_name: 2
-
   defmacro __using__(_opts) do
     quote do
       @behaviour Pax.Admin.Resource
+
+      def pax_init(_params, _session, socket), do: {:cont, socket}
+
+      def singular_name(_socket), do: nil
+      def plural_name(_socket), do: nil
+      def object_name(_object, _socket), do: nil
+
+      def index_fields(_socket), do: nil
+      def fieldsets(_socket), do: nil
+
+      defoverridable pax_init: 3, singular_name: 1, plural_name: 1, object_name: 2, index_fields: 1, fieldsets: 1
     end
   end
 end

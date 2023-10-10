@@ -28,14 +28,10 @@ defmodule Pax.Admin.Resource.Live do
       socket
       # TODO: make this a admin_site map like dashboard
       |> assign(pax_site_mod: site_mod)
-      |> assign(:page_title, resource.title)
+      |> assign(:page_title, resource.label)
       |> assign(:resource, resource)
 
-    if function_exported?(resource.mod, :pax_init, 3) do
-      resource.mod.pax_init(params, session, socket)
-    else
-      {:cont, socket}
-    end
+    resource.mod.pax_init(params, session, socket)
   end
 
   defp get_resource(socket, site_mod, params, session) do
@@ -60,22 +56,29 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def singular_name(socket) do
-    socket.assigns.resource.title
+    resource_mod = socket.assigns.resource.mod
+
+    case resource_mod.singular_name(socket) do
+      name when is_binary(name) or is_nil(name) -> name
+      _ -> raise ArgumentError, "Invalid name returned from #{inspect(resource_mod)}.singular_name/1"
+    end
   end
 
   def plural_name(socket) do
-    # TODO: this isn't returning plural
-    socket.assigns.resource.title
+    resource_mod = socket.assigns.resource.mod
+
+    case resource_mod.plural_name(socket) do
+      name when is_binary(name) or is_nil(name) -> name
+      _ -> raise ArgumentError, "Invalid name returned from #{inspect(resource_mod)}.plural_name/1"
+    end
   end
 
   def object_name(object, socket) do
     resource_mod = socket.assigns.resource.mod
-    adapter = socket.assigns.pax.adapter
 
-    if function_exported?(resource_mod, :object_name, 2) do
-      resource_mod.object_name(object, socket)
-    else
-      Pax.Adapter.object_name(adapter, object)
+    case resource_mod.object_name(object, socket) do
+      name when is_binary(name) or is_nil(name) -> name
+      _ -> raise ArgumentError, "Invalid name returned from #{inspect(resource_mod)}.object_name/2"
     end
   end
 
@@ -114,28 +117,18 @@ defmodule Pax.Admin.Resource.Live do
   def index_fields(socket) do
     resource_mod = socket.assigns.resource.mod
 
-    if function_exported?(resource_mod, :index_fields, 1) do
-      case resource_mod.index_fields(socket) do
-        fields when is_list(fields) -> fields
-        nil -> nil
-        _ -> raise ArgumentError, "Invalid fields returned from #{inspect(resource_mod)}.index_fields/1"
-      end
-    else
-      nil
+    case resource_mod.index_fields(socket) do
+      fields when is_list(fields) or is_nil(fields) -> fields
+      _ -> raise ArgumentError, "Invalid fields returned from #{inspect(resource_mod)}.index_fields/1"
     end
   end
 
   def fieldsets(socket) do
     resource_mod = socket.assigns.resource.mod
 
-    if function_exported?(resource_mod, :fieldsets, 1) do
-      case resource_mod.fieldsets(socket) do
-        fieldsets when is_list(fieldsets) -> fieldsets
-        nil -> nil
-        _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(resource_mod)}.fieldsets/1"
-      end
-    else
-      nil
+    case resource_mod.fieldsets(socket) do
+      fieldsets when is_list(fieldsets) or is_nil(fieldsets) -> fieldsets
+      _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(resource_mod)}.fieldsets/1"
     end
   end
 end

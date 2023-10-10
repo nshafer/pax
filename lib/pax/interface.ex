@@ -25,16 +25,16 @@ defmodule Pax.Interface do
   @callback adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               module() | {module(), keyword()} | {module(), module(), keyword()}
 
-  @callback singular_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback plural_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback object_name(object :: map(), socket :: Phoenix.LiveView.Socket.t()) :: String.t()
+  @callback singular_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
+  @callback plural_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
+  @callback object_name(object :: map(), socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
 
   @optional_callbacks singular_name: 1, plural_name: 1, object_name: 2
 
-  @callback index_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback new_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback show_path(object :: map(), socket :: Phoenix.LiveView.Socket.t()) :: String.t()
-  @callback edit_path(object :: map(), socket :: Phoenix.LiveView.Socket.t()) :: String.t()
+  @callback index_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
+  @callback new_path(socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
+  @callback show_path(object :: map(), socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
+  @callback edit_path(object :: map(), socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
 
   @optional_callbacks index_path: 1, new_path: 1, show_path: 2, edit_path: 2
 

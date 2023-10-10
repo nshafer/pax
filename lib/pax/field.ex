@@ -114,10 +114,7 @@ defmodule Pax.Field do
   end
 
   def label(%Field{name: name, opts: opts}) do
-    case Map.get(opts, :label) do
-      nil -> Pax.Util.Introspection.field_name_to_label(name)
-      label -> label
-    end
+    Map.get(opts, :label) || Pax.Util.Introspection.field_name_to_label(name)
   end
 
   def link(%Field{opts: opts}, object) do

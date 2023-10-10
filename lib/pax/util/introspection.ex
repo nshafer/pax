@@ -2,6 +2,11 @@ defmodule Pax.Util.Introspection do
   def field_name_to_label(name) when is_atom(name) do
     name
     |> Atom.to_string()
+    |> field_name_to_label()
+  end
+
+  def field_name_to_label(name) when is_binary(name) do
+    name
     |> String.slice(0..100)
     |> String.split(~r/[\W_]/)
     |> Enum.take(5)
@@ -20,5 +25,21 @@ defmodule Pax.Util.Introspection do
     |> List.last()
     |> String.replace("_", " ")
     |> String.capitalize()
+  end
+
+  def resource_name_to_label(name) when is_atom(name) do
+    name
+    |> to_string()
+    |> resource_name_to_label()
+  end
+
+  def resource_name_to_label(name) when is_binary(name) do
+    name
+    |> String.slice(0..100)
+    |> String.split(~r/[\W_]/)
+    |> Enum.take(5)
+    |> Enum.map(&String.capitalize/1)
+    |> Enum.join(" ")
+    |> String.slice(0..25)
   end
 end

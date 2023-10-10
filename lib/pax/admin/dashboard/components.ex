@@ -22,18 +22,18 @@ defmodule Pax.Admin.Dashboard.Components do
       <%= for resource <- @entry.resources do %>
         <li>
           <.link navigate={Pax.Admin.Site.resource_index_path(@admin_site.mod, nil, resource)}>
-            <%= resource.title %>
+            <%= resource.label %>
           </.link>
         </li>
       <% end %>
     <% else %>
       <li>
-        <h2><%= @entry.section.title %></h2>
+        <h2><%= @entry.section.label %></h2>
         <ul class="list-disc ml-4">
           <%= for resource <- @entry.resources do %>
             <li>
               <.link navigate={Pax.Admin.Site.resource_index_path(@admin_site.mod, @entry.section, resource)}>
-                <%= resource.title %>
+                <%= resource.label %>
               </.link>
             </li>
           <% end %>

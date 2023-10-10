@@ -106,10 +106,9 @@ defmodule Pax.Admin.Site do
   defp merge_config(conf) when is_map(conf), do: Keyword.new(conf) |> merge_config()
   defp merge_config(arg), do: raise("invalid config: #{inspect(arg)}")
 
-  # TODO: move title to opts
-  defmacro section(name, title, do: context) when is_atom(name) and is_binary(title) do
+  defmacro section(name, opts \\ [], do: context) when is_atom(name) and is_list(opts) do
     quote do
-      Pax.Admin.Site.__section__(__MODULE__, unquote(name), unquote(title))
+      Pax.Admin.Site.__section__(__MODULE__, unquote(name), unquote(opts))
 
       try do
         unquote(context)
@@ -119,13 +118,13 @@ defmodule Pax.Admin.Site do
     end
   end
 
-  def __section__(site_mod, name, title) do
+  def __section__(site_mod, name, opts) do
     case Module.get_attribute(site_mod, :pax_current_section) do
       nil ->
         Module.put_attribute(site_mod, :pax_current_section, %Section{
           name: name,
           path: to_string(name),
-          title: title
+          label: Keyword.get_lazy(opts, :label, fn -> Pax.Util.Introspection.resource_name_to_label(name) end)
         })
 
       _ ->
@@ -134,14 +133,13 @@ defmodule Pax.Admin.Site do
     end
   end
 
-  # TODO: move title to opts
-  defmacro resource(name, title, resource_mod, opts \\ []) when is_atom(name) and is_binary(title) do
+  defmacro resource(name, resource_mod, opts \\ []) when is_atom(name) and is_list(opts) do
     quote do
-      Pax.Admin.Site.__resource__(__MODULE__, unquote(name), unquote(title), unquote(resource_mod), unquote(opts))
+      Pax.Admin.Site.__resource__(__MODULE__, unquote(name), unquote(resource_mod), unquote(opts))
     end
   end
 
-  def __resource__(site_mod, name, title, resource_mod, opts \\ []) do
+  def __resource__(site_mod, name, resource_mod, opts \\ []) do
     current_section = Module.get_attribute(site_mod, :pax_current_section)
     resources = Module.get_attribute(site_mod, :pax_resources)
     exists? = Enum.any?(resources, &match?(%{section: ^current_section, name: ^name}, &1))
@@ -156,7 +154,7 @@ defmodule Pax.Admin.Site do
       Module.put_attribute(site_mod, :pax_resources, %Resource{
         name: name,
         path: to_string(name),
-        title: title,
+        label: Keyword.get_lazy(opts, :label, fn -> Pax.Util.Introspection.resource_name_to_label(name) end),
         section: current_section,
         mod: resource_mod,
         opts: opts
@@ -177,6 +175,8 @@ defmodule Pax.Admin.Site do
     end
   end
 
+  # Merge the tree of resources into a flat list, with every resource containing the section it is in.
+  # This mimics how the macros work.
   defp merge_resources(resources, current_section) when is_list(resources) do
     for resource <- resources, reduce: {[], current_section} do
       {acc, current_section} -> {[parse_resource(resource, current_section) | acc], current_section}
@@ -188,43 +188,73 @@ defmodule Pax.Admin.Site do
     raise "invalid resources format: #{inspect(resources)}"
   end
 
+  # This is an example of a complex return from the resources callback:
+  #
+  # def resources(_params, _session, _socket) do
+  #   [
+  #     label: %{label: "Record Labels", resource: PaxDemoWeb.MainAdmin.LabelResource},       <- C
+  #     artist: %{resource: PaxDemoWeb.MainAdmin.ArtistResource, some_opt: "asdf"},    <- C
+  #     library: [                                                                     <- A
+  #       label: %{resource: PaxDemoWeb.MainAdmin.LabelResource},                      <- C
+  #       artist: %{resource: PaxDemoWeb.MainAdmin.ArtistResource},                    <- C
+  #       album: %{resource: PaxDemoWeb.MainAdmin.AlbumResource}                       <- C
+  #     ],
+  #     library2: %{                                                                   <- B
+  #       label: "Music Library Two",
+  #       resources: [
+  #         album: %{resource: PaxDemoWeb.MainAdmin.AlbumResource}                     <- C
+  #       ]
+  #     }
+  #   ]
+  # end
+  #
+  # Comments below explain the parsing logic, with the letters pointing to specific lines they deal with marked above.
+
+  # A. Parse this entry as section name and list of resources to go in it
   defp parse_resource({section_name, resources}, nil) when is_atom(section_name) and is_list(resources) do
     merge_resources(resources, %Section{
       name: section_name,
       path: to_string(section_name),
-      title: section_name |> to_string() |> String.capitalize()
+      label: Pax.Util.Introspection.resource_name_to_label(section_name)
     })
   end
 
+  # If we are inside a section, then we don't allow embedding another section inside it.
   defp parse_resource({name, resources}, current_section) when is_atom(name) and is_list(resources) do
     raise "cannot embed section '#{name}' inside another section '#{current_section.name}'"
   end
 
+  # B. Parse a section name and a map with the :resources key in it as a section with extra metadata, and the
+  #    resources key pointing to a list of resources to go in it.
   defp parse_resource({section_name, %{resources: resources} = section}, nil) when is_atom(section_name) do
     merge_resources(resources, %Section{
       name: section_name,
       path: to_string(section_name),
-      title: Map.get_lazy(section, :title, fn -> section_name |> to_string() |> String.capitalize() end)
+      label: Map.get_lazy(section, :label, fn -> Pax.Util.Introspection.resource_name_to_label(section_name) end)
     })
   end
 
+  # If we are inside a section, then we don't allow embedding another section inside it.
   defp parse_resource({name, %{resources: resources}}, current_section) when is_atom(name) and is_list(resources) do
     raise "cannot embed section '#{name}' inside another section '#{current_section.name}'"
   end
 
-  defp parse_resource({name, %{resource: resource_mod} = resource}, current_section) when is_atom(name) do
+  # C. Treat an entry as a Resource if there is the :resource key in it. The current_section can be nil.
+  defp parse_resource({resource_name, %{resource: resource_mod} = resource}, current_section)
+       when is_atom(resource_name) do
     %Resource{
-      name: name,
-      path: to_string(name),
-      title: Map.get_lazy(resource, :title, fn -> name |> to_string() |> String.capitalize() end),
+      name: resource_name,
+      path: to_string(resource_name),
+      label: Map.get_lazy(resource, :label, fn -> Pax.Util.Introspection.resource_name_to_label(resource_name) end),
       section: current_section,
       mod: resource_mod,
-      opts: Map.drop(resource, [:title, :resource]) |> Keyword.new()
+      opts: Map.drop(resource, [:label, :resource]) |> Keyword.new()
     }
   end
 
   # TODO: parse links, pages, etc
 
+  # Handle invalid resources
   defp parse_resource({name, resource}, current_section) do
     if current_section do
       raise "invalid resource #{inspect(name)}: '#{inspect(resource)}' in section '#{inspect(current_section.name)}'"
