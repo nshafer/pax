@@ -5,7 +5,6 @@ defmodule Pax.Admin.Resource.Components do
   import Pax.Field.Components
 
   attr :pax, :map, required: true
-  attr :resource, :map, required: true
   attr :objects, :list, required: true
   attr :class, :string, default: nil
 

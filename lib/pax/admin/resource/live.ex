@@ -14,7 +14,7 @@ defmodule Pax.Admin.Resource.Live do
 
   def render(assigns) do
     ~H"""
-    <.index :if={@live_action == :index} pax={@pax} resource={@resource} objects={@objects} />
+    <.index :if={@live_action == :index} pax={@pax} objects={@objects} />
     <.show :if={@live_action == :show} pax={@pax} object={@object} />
     <.new :if={@live_action == :new} pax={@pax} object={@object} form={@form} />
     <.edit :if={@live_action == :edit} pax={@pax} object={@object} form={@form} />
@@ -26,10 +26,13 @@ defmodule Pax.Admin.Resource.Live do
 
     socket =
       socket
-      # TODO: make this a admin_site map like dashboard
-      |> assign(pax_site_mod: site_mod)
-      |> assign(:page_title, resource.label)
+      |> assign(:page_title, resource.mod.plural_name(socket) || resource.label)
       |> assign(:resource, resource)
+      |> assign(:admin_site, %{
+        mod: site_mod,
+        config: Pax.Admin.Site.config_for(site_mod, params, session, socket),
+        resource_tree: Pax.Admin.Site.resource_tree(site_mod, params, session, socket)
+      })
 
     resource.mod.pax_init(params, session, socket)
   end
@@ -83,21 +86,21 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def index_path(socket) do
-    site_mod = socket.assigns.pax_site_mod
+    site_mod = socket.assigns.admin_site.mod
     resource = socket.assigns.resource
 
     Pax.Admin.Site.resource_index_path(site_mod, resource.section, resource)
   end
 
   def new_path(socket) do
-    site_mod = socket.assigns.pax_site_mod
+    site_mod = socket.assigns.admin_site.mod
     resource = socket.assigns.resource
 
     Pax.Admin.Site.resource_new_path(site_mod, resource.section, resource)
   end
 
   def show_path(object, socket) do
-    site_mod = socket.assigns.pax_site_mod
+    site_mod = socket.assigns.admin_site.mod
     adapter = socket.assigns.pax.adapter
     resource = socket.assigns.resource
     id_field = Pax.Adapter.id_field(adapter)
@@ -106,7 +109,7 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def edit_path(object, socket) do
-    site_mod = socket.assigns.pax_site_mod
+    site_mod = socket.assigns.admin_site.mod
     adapter = socket.assigns.pax.adapter
     resource = socket.assigns.resource
     id_field = Pax.Adapter.id_field(adapter)
