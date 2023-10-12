@@ -16,6 +16,10 @@ input[type="checkbox"] {
         @apply text-sm;
     }
 
+    .pax .pax-link {
+        @apply font-bold underline;
+    }
+
     .pax .pax-field-control-input {
         @apply py-[0.5em] px-[0.5em] leading-normal border border-zinc-300 bg-inherit text-black dark:bg-inherit dark:text-white dark:border-zinc-700;
         font-size: inherit;
@@ -25,7 +29,6 @@ input[type="checkbox"] {
         @apply bg-red-200 dark:bg-red-900 ring-red-400 dark:ring-red-700;
     }
 
-    /* Tailwind resets buttons and submits to be unstyled, so we have to apply the same style as pax.css */
     .pax .pax-button {
         @apply py-1 px-2 bg-black text-white dark:bg-white dark:text-black;
     }

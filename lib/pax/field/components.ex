@@ -30,9 +30,9 @@ defmodule Pax.Field.Components do
 
   def field_text(assigns) do
     ~H"""
-    <span class="pax-field-text">
+    <div class="pax-field-text">
       <%= Pax.Field.render(@field, @object) %>
-    </span>
+    </div>
     """
   end
 
@@ -83,9 +83,9 @@ defmodule Pax.Field.Components do
   def field_error(assigns) do
     # TODO: add icon?
     ~H"""
-    <p class="pax-field-error">
+    <div class="pax-field-error">
       <%= render_slot(@inner_block) %>
-    </p>
+    </div>
     """
   end
 

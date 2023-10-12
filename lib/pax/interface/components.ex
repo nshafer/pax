@@ -144,7 +144,7 @@ defmodule Pax.Interface.Components do
 
   def table(assigns) do
     ~H"""
-    <div class="pax-table-wrapper">
+    <div class="pax-table-wrapper" role="region" aria-label="Index table" tabindex="0">
       <table class={["pax-index-table", @class]}>
         <thead class="pax-index-table-head">
           <tr class="pax-index-table-head-row">

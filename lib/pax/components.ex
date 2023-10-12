@@ -119,11 +119,11 @@ defmodule Pax.Components do
         <%= render_slot(@marquee) %>
       </div>
 
-      <div class="pax-header-actions">
+      <div class="pax-header-tools">
         <%= if @actions != [] do %>
           <%= render_slot(@actions) %>
         <% else %>
-          <div :for={action <- @action} class="pax-header-action">
+          <div :for={action <- @action} class="pax-header-tool">
             <%= render_slot(action) %>
           </div>
         <% end %>
