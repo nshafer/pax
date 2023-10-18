@@ -1,4 +1,19 @@
 defmodule Pax.Admin.Router do
+  @moduledoc """
+  Provides functionality for mounting Pax.Admin sites in your router.
+
+  > #### `use Pax.Admin.Router` {: .info}
+  >
+  > When you `use Pax.Admin.Router` the `pax_admin/3` macro will be imported for use in your router. A module attribute
+  > called `@pax_paths` will also be defined. This attribute is used by `Pax.Admin.Site` to determine the path
+  > to a given admin site. It will be exposed with a `__pax__/1` function that returns a map of site modules to
+  > paths when called with `:paths`.
+
+  Note: This must be done in your main Router, not in a Router that is forwarded from another router. This is currently
+  a limitation of LiveView per https://github.com/phoenixframework/phoenix_live_view/issues/476.
+  """
+  require Phoenix.LiveView.Router
+
   defmacro __using__(_opts) do
     quote do
       import Pax.Admin.Router
@@ -7,29 +22,61 @@ defmodule Pax.Admin.Router do
     end
   end
 
+  @doc """
+  Mounts a Pax.Admin.Site at the given path in your router.
+
+  This macro will define a `live_session` block that contains many `Phoenix.LiveView.Router.live/4` calls to define
+  endpoints for the admin site. If router helpers are enabled, then it will generate route helper names based on the
+  Site module's name.
+
+  ## Options
+
+    * `:as` - The name to use for the route helpers. Defaults to the underscored version of the Site module's name.
+
+    * `:root_layout` - An optional root layout tuple for the initial HTTP render. Defaults to
+      `{Pax.Admin.Layouts, :root}`.
+
+    * `:layout` - An optional layout tuple for the Admin interface. Defaults to `{Pax.Admin.Layouts, :admin}`.
+
+    * `:on_mount` - The optional list of hooks to attach to the mount lifecycle _of each LiveView in the session_.
+      See `Phoenix.LiveView.on_mount/1`. Passing a single value is also accepted.
+
+  ## Examples
+
+        scope "/", PaxDemoWeb do
+          pipe_through [:browser]
+
+          pax_admin "/admin", MainAdmin.Site,
+            as: :admin,
+            on_mount: {MyAppWeb.AdminAuth, :ensure_user_is_admin}
+          pax_admin "/public/admin", PublicAdmin.Site
+        end
+
+  """
   defmacro pax_admin(path, site_mod, opts \\ []) do
     site_mod = Macro.expand(site_mod, __CALLER__)
 
     quote bind_quoted: binding() do
-      {full_path, full_site_mod, dashboard_mod, dashboard_opts, resource_mod, resource_opts} =
+      {full_path, full_site_mod, modules, opts} =
         Pax.Admin.Router.__pax_admin__(__MODULE__, path, site_mod, opts)
 
       @pax_paths Map.put(@pax_paths, full_site_mod, full_path)
 
-      live "#{path}", dashboard_mod, :dashboard, dashboard_opts
+      live_session site_mod, opts.live_session do
+        live "#{path}", modules.dashboard, :dashboard, opts.dashboard
 
-      # TODO: pass full_site_mod to live view via metadata
-      live "#{path}/r/:resource", resource_mod, :index, resource_opts
-      live "#{path}/r/:resource/new", resource_mod, :new, resource_opts
-      live "#{path}/r/:resource/:id", resource_mod, :show, resource_opts
-      live "#{path}/r/:resource/:id/edit", resource_mod, :edit, resource_opts
-      live "#{path}/r/:resource/:id/delete", resource_mod, :delete, resource_opts
+        live "#{path}/r/:resource", modules.resource, :index, opts.resource
+        live "#{path}/r/:resource/new", modules.resource, :new, opts.resource
+        live "#{path}/r/:resource/:id", modules.resource, :show, opts.resource
+        live "#{path}/r/:resource/:id/edit", modules.resource, :edit, opts.resource
+        live "#{path}/r/:resource/:id/delete", modules.resource, :delete, opts.resource
 
-      live "#{path}/:section/r/:resource", resource_mod, :index, resource_opts
-      live "#{path}/:section/r/:resource/new", resource_mod, :new, resource_opts
-      live "#{path}/:section/r/:resource/:id", resource_mod, :show, resource_opts
-      live "#{path}/:section/r/:resource/:id/edit", resource_mod, :edit, resource_opts
-      live "#{path}/:section/r/:resource/:id/delete", resource_mod, :delete, resource_opts
+        live "#{path}/:section/r/:resource", modules.resource, :index, opts.resource
+        live "#{path}/:section/r/:resource/new", modules.resource, :new, opts.resource
+        live "#{path}/:section/r/:resource/:id", modules.resource, :show, opts.resource
+        live "#{path}/:section/r/:resource/:id/edit", modules.resource, :edit, opts.resource
+        live "#{path}/:section/r/:resource/:id/delete", modules.resource, :delete, opts.resource
+      end
     end
   end
 
@@ -44,13 +91,25 @@ defmodule Pax.Admin.Router do
     full_site_mod = Phoenix.Router.scoped_alias(router_mod, site_mod)
     base_as = as_from_site_mod(opts[:as], full_site_mod)
 
-    dashboard_mod = Module.concat(site_mod, DashboardLive)
-    dashboard_opts = Keyword.put(opts, :as, :"#{base_as}_dashboard")
+    modules = %{
+      dashboard: Module.concat(site_mod, DashboardLive),
+      resource: Module.concat(site_mod, ResourceLive)
+    }
 
-    resource_mod = Module.concat(site_mod, ResourceLive)
-    resource_opts = Keyword.put(opts, :as, :"#{base_as}_resource")
+    live_session_opts =
+      [
+        root_layout: Keyword.get(opts, :root_layout, {Pax.Admin.Layouts, :root}),
+        layout: Keyword.get(opts, :layout, {Pax.Admin.Layouts, :admin})
+      ]
+      |> Keyword.merge(Keyword.take(opts, [:session, :on_mount]))
 
-    {full_path, full_site_mod, dashboard_mod, dashboard_opts, resource_mod, resource_opts}
+    opts = %{
+      live_session: live_session_opts,
+      dashboard: [as: :"#{base_as}_dashboard"],
+      resource: [as: :"#{base_as}_resource"]
+    }
+
+    {full_path, full_site_mod, modules, opts}
   end
 
   defp as_from_site_mod(nil, site_mod) do

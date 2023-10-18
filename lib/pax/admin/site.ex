@@ -1,4 +1,15 @@
 defmodule Pax.Admin.Site do
+  @moduledoc """
+  This module is used to define the admin site for your application.
+
+  > #### `use Pax.Admin.Site` {: .info}
+  >
+  > When you `use Pax.Admin.Site` this module will be imported to provide many convenience macros for defining the
+  > layout of your Admin Site. It will declare `@behaviour Pax.Admin.Site` and `@before_compile Pax.Admin.Site`. It
+  > will also define many attributes required by Pax.Admin for interoperability with your site. Finally it will define
+  > several functions that can be used to generate paths and URLs to parts of your Admin Site.
+  """
+
   require Logger
   alias Pax.Admin.Config
   alias Pax.Admin.Section
@@ -18,6 +29,16 @@ defmodule Pax.Admin.Site do
 
   @optional_callbacks config: 3, resources: 3
 
+  @doc """
+  This macro is used to define the admin site for your application. The `:router` option is required and should be
+  the module name of your main site Router. This is required so that your Admin Site module can generate proper
+  paths and urls for your Site Admin, which is used in the interface.
+
+  ## Example
+
+      use Pax.Admin.Site, router: MyAppWeb.Router
+
+  """
   defmacro __using__(opts) do
     router = Keyword.get(opts, :router, nil) || raise "missing :router option"
 
@@ -30,6 +51,8 @@ defmodule Pax.Admin.Site do
       Module.put_attribute(__MODULE__, :pax_config, nil)
       Module.put_attribute(__MODULE__, :pax_current_section, nil)
       Module.register_attribute(__MODULE__, :pax_resources, accumulate: true)
+
+      def dashboard_path(), do: Pax.Admin.Site.dashboard_path(__MODULE__)
 
       def resource_index_path(section \\ nil, resource),
         do: Pax.Admin.Site.resource_index_path(__MODULE__, section, resource)
@@ -316,7 +339,7 @@ defmodule Pax.Admin.Site do
       def __pax__(:resources), do: @pax_resources_sorted
 
       defmodule DashboardLive do
-        use Phoenix.LiveView, layout: {Pax.Admin.Layouts, :app}
+        use Phoenix.LiveView
 
         def render(assigns), do: Pax.Admin.Dashboard.Live.render(unquote(env.module), assigns)
 
@@ -325,7 +348,7 @@ defmodule Pax.Admin.Site do
       end
 
       defmodule ResourceLive do
-        use Phoenix.LiveView, layout: {Pax.Admin.Layouts, :app}
+        use Phoenix.LiveView
         use Pax.Interface
 
         def render(assigns), do: Pax.Admin.Resource.Live.render(unquote(env.module), assigns)
@@ -347,6 +370,11 @@ defmodule Pax.Admin.Site do
         defdelegate fieldsets(socket), to: Pax.Admin.Resource.Live
       end
     end
+  end
+
+  def dashboard_path(site_mod) do
+    path = site_mod.__pax__(:path)
+    "#{path}"
   end
 
   defp section_path(nil), do: nil

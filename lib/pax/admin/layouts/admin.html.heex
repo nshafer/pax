@@ -2,6 +2,9 @@
   <div class="container px-4 py-4 mx-auto flex items-center justify-between">
     <a class="font-bold text-2xl" href="/">
       Pax Admin
+      <span :if={assigns[:admin_site]}>
+        <%= @admin_site.mod %>
+      </span>
     </a>
     <div class="flex items-center gap-4 font-semibold leading-6 ">
       <a

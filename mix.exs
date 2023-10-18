@@ -10,6 +10,7 @@ defmodule Pax.MixProject do
       start_permanent: Mix.env() == :prod,
       name: "Pax",
       description: description(),
+      source_url: "https://github.com/nshafer/pax",
       package: package(),
       deps: deps(),
       aliases: aliases()
@@ -29,7 +30,7 @@ defmodule Pax.MixProject do
   defp elixirc_paths(_), do: ["lib"]
 
   def description() do
-    "A toolkit for rapibly building Live View interfaces for CRUD operations."
+    "A low-code admin interface built on a toolkit for building Live View CRUD interfaces."
   end
 
   def package() do
