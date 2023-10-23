@@ -3,7 +3,7 @@ defmodule Pax.Interface.Detail do
   import Phoenix.Component, only: [assign: 3, to_form: 1]
   import Phoenix.LiveView
   import Pax.Interface.Init
-  import Pax.Interface.Util
+  import Pax.Interface.Context
   require Logger
 
   def on_handle_params(module, adapter, params, uri, socket) do

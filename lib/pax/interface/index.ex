@@ -1,7 +1,7 @@
 defmodule Pax.Interface.Index do
   @moduledoc false
   import Phoenix.Component, only: [assign: 3]
-  import Pax.Interface.Util
+  import Pax.Interface.Context
   require Logger
 
   def on_handle_params(module, adapter, params, uri, socket) do

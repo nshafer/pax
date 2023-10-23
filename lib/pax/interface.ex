@@ -6,7 +6,7 @@ defmodule Pax.Interface do
   require Logger
 
   import Pax.Interface.Init
-  import Pax.Interface.Util
+  import Pax.Interface.Context
   alias Pax.Interface.Index
   alias Pax.Interface.Detail
 

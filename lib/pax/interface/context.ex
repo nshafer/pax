@@ -1,14 +1,28 @@
-defmodule Pax.Interface.Util do
-  # A module with common functions related to the Pax.Interface module
-  @moduledoc false
+defmodule Pax.Interface.Context do
   import Phoenix.Component, only: [assign: 3]
+  alias Pax.Interface.Context
+
+  defstruct [
+    :module,
+    :adapter,
+    :plugins,
+    :singular_name,
+    :plural_name,
+    :object_name,
+    :index_path,
+    :new_path,
+    :show_path,
+    :edit_path,
+    :fields,
+    :fieldsets
+  ]
 
   def assign_pax(socket_or_assigns, key, value)
 
   def assign_pax(%Phoenix.LiveView.Socket{} = socket, key, value) do
     pax =
       socket.assigns
-      |> Map.get(:pax, %{})
+      |> Map.get(:pax, %Context{})
       |> Map.put(key, value)
 
     assign(socket, :pax, pax)
@@ -17,7 +31,7 @@ defmodule Pax.Interface.Util do
   def assign_pax(%{} = assigns, key, value) do
     pax =
       assigns
-      |> Map.get(:pax, %{})
+      |> Map.get(:pax, %Context{})
       |> Map.put(key, value)
 
     assign(assigns, :pax, pax)
