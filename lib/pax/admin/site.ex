@@ -51,6 +51,7 @@ defmodule Pax.Admin.Site do
       Module.put_attribute(__MODULE__, :pax_config, nil)
       Module.put_attribute(__MODULE__, :pax_current_section, nil)
       Module.register_attribute(__MODULE__, :pax_resources, accumulate: true)
+      Module.put_attribute(__MODULE__, :pax_sections, %{})
 
       def dashboard_path(), do: Pax.Admin.Site.dashboard_path(__MODULE__)
 
@@ -144,15 +145,28 @@ defmodule Pax.Admin.Site do
   def __section__(site_mod, name, opts) do
     case Module.get_attribute(site_mod, :pax_current_section) do
       nil ->
-        Module.put_attribute(site_mod, :pax_current_section, %Section{
-          name: name,
-          path: to_string(name),
-          label: Keyword.get_lazy(opts, :label, fn -> Pax.Util.Introspection.resource_name_to_label(name) end)
-        })
+        put_section(site_mod, name, opts)
 
       _ ->
         current_section = Module.get_attribute(site_mod, :pax_current_section)
         raise "cannot embed section '#{name}' inside another section '#{current_section.name}'"
+    end
+  end
+
+  defp put_section(site_mod, name, opts) do
+    sections = Module.get_attribute(site_mod, :pax_sections)
+
+    if Map.has_key?(sections, name) do
+      raise "duplicate section '#{name}'"
+    else
+      section = %Section{
+        name: name,
+        path: to_string(name),
+        label: Keyword.get_lazy(opts, :label, fn -> Pax.Util.Introspection.resource_name_to_label(name) end)
+      }
+
+      Module.put_attribute(site_mod, :pax_current_section, section)
+      Module.put_attribute(site_mod, :pax_sections, Map.put(sections, name, section))
     end
   end
 
