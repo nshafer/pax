@@ -1,22 +1,20 @@
 <!DOCTYPE html>
-<html lang="en" class="[scrollbar-gutter:stable]">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
     <.live_title suffix=" · Pax Admin">
-      <%= assigns[:page_title] || "PaxDemo" %>
+      <%= assigns[:page_title] || "Pax" %>
     </.live_title>
 
-    <link phx-track-static rel="stylesheet" href="/pax/pax.css" />
-    <script defer phx-track-static type="text/javascript" src="/pax/pax.js">
-    </script>
+    <link phx-track-static rel="stylesheet" href="/pax/fontawesome/css/all.min.css" />
 
     <link phx-track-static rel="stylesheet" href="/pax/admin.css" />
     <script defer phx-track-static type="text/javascript" src="/pax/admin.js">
     </script>
   </head>
-  <body class="bg-white text-zinc-950 dark:bg-zinc-900 dark:text-zinc-100 antialiased">
+  <body class="bg-white text-zinc-950 dark:bg-zinc-800 dark:text-zinc-100 antialiased">
     <%= @inner_content %>
   </body>
 </html>

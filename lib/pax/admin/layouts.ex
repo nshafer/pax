@@ -1,6 +1,8 @@
 defmodule Pax.Admin.Layouts do
   use Phoenix.Component
 
+  import Pax.Admin.Components
+
   # Import convenience functions from controllers
   import Phoenix.Controller,
     only: [get_csrf_token: 0]

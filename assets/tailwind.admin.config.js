@@ -13,6 +13,17 @@ module.exports = {
     extend: {
       colors: {
         brand: "#FD4F00",
+        zinc: {
+          150: "rgb(236 236 238)"
+        },
+        sky: {
+          //950: "rgb(8 47 73)",
+          925: "rgb(10 56 85)",
+          //900: "rgb(12 74 110)",
+        }
+      },
+      height: {
+        'header': '4rem'
       }
     },
   },

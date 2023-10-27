@@ -1,9 +1,10 @@
 defmodule Pax.Admin.Resource.Live do
   use Phoenix.Component
   import Pax.Admin.Resource.Components
+  import Pax.Admin.Context
 
   def render(site_mod, assigns) do
-    resource_mod = assigns.resource.mod
+    resource_mod = assigns.pax_admin.resource.mod
 
     cond do
       function_exported?(resource_mod, :render, 1) -> resource_mod.render_index(assigns)
@@ -22,33 +23,32 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def pax_init(site_mod, params, session, socket) do
-    resource = get_resource(socket, site_mod, params, session)
+    resources = Pax.Admin.Site.resources_for(site_mod, params, session, socket)
+    resource = get_resource(resources, params)
 
     socket =
       socket
       |> assign(:page_title, resource.mod.plural_name(socket) || resource.label)
-      |> assign(:resource, resource)
-      |> assign(:admin_site, %{
-        mod: site_mod,
-        config: Pax.Admin.Site.config_for(site_mod, params, session, socket),
-        resource_tree: Pax.Admin.Site.resource_tree(site_mod, params, session, socket)
-      })
+      |> assign_admin(site_mod: site_mod)
+      |> assign_admin(config: Pax.Admin.Site.config_for(site_mod, params, session, socket))
+      |> assign_admin(resources: resources)
+      |> assign_admin(:resource, resource)
 
     resource.mod.pax_init(params, session, socket)
   end
 
-  defp get_resource(socket, site_mod, params, session) do
+  defp get_resource(resources, params) do
     section = Map.get(params, "section")
     resource = Map.get(params, "resource")
 
-    case Pax.Admin.Site.match_resource(site_mod, params, session, socket, section, resource) do
+    case Pax.Admin.Site.match_resource(resources, section, resource) do
       nil -> raise Pax.Admin.ResourceNotFoundError.exception(section: section, resource: resource)
       %{} = resource -> resource
     end
   end
 
   def adapter(socket) do
-    resource_mod = socket.assigns.resource.mod
+    resource_mod = socket.assigns.pax_admin.resource.mod
 
     # Set the resource_mod as the callback_module for the adapter if none were specified
     case resource_mod.adapter(socket) do
@@ -59,7 +59,7 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def singular_name(socket) do
-    resource_mod = socket.assigns.resource.mod
+    resource_mod = socket.assigns.pax_admin.resource.mod
 
     case resource_mod.singular_name(socket) do
       name when is_binary(name) or is_nil(name) -> name
@@ -68,7 +68,7 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def plural_name(socket) do
-    resource_mod = socket.assigns.resource.mod
+    resource_mod = socket.assigns.pax_admin.resource.mod
 
     case resource_mod.plural_name(socket) do
       name when is_binary(name) or is_nil(name) -> name
@@ -77,7 +77,7 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def object_name(object, socket) do
-    resource_mod = socket.assigns.resource.mod
+    resource_mod = socket.assigns.pax_admin.resource.mod
 
     case resource_mod.object_name(object, socket) do
       name when is_binary(name) or is_nil(name) -> name
@@ -86,39 +86,39 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def index_path(socket) do
-    site_mod = socket.assigns.admin_site.mod
-    resource = socket.assigns.resource
+    site_mod = socket.assigns.pax_admin.site_mod
+    resource = socket.assigns.pax_admin.resource
 
     Pax.Admin.Site.resource_index_path(site_mod, resource.section, resource)
   end
 
   def new_path(socket) do
-    site_mod = socket.assigns.admin_site.mod
-    resource = socket.assigns.resource
+    site_mod = socket.assigns.pax_admin.site_mod
+    resource = socket.assigns.pax_admin.resource
 
     Pax.Admin.Site.resource_new_path(site_mod, resource.section, resource)
   end
 
   def show_path(object, socket) do
-    site_mod = socket.assigns.admin_site.mod
+    site_mod = socket.assigns.pax_admin.site_mod
     adapter = socket.assigns.pax.adapter
-    resource = socket.assigns.resource
+    resource = socket.assigns.pax_admin.resource
     id_field = Pax.Adapter.id_field(adapter)
 
     Pax.Admin.Site.resource_show_path(site_mod, resource.section, resource, object, id_field)
   end
 
   def edit_path(object, socket) do
-    site_mod = socket.assigns.admin_site.mod
+    site_mod = socket.assigns.pax_admin.site_mod
     adapter = socket.assigns.pax.adapter
-    resource = socket.assigns.resource
+    resource = socket.assigns.pax_admin.resource
     id_field = Pax.Adapter.id_field(adapter)
 
     Pax.Admin.Site.resource_edit_path(site_mod, resource.section, resource, object, id_field)
   end
 
   def index_fields(socket) do
-    resource_mod = socket.assigns.resource.mod
+    resource_mod = socket.assigns.pax_admin.resource.mod
 
     case resource_mod.index_fields(socket) do
       fields when is_list(fields) or is_nil(fields) -> fields
@@ -127,7 +127,7 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def fieldsets(socket) do
-    resource_mod = socket.assigns.resource.mod
+    resource_mod = socket.assigns.pax_admin.resource.mod
 
     case resource_mod.fieldsets(socket) do
       fieldsets when is_list(fieldsets) or is_nil(fieldsets) -> fieldsets

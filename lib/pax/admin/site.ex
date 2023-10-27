@@ -304,43 +304,21 @@ defmodule Pax.Admin.Site do
     raise "invalid resource #{inspect(arg)} in section '#{inspect(current_section.name)}'"
   end
 
-  def match_resource(site_mod, params, session, socket, nil, resource_name) when is_atom(resource_name) do
-    resources_for(site_mod, params, session, socket)
-    |> Enum.find(&match?(%Resource{section: nil, name: ^resource_name}, &1))
+  def match_resource(resources, nil, resource_name) when is_atom(resource_name) do
+    Enum.find(resources, &match?(%Resource{section: nil, name: ^resource_name}, &1))
   end
 
-  def match_resource(site_mod, params, session, socket, nil, resource_path) when is_binary(resource_path) do
-    resources_for(site_mod, params, session, socket)
-    |> Enum.find(&match?(%Resource{section: nil, path: ^resource_path}, &1))
+  def match_resource(resources, nil, resource_path) when is_binary(resource_path) do
+    Enum.find(resources, &match?(%Resource{section: nil, path: ^resource_path}, &1))
   end
 
-  def match_resource(site_mod, params, session, socket, section_name, resource_name)
-      when is_atom(section_name) and is_atom(resource_name) do
-    resources_for(site_mod, params, session, socket)
-    |> Enum.find(&match?(%Resource{section: %{name: ^section_name}, name: ^resource_name}, &1))
+  def match_resource(resources, section_name, resource_name) when is_atom(section_name) and is_atom(resource_name) do
+    Enum.find(resources, &match?(%Resource{section: %{name: ^section_name}, name: ^resource_name}, &1))
   end
 
-  def match_resource(site_mod, params, session, socket, section_path, resource_path)
+  def match_resource(resources, section_path, resource_path)
       when is_binary(section_path) and is_binary(resource_path) do
-    resources_for(site_mod, params, session, socket)
-    |> Enum.find(&match?(%Resource{section: %{path: ^section_path}, path: ^resource_path}, &1))
-  end
-
-  def resource_tree(site_mod, params, session, socket) do
-    resources_for(site_mod, params, session, socket)
-    |> Enum.reduce({[], nil}, fn
-      resource, {[], nil} ->
-        {[%{section: resource.section, resources: [resource]}], resource.section}
-
-      %{section: current_section} = resource, {[curr | rest], current_section} ->
-        {[%{curr | resources: [resource | curr.resources]} | rest], current_section}
-
-      resource, {acc, _current_section} ->
-        {[%{section: resource.section, resources: [resource]} | acc], resource.section}
-    end)
-    |> elem(0)
-    |> Enum.map(fn %{resources: resources} = entry -> %{entry | resources: Enum.reverse(resources)} end)
-    |> Enum.reverse()
+    Enum.find(resources, &match?(%Resource{section: %{path: ^section_path}, path: ^resource_path}, &1))
   end
 
   defmacro __before_compile__(env) do
@@ -353,7 +331,7 @@ defmodule Pax.Admin.Site do
       def __pax__(:resources), do: @pax_resources_sorted
 
       defmodule DashboardLive do
-        use Phoenix.LiveView
+        use Phoenix.LiveView, container: {:div, class: "admin"}
 
         def render(assigns), do: Pax.Admin.Dashboard.Live.render(unquote(env.module), assigns)
 
@@ -362,7 +340,7 @@ defmodule Pax.Admin.Site do
       end
 
       defmodule ResourceLive do
-        use Phoenix.LiveView
+        use Phoenix.LiveView, container: {:div, class: "admin"}
         use Pax.Interface
 
         def render(assigns), do: Pax.Admin.Resource.Live.render(unquote(env.module), assigns)
