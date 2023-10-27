@@ -2,7 +2,7 @@ defmodule Pax.Admin.Context do
   import Phoenix.Component, only: [assign: 3]
   alias Pax.Admin.Context
 
-  defstruct [:site_mod, :config, :resources, :resource]
+  defstruct [:site_mod, :config, :resources, :active, :resource]
 
   def assign_admin(socket_or_assigns, key, value)
 

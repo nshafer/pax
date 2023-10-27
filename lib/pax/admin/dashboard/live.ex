@@ -29,6 +29,7 @@ defmodule Pax.Admin.Dashboard.Live do
       |> assign(page_title: "Dashboard")
       |> assign_admin(site_mod: site_mod)
       |> assign_admin(config: Pax.Admin.Site.config_for(site_mod, params, session, socket))
+      |> assign_admin(active: :dashboard)
       |> assign_admin(resources: resources)
 
     {:ok, socket}

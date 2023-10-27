@@ -31,6 +31,7 @@ defmodule Pax.Admin.Resource.Live do
       |> assign(:page_title, resource.mod.plural_name(socket) || resource.label)
       |> assign_admin(site_mod: site_mod)
       |> assign_admin(config: Pax.Admin.Site.config_for(site_mod, params, session, socket))
+      |> assign_admin(active: :resource)
       |> assign_admin(resources: resources)
       |> assign_admin(:resource, resource)
 
