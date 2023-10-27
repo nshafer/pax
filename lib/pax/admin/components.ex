@@ -1,5 +1,6 @@
 defmodule Pax.Admin.Components do
   use Phoenix.Component
+  alias Phoenix.LiveView.JS
 
   attr :pax, Pax.Interface.Context, default: nil
   attr :pax_admin, Pax.Admin.Context, required: true
@@ -37,7 +38,7 @@ defmodule Pax.Admin.Components do
     dbg(assigns.pax_admin.resource)
 
     ~H"""
-    <div class="group/sidebar_menu">
+    <div class="group/sidebar-menu">
       <%= for entry <- resource_tree(@pax_admin.resources) do %>
         <%= if entry.section do %>
           <.sidebar_section pax_admin={@pax_admin} section={entry.section} resources={entry.resources} />
@@ -60,28 +61,22 @@ defmodule Pax.Admin.Components do
     assigns = Map.put(assigns, :active?, active?)
 
     ~H"""
-    <div class="group/sidebar_section relative">
-      <input type="checkbox" class="peer hidden" id={"section_toggle_#{@section.name}"} checked={@active?} />
-      <label
-        for={"section_toggle_#{@section.name}"}
-        id={"section_button_#{@section.name}"}
+    <div id={"sidebar_section_#{@section.name}"} class={["group/sidebar-section relative", @active? && "expanded"]}>
+      <button
         class={[
-          "block w-full cursor-pointer select-none",
+          "block w-full",
           "pl-4 pr-8 py-2 leading-5 text-left",
           "hover:bg-zinc-200 dark:hover:bg-zinc-800",
-          "border-l-8 border-transparent",
-          "peer-checked:border-zinc-300 dark:peer-checked:border-zinc-700"
+          "border-l-8 border-transparent"
         ]}
+        phx-click={toggle_class("expanded", "#sidebar_section_#{@section.name}")}
       >
         <%= @section.label %>
-      </label>
-      <div class="absolute top-[6px] right-4 peer-checked:rotate-90 transition-transform">
+      </button>
+      <div class="absolute top-[6px] right-4 transition-transform group-[.expanded]/sidebar-section:rotate-90">
         <i class="fa-solid fa-chevron-right "></i>
       </div>
-      <div
-        id={"section_submenu_#{@section.name}"}
-        class="grid grid-rows-[0fr] peer-checked:grid-rows-[1fr] transition-[grid-template-rows] ease-in-out"
-      >
+      <div class="transition-[grid-template-rows] ease-in-out grid grid-rows-[0fr] group-[.expanded]/sidebar-section:grid-rows-[1fr]">
         <div class="overflow-hidden">
           <%= for resource <- @resources do %>
             <.sidebar_resource pax_admin={@pax_admin} section={@section} resource={resource} indent="pl-8" />
@@ -165,5 +160,14 @@ defmodule Pax.Admin.Components do
     |> elem(0)
     |> Enum.map(fn %{resources: resources} = entry -> %{entry | resources: Enum.reverse(resources)} end)
     |> Enum.reverse()
+  end
+
+  # Toggle a class on an element by removing it from any that have it, then adding it to any that don't.
+  # This is needed until LiveView finally adds a toggle_class function.
+  # https://github.com/phoenixframework/phoenix_live_view/pull/1721
+  defp toggle_class(js \\ %JS{}, class, id) do
+    js
+    |> JS.remove_class(class, to: "#{id}.#{class}")
+    |> JS.add_class(class, to: "#{id}:not(.#{class})")
   end
 end
