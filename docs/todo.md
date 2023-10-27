@@ -39,6 +39,7 @@
 - [ ] Create `resources MyAppWeb.MyAdmin do` macro, which gets prefixed before resources modules, so can do `resource :name, "Label", LabelResource` to save typing. Same as Phoenix router scopes.
 - [ ] Bookmarks - save current params as custom link in nav bar.
 - [ ] Allow configuration of sites, resources, etc with macros instead of run-time callbacks.
+- [ ] Make a dashboard-like page for each Section, optional, that allows widgets like the main Dashboard.
 
 ## Static
 - [ ] Fix/figure out phx.digest. Do it or not? (Probably not...)

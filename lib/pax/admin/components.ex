@@ -35,8 +35,6 @@ defmodule Pax.Admin.Components do
   attr :pax_admin, Pax.Admin.Context, required: true
 
   def sidebar_menu(assigns) do
-    dbg(assigns.pax_admin.resource)
-
     ~H"""
     <div class="group/sidebar-menu">
       <%= for entry <- resource_tree(@pax_admin.resources) do %>
@@ -102,11 +100,11 @@ defmodule Pax.Admin.Components do
         "block py-2 pr-4 ",
         @indent,
         "leading-5 truncate",
-        "hover:bg-zinc-200 dark:hover:bg-zinc-800",
         "border-l-8",
-        @active? &&
-          "font-bold border-sky-900 dark:border-sky-950 bg-sky-100 hover:bg-sky-200 dark:bg-sky-925 dark:hover:bg-sky-900",
-        !@active? && "border-transparent"
+        @active? && "font-bold",
+        @active? && "border-sky-900 dark:border-sky-800 ",
+        @active? && "bg-zinc-200 hover:bg-zinc-250 dark:bg-zinc-800 dark:hover:bg-zinc-750",
+        !@active? && "border-transparent hover:bg-zinc-200 dark:hover:bg-zinc-800"
       ]}
       navigate={Pax.Admin.Site.resource_index_path(@pax_admin.site_mod, @section, @resource)}
     >
@@ -123,7 +121,7 @@ defmodule Pax.Admin.Components do
 
   def header(assigns) do
     ~H"""
-    <div class="flex gap-8 items-center bg-zinc-50 dark:bg-zinc-800 border-b p-4 mb-4">
+    <div class="flex gap-8 items-center border-b border-zinc-200 dark:border-zinc-750 p-4 mb-4">
       <div class="text-2xl mr-auto leading-5 ">
         <%= render_slot(@title) %>
       </div>

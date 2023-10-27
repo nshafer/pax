@@ -2,14 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Tailwind config */
-@layer base {
-    *, ::before, ::after {
-        @apply border-zinc-200/50 dark:border-zinc-700/50;
-    }
-}
+/*
+    Main layout for all admin pages. The liveview container is configured as:
 
-/* Main layout for all admin pages */
+        use Phoenix.LiveView, container: {:div, class: "admin"}
+
+    So we style the container here instead of with tailwind classes on each liveview module in Pax.Admin.Site.
+*/
 html, body {
     height: 100%;
 }
@@ -17,36 +16,9 @@ html, body {
 .admin {
     height: 100%;
     display: grid;
-    grid-template-columns: 14rem 1fr;
-    grid-template-rows: 3rem 1fr;
-    grid-template-areas:
-        "title header"
-        "sidebar main";
+    grid-template-columns: 15rem 1fr;
+    grid-template-rows: auto 1fr;
 }
-
-.admin-title {
-    grid-area: title;
-    overflow: hidden;
-}
-
-.admin-header {
-    grid-area: header;
-    overflow: hidden;
-}
-
-.admin-sidebar {
-    grid-area: sidebar;
-    overflow: auto;
-}
-
-.admin-main {
-    grid-area: main;
-    overflow: auto;
-}
-
-/* Sidebar */
-
-
 
 
 /* Fix checkbox alignment instead of Tailwind's naive `vertical-align: middle` */
