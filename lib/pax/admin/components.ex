@@ -80,7 +80,7 @@ defmodule Pax.Admin.Components do
       >
         <%= @section.label %>
       </button>
-      <div class="absolute top-[6px] right-4 transition-transform group-[.expanded]/sidebar-section:rotate-90">
+      <div class="absolute top-[6px] right-4 transition-transform group-[.expanded]/sidebar-section:rotate-90 pointer-events-none">
         <i class="fa-solid fa-chevron-right "></i>
       </div>
       <div class="transition-[grid-template-rows] ease-in-out grid grid-rows-[0fr] group-[.expanded]/sidebar-section:grid-rows-[1fr]">
