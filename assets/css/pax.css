@@ -105,7 +105,7 @@
 /*************************/
 
 .pax-detail-fieldset {
-    margin-bottom: 2em;
+    margin-bottom: calc(var(--pax-spacing) * 1);
 }
 
 .pax-detail-fieldset-heading {
