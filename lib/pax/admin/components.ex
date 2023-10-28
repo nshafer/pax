@@ -140,7 +140,7 @@ defmodule Pax.Admin.Components do
 
   def header(assigns) do
     ~H"""
-    <div class="flex gap-8 items-center border-b border-zinc-200 dark:border-zinc-750 p-4 mb-4">
+    <div class="flex gap-8 items-center border-b border-zinc-200 dark:border-zinc-750 py-2 px-4 mb-4">
       <div class="text-2xl mr-auto leading-5 ">
         <%= render_slot(@title) %>
       </div>
@@ -160,6 +160,53 @@ defmodule Pax.Admin.Components do
       </div>
     </div>
     """
+  end
+
+  @doc """
+  Renders a button. Can be called with "navigate", "patch" or "href" to render as a link styled like a button. All
+  other attributes from Phoenix.Component.link are passed through in that case.
+
+  ## Examples
+
+      <.button>Send!</.button>
+      <.button phx-click="go" class="ml-2">Send!</.button>
+      <.button navigate="/to/somewhere">Go somewhere</.button>
+      <.button patch="/my/liveview">Edit</.button>
+  """
+  @doc type: :component
+  attr :type, :string, default: nil
+  attr :class, :string, default: nil
+  attr :secondary, :boolean, default: false
+
+  attr :rest, :global, include: ~w(
+    disabled form name value
+    navigate patch href replace method csrf_token
+    download hreflang referrerpolicy rel target type)
+
+  slot :inner_block, required: true
+
+  def button(assigns) do
+    assigns =
+      assign(assigns, :classes, [
+        "block py-1 px-2 rounded",
+        !assigns.secondary && "bg-sky-900 text-zinc-100 hover:bg-sky-800",
+        assigns.secondary && "bg-zinc-600 text-zinc-100 hover:bg-zinc-500",
+        assigns.class
+      ])
+
+    if assigns.rest[:navigate] != nil or assigns.rest[:patch] != nil or assigns.rest[:href] != nil do
+      ~H"""
+      <Phoenix.Component.link class={@classes} {@rest}>
+        <%= render_slot(@inner_block) %>
+      </Phoenix.Component.link>
+      """
+    else
+      ~H"""
+      <button type={@type} class={@classes} {@rest}>
+        <%= render_slot(@inner_block) %>
+      </button>
+      """
+    end
   end
 
   # Transform a list of resources into a list of sections, each with a list of resources

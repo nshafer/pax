@@ -17,7 +17,7 @@ defmodule Pax.Admin.Resource.Components do
         </:title>
 
         <:tool :if={@pax.new_path}>
-          <.pax_button navigate={@pax.new_path}>New</.pax_button>
+          <.button navigate={@pax.new_path}>New</.button>
         </:tool>
       </.header>
 
@@ -26,7 +26,7 @@ defmodule Pax.Admin.Resource.Components do
           <.field_label field={field} />
         </:header>
         <:cell :let={{field, object}}>
-          <.field_link_or_text field={field} object={object} />
+          <.field_link_or_text link_class="font-bold underline" field={field} object={object} />
         </:cell>
       </.table>
     </div>
@@ -39,14 +39,14 @@ defmodule Pax.Admin.Resource.Components do
 
   def show(assigns) do
     ~H"""
-    <div class={["pax pax-detail pax-detail-show", @class]}>
+    <div class={["", @class]}>
       <.header>
         <:title>
           <%= @pax.object_name %>
         </:title>
 
         <:tool :if={@pax.edit_path}>
-          <.pax_button patch={@pax.edit_path}>Edit</.pax_button>
+          <.button patch={@pax.edit_path}>Edit</.button>
         </:tool>
       </.header>
 
@@ -54,18 +54,18 @@ defmodule Pax.Admin.Resource.Components do
         <.fieldset :let={fieldgroup} fieldset={fieldset}>
           <.fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
             <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
-              <.field_label field={field} />
+              <.field_label class="font-bold" field={field} />
               <.field_text field={field} object={@object} />
             </div>
           </.fieldgroup>
         </.fieldset>
       <% end %>
 
-      <div class="pax-button-group">
-        <.pax_button :if={@pax.edit_path} patch={@pax.edit_path}>Edit</.pax_button>
-        <.pax_button :if={@pax.index_path} navigate={@pax.index_path} secondary={true}>
+      <div class="px-4 flex flex-wrap content-center items-center gap-2">
+        <.button :if={@pax.edit_path} patch={@pax.edit_path}>Edit</.button>
+        <.button :if={@pax.index_path} navigate={@pax.index_path} secondary={true}>
           Back
-        </.pax_button>
+        </.button>
       </div>
     </div>
     """
@@ -145,12 +145,12 @@ defmodule Pax.Admin.Resource.Components do
 
   def table(assigns) do
     ~H"""
-    <div class="pax-table-wrapper" role="region" aria-label="Index table" tabindex="0">
-      <table class={["pax-index-table", @class]}>
-        <thead class="pax-index-table-head">
-          <tr class="pax-index-table-head-row">
+    <div class="overflow-x-auto text-sm" role="region" aria-label="Index table" tabindex="0">
+      <table class={["border-collapse w-full", @class]}>
+        <thead>
+          <tr>
             <%= for field <- @fields do %>
-              <th class="pax-index-table-header">
+              <th class="py-[2px] px-2 first:pl-4 last:pr-4text-left align-bottom">
                 <%= render_slot(@header, field) %>
               </th>
             <% end %>
@@ -158,9 +158,9 @@ defmodule Pax.Admin.Resource.Components do
         </thead>
         <tbody>
           <%= for object <- @objects do %>
-            <tr class="pax-index-table-row">
+            <tr>
               <%= for field <- @fields do %>
-                <td class="pax-index-table-datacell">
+                <td class="py-[2px] px-2 first:pl-4 last:pr-4 align-top">
                   <%= render_slot(@cell, {field, object}) %>
                 </td>
               <% end %>
@@ -180,11 +180,11 @@ defmodule Pax.Admin.Resource.Components do
     assigns = assigns |> Map.put(:name, name) |> Map.put(:fieldgroups, fieldgroups)
 
     ~H"""
-    <div class="pax-detail-fieldset">
-      <div :if={@name != :default} class="pax-detail-fieldset-heading">
+    <div class="mb-4">
+      <div :if={@name != :default} class="text-xl border-b border-zinc-200 dark:border-zinc-750 py-2 px-4 mb-4">
         <%= @name |> to_string() |> String.capitalize() %>
       </div>
-      <div class="pax-detail-fieldset-body">
+      <div class="px-4">
         <%= for fieldgroup <- @fieldgroups do %>
           <%= render_slot(@inner_block, fieldgroup) %>
         <% end %>
@@ -202,7 +202,7 @@ defmodule Pax.Admin.Resource.Components do
     assigns = Map.put(assigns, :fieldgroup, fields)
 
     ~H"""
-    <div class={["pax-detail-fieldgroup", "pax-fieldgroup-count-#{Enum.count(@fieldgroup)}"]}>
+    <div class={["flex flex-col lg:flex-row lg:gap-8", "pax-fieldgroup-count-#{Enum.count(@fieldgroup)}"]}>
       <%= for field <- @fieldgroup do %>
         <%= render_slot(@inner_block, field) %>
       <% end %>
