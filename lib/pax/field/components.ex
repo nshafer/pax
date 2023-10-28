@@ -6,10 +6,11 @@ defmodule Pax.Field.Components do
   attr :form, :any, default: nil
   attr :label, :string, default: nil
   attr :for, :string, default: nil
+  attr :class, :any, default: nil
 
   def field_label(assigns) do
     ~H"""
-    <label for={@for || Pax.Field.label_for(@field, @form)} class="pax-field-label">
+    <label for={@for || Pax.Field.label_for(@field, @form)} class={["pax-field-label", @class]}>
       <%= @label || Pax.Field.label(@field) %>
     </label>
     """
@@ -17,20 +18,23 @@ defmodule Pax.Field.Components do
 
   attr :field, :any, required: true
   attr :object, :map, required: true
+  attr :link_class, :string, default: nil
+  attr :text_class, :string, default: nil
 
   def field_link_or_text(assigns) do
     case Pax.Field.link(assigns.field, assigns.object) do
-      nil -> field_text(assigns)
-      link -> field_link(assign(assigns, link: link))
+      nil -> field_text(assign(assigns, :class, assigns.text_class))
+      link -> field_link(assign(assigns, class: assigns.link_class, link: link))
     end
   end
 
   attr :field, :any, required: true
   attr :object, :map, required: true
+  attr :class, :any, default: nil
 
   def field_text(assigns) do
     ~H"""
-    <div class="pax-field-text">
+    <div class={["pax-field-text", @class]}>
       <%= Pax.Field.render(@field, @object) %>
     </div>
     """
@@ -39,10 +43,11 @@ defmodule Pax.Field.Components do
   attr :field, :any, required: true
   attr :object, :map, required: true
   attr :link, :string, required: true
+  attr :class, :any, default: nil
 
   def field_link(assigns) do
     ~H"""
-    <.pax_link class="pax-field-link" navigate={@link}>
+    <.pax_link class={["pax-field-link", @class]} navigate={@link}>
       <%= Pax.Field.render(@field, @object) %>
     </.pax_link>
     """
@@ -51,15 +56,19 @@ defmodule Pax.Field.Components do
   attr :field, :any, required: true
   attr :form, :any, default: nil
   attr :object, :any, required: true
+  attr :class, :any, default: nil
+  attr :text_class, :any, default: nil
+  attr :errors_class, :any, default: nil
+  attr :error_class, :any, default: nil
 
   def field_input(assigns) do
     ~H"""
     <%= if @form == nil or Pax.Field.immutable?(@field) do %>
-      <.field_text field={@field} object={@object} />
+      <.field_text class={@text_class} field={@field} object={@object} />
     <% else %>
-      <div class="pax-field-input" phx-feedback-for={Pax.Field.feedback_for(@field, @form)}>
+      <div class={["pax-field-input", @class]} phx-feedback-for={Pax.Field.feedback_for(@field, @form)}>
         <%= Pax.Field.input(@field, @form) %>
-        <.field_errors field={@field} form={@form} />
+        <.field_errors field={@field} form={@form} class={@errors_class} error_class={@error_class} />
       </div>
     <% end %>
     """
@@ -67,11 +76,13 @@ defmodule Pax.Field.Components do
 
   attr :field, :any, required: true
   attr :form, :any, default: nil
+  attr :class, :any, default: nil
+  attr :error_class, :string, default: nil
 
   def field_errors(assigns) do
     ~H"""
-    <div class="pax-field-errors">
-      <.field_error :for={msg <- Pax.Field.errors(@field, @form)}>
+    <div class={["pax-field-errors", @class]}>
+      <.field_error :for={msg <- Pax.Field.errors(@field, @form)} class={@error_class}>
         <%= msg %>
       </.field_error>
     </div>
@@ -79,11 +90,12 @@ defmodule Pax.Field.Components do
   end
 
   slot :inner_block, required: true
+  attr :class, :any, default: nil
 
   def field_error(assigns) do
     # TODO: add icon?
     ~H"""
-    <div class="pax-field-error">
+    <div class={["pax-field-error", @class]}>
       <%= render_slot(@inner_block) %>
     </div>
     """

@@ -5,7 +5,7 @@ defmodule Pax.Components do
   Renders a link using Phoenix.Component.link. All attributes from Phoenix.Component.link are passed through.
   """
 
-  attr :class, :string, default: nil
+  attr :class, :any, default: nil
 
   attr :rest, :global, include: ~w(
     navigate patch href replace method csrf_token
@@ -27,14 +27,14 @@ defmodule Pax.Components do
 
   ## Examples
 
-      <.button>Send!</.button>
-      <.button phx-click="go" class="ml-2">Send!</.button>
-      <.button navigate="/to/somewhere">Go somewhere</.button>
-      <.button patch="/my/liveview">Edit</.button>
+      <.pax_button>Send!</.button>
+      <.pax_button phx-click="go" class="ml-2">Send!</.button>
+      <.pax_button navigate="/to/somewhere">Go somewhere</.button>
+      <.pax_button patch="/my/liveview">Edit</.button>
   """
   @doc type: :component
   attr :type, :string, default: nil
-  attr :class, :string, default: nil
+  attr :class, :any, default: nil
   attr :secondary, :boolean, default: false
   attr :large, :boolean, default: false
   attr :icon, :boolean, default: false
