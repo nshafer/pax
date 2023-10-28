@@ -7,7 +7,7 @@ defmodule Pax.Interface.Components do
   attr :objects, :list, required: true
   attr :class, :string, default: nil
 
-  def index(assigns) do
+  def pax_index(assigns) do
     ~H"""
     <div class={["pax pax-index", @class]}>
       <.pax_header pax={@pax}>
@@ -20,14 +20,14 @@ defmodule Pax.Interface.Components do
         </:action>
       </.pax_header>
 
-      <.table fields={@pax.fields} objects={@objects}>
+      <.pax_table fields={@pax.fields} objects={@objects}>
         <:header :let={field}>
           <.field_label field={field} />
         </:header>
         <:cell :let={{field, object}}>
           <.field_link_or_text field={field} object={object} />
         </:cell>
-      </.table>
+      </.pax_table>
     </div>
     """
   end
@@ -36,7 +36,7 @@ defmodule Pax.Interface.Components do
   attr :object, :map, required: true
   attr :class, :string, default: nil
 
-  def show(assigns) do
+  def pax_show(assigns) do
     ~H"""
     <div class={["pax pax-detail pax-detail-show", @class]}>
       <.pax_header pax={@pax}>
@@ -50,14 +50,14 @@ defmodule Pax.Interface.Components do
       </.pax_header>
 
       <%= for fieldset <- @pax.fieldsets do %>
-        <.fieldset :let={fieldgroup} fieldset={fieldset}>
-          <.fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
+        <.pax_fieldset :let={fieldgroup} fieldset={fieldset}>
+          <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
             <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
               <.field_label field={field} />
               <.field_text field={field} object={@object} />
             </div>
-          </.fieldgroup>
-        </.fieldset>
+          </.pax_fieldgroup>
+        </.pax_fieldset>
       <% end %>
 
       <div class="pax-button-group">
@@ -75,10 +75,10 @@ defmodule Pax.Interface.Components do
   attr :form, :any, required: true
   attr :class, :string, default: nil
 
-  def new(assigns) do
+  def pax_new(assigns) do
     assigns
     |> assign(new: true)
-    |> edit()
+    |> pax_edit()
   end
 
   attr :pax, :map, required: true
@@ -87,7 +87,7 @@ defmodule Pax.Interface.Components do
   attr :class, :string, default: nil
   attr :new, :boolean, default: false
 
-  def edit(assigns) do
+  def pax_edit(assigns) do
     ~H"""
     <div class={["pax pax-detail pax-detail-edit", @class]}>
       <.form :let={f} for={@form} as={:detail} phx-change="pax_validate" phx-submit="pax_save">
@@ -110,14 +110,14 @@ defmodule Pax.Interface.Components do
         </.pax_header>
 
         <%= for fieldset <- @pax.fieldsets do %>
-          <.fieldset :let={fieldgroup} fieldset={fieldset}>
-            <.fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
+          <.pax_fieldset :let={fieldgroup} fieldset={fieldset}>
+            <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
               <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
                 <.field_label field={field} form={f} />
                 <.field_input field={field} form={f} object={@object} />
               </div>
-            </.fieldgroup>
-          </.fieldset>
+            </.pax_fieldgroup>
+          </.pax_fieldset>
         <% end %>
         <div class="pax-button-group">
           <.pax_button type="submit" phx-disable-with="Saving..." name="detail[save]" value="save">
@@ -142,7 +142,7 @@ defmodule Pax.Interface.Components do
   slot :header, required: true
   slot :cell, required: true
 
-  def table(assigns) do
+  def pax_table(assigns) do
     ~H"""
     <div class="pax-table-wrapper" role="region" aria-label="Index table" tabindex="0">
       <table class={["pax-index-table", @class]}>
@@ -174,7 +174,7 @@ defmodule Pax.Interface.Components do
   attr :fieldset, :any, required: true
   slot :inner_block, required: true
 
-  def fieldset(assigns) do
+  def pax_fieldset(assigns) do
     {name, fieldgroups} = assigns.fieldset
     assigns = assigns |> Map.put(:name, name) |> Map.put(:fieldgroups, fieldgroups)
 
@@ -196,7 +196,7 @@ defmodule Pax.Interface.Components do
   attr :with_index, :boolean, default: false
   slot :inner_block, required: true
 
-  def fieldgroup(assigns) do
+  def pax_fieldgroup(assigns) do
     fields = if assigns.with_index, do: Enum.with_index(assigns.fieldgroup), else: assigns.fieldgroup
     assigns = Map.put(assigns, :fieldgroup, fields)
 
