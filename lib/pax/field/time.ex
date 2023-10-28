@@ -24,7 +24,7 @@ defmodule Pax.Field.Time do
     }
 
     ~H"""
-    <Pax.Field.Components.field_control field={@field} form_field={@form_field} type="time" />
+    <Pax.Field.Components.pax_field_control field={@field} form_field={@form_field} type="time" />
     """
   end
 end

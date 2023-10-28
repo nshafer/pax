@@ -38,7 +38,7 @@ defmodule Pax.Field.Datetime do
     }
 
     ~H"""
-    <Pax.Field.Components.field_control field={@field} form_field={@form_field} type="datetime-local" />
+    <Pax.Field.Components.pax_field_control field={@field} form_field={@form_field} type="datetime-local" />
     """
   end
 end

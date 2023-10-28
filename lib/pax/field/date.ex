@@ -24,7 +24,7 @@ defmodule Pax.Field.Date do
     }
 
     ~H"""
-    <Pax.Field.Components.field_control field={@field} form_field={@form_field} type="date" />
+    <Pax.Field.Components.pax_field_control field={@field} form_field={@form_field} type="date" />
     """
   end
 end

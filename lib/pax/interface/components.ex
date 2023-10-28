@@ -22,10 +22,10 @@ defmodule Pax.Interface.Components do
 
       <.pax_table fields={@pax.fields} objects={@objects}>
         <:header :let={field}>
-          <.field_label field={field} />
+          <.pax_field_label field={field} />
         </:header>
         <:cell :let={{field, object}}>
-          <.field_link_or_text field={field} object={object} />
+          <.pax_field_link_or_text field={field} object={object} />
         </:cell>
       </.pax_table>
     </div>
@@ -53,8 +53,8 @@ defmodule Pax.Interface.Components do
         <.pax_fieldset :let={fieldgroup} fieldset={fieldset}>
           <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
             <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
-              <.field_label field={field} />
-              <.field_text field={field} object={@object} />
+              <.pax_field_label field={field} />
+              <.pax_field_text field={field} object={@object} />
             </div>
           </.pax_fieldgroup>
         </.pax_fieldset>
@@ -113,8 +113,8 @@ defmodule Pax.Interface.Components do
           <.pax_fieldset :let={fieldgroup} fieldset={fieldset}>
             <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
               <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
-                <.field_label field={field} form={f} />
-                <.field_input field={field} form={f} object={@object} />
+                <.pax_field_label field={field} form={f} />
+                <.pax_field_input field={field} form={f} object={@object} />
               </div>
             </.pax_fieldgroup>
           </.pax_fieldset>

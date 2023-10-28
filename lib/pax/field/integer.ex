@@ -24,7 +24,7 @@ defmodule Pax.Field.Integer do
     }
 
     ~H"""
-    <Pax.Field.Components.field_control
+    <Pax.Field.Components.pax_field_control
       field={@field}
       form_field={@form_field}
       type="text"
