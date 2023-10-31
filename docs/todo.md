@@ -47,4 +47,4 @@
     - [ ] Figure out / write docs on creating custom admin.css that imports pax_admin.css
 - [ ] Rejig `mix assets.deploy` to output to pax.min.css
 - [x] Make basic pax.css using minimal css instead of tailwind?
-- [ ] Maybe don't use tailwind for pax.css? Use postcss instead?
+- [x] Maybe don't use tailwind for pax.css? Use ~~postcss~~ sass instead?

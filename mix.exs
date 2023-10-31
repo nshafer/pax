@@ -56,7 +56,7 @@ defmodule Pax.MixProject do
       {:jason, "~> 1.2", only: :dev},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:esbuild, "~> 0.7", only: :dev},
-      {:tailwind, "~> 0.2.0", only: :dev},
+      {:dart_sass, "~> 0.7.0", only: :dev},
       {:phoenix_copy, "~> 0.1.3", only: :dev}
       # {:floki, ">= 0.30.0", only: :test},
       # {:ecto_sql, "~> 3.10", only: :test},
@@ -71,13 +71,13 @@ defmodule Pax.MixProject do
       # test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       build: ["assets.deploy", "hex.build"],
       "build.unpack": ["assets.deploy", "hex.build --unpack"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      "assets.setup": ["sass.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["assets.build.pax", "assets.build.admin"],
-      "assets.build.pax": ["tailwind pax", "esbuild pax"],
-      "assets.build.admin": ["tailwind admin", "esbuild admin"],
+      "assets.build.pax": ["sass pax --embed-source-map", "esbuild pax"],
+      "assets.build.admin": ["sass admin --embed-source-map", "esbuild admin"],
       "assets.deploy": ["assets.deploy.pax", "assets.deploy.admin"],
-      "assets.deploy.pax": ["tailwind pax --minify", "esbuild pax --minify"],
-      "assets.deploy.admin": ["tailwind admin --minify", "esbuild admin --minify"]
+      "assets.deploy.pax": ["sass pax --no-source-map --style=compressed", "esbuild pax --minify"],
+      "assets.deploy.admin": ["sass admin --no-source-map --style=compressed", "esbuild admin --minify"]
     ]
   end
 end

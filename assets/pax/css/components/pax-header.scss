@@ -1,0 +1,24 @@
+.pax-header {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: calc(var(--pax-spacing) * 2);
+    margin-bottom: var(--pax-spacing);
+
+    .pax-title {
+        margin-bottom: 0;
+    }
+}
+
+.pax-header-primary {
+    order: 1;
+}
+
+.pax-header-secondary {
+    order: 3;
+}
+
+.pax-header-tertiary {
+    order: 2;
+}

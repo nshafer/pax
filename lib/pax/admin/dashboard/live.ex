@@ -2,7 +2,7 @@ defmodule Pax.Admin.Dashboard.Live do
   # import Phoenix.LiveView
   use Phoenix.Component
   import Pax.Admin.Context
-  import Pax.Admin.Components
+  import Pax.Components
 
   def render(site_mod, assigns) do
     cond do
@@ -13,11 +13,13 @@ defmodule Pax.Admin.Dashboard.Live do
 
   def render_dashboard(assigns) do
     ~H"""
-    <.header>
-      <:title>
-        Dashboard
-      </:title>
-    </.header>
+    <.pax_header>
+      <:primary>
+        <.pax_title>
+          Dashboard
+        </.pax_title>
+      </:primary>
+    </.pax_header>
     """
   end
 

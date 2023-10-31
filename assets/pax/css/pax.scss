@@ -1,0 +1,20 @@
+/* Minimal styling for Pax components
+   The goal here is to provide a basic amount of layout and structure without any opinionated styling. For the most
+   part, the components should just adapt to the existing styles of the page they're on.
+*/
+
+@use './components/pax-header.scss';
+@use './components/pax-title.scss';
+@use './components/pax-actions.scss';
+@use './components/pax-button.scss';
+@use './components/pax-table.scss';
+@use './components/pax-index.scss';
+@use './components/pax-detail.scss';
+@use './components/pax-field.scss';
+
+/* Variables for use in all Pax CSS. Easily override this in your own CSS on the .pax class */
+/* TODO: should this be .pax-interface? */
+.pax {
+    /* Generic spacing used in a few places */
+    --pax-spacing: 1em;
+}

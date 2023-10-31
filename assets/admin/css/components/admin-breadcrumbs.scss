@@ -1,0 +1,13 @@
+.admin-breadcrumbs {
+    font-size: 0.85em;
+    font-weight: bold;
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.admin-breadcrumb-link {
+    display: block;
+    font-weight: bold;
+}

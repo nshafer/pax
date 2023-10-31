@@ -1,0 +1,16 @@
+/* CSS for Pax.Interface.Index components */
+
+.pax-index-table {
+    border-collapse: collapse;
+    table-layout: auto;
+    width: 100%;
+}
+
+.pax-index-table-header {
+    text-align: left;
+    vertical-align: bottom;
+}
+
+.pax-index-table-datacell {
+    vertical-align: top;
+}

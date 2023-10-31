@@ -1,0 +1,17 @@
+.pax-button {
+    display: block;
+}
+
+.pax-button[disabled] {
+    /* Prevent links masquerading as buttons from being clickable when disabled */
+    pointer-events: none;
+}
+
+/* Group buttons together */
+.pax-button-group {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: calc(var(--pax-spacing) * .5);
+}

@@ -1,0 +1,112 @@
+/* Main layout for all admin pages. */
+
+/* Import the basic Preflight css reset borrowed from Tailwind. Besides being a reasonable set of defaults, it
+   also ensures that plugins or custom components using tailwind will function as expected. */
+@use 'preflight.css';
+
+/* Base styles for the admin sites */
+@use 'base/typography.scss';
+@use 'base/layout.scss';
+
+/* Component styles */
+@use 'components/admin-title.scss';
+@use 'components/admin-header.scss';
+@use 'components/admin-breadcrumbs.scss';
+@use 'components/admin-sidebar.scss';
+@use 'components/admin-menu.scss';
+
+/* Variables for just the admin pages */
+:root {
+    // Base colors, mostly main backgrounds. Lighter -> darker
+    --bg-base-1: hsl(204, 5%, 97%);
+    --bg-base-2: hsl(204, 5%, 94%);
+    --bg-base-3: hsl(204, 5%, 91%);
+    --bg-base-4: hsl(204, 5%, 88%);
+
+    --border-base-1: hsl(204, 5%, 94%);
+    --border-base-2: hsl(204, 5%, 91%);
+    --border-base-3: hsl(204, 5%, 88%);
+    --border-base-4: hsl(204, 5%, 85%);
+
+    --text-base: hsl(204, 5%, 20%);
+    --link-base: hsl(204, 70%, 40%);
+    --link-base-hover: hsl(204, 70%, 30%);
+
+    // Primary colors, mostly for the main admin header
+    --bg-primary-1: hsl(204, 75%, 20%);
+    --bg-primary-2: hsl(204, 80%, 15%);
+
+    --text-primary: hsl(204, 5%, 90%);
+    --link-primary: hsl(204, 5%, 90%);
+    --link-primary-hover: hsl(204, 70%, 80%);
+
+    // Primary color for things like highlights, buttons, etc
+    --primary-color: hsl(204, 75%, 25%);
+
+    // Secondary color for non-primary things like secondary buttons, etc
+    --secondary-color: hsl(204, 65%, 35%);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        // Dark mode: darker -> lighter
+        --bg-base-1: hsl(204, 5%, 8%);
+        --bg-base-2: hsl(204, 5%, 11%);
+        --bg-base-3: hsl(204, 5%, 14%);
+        --bg-base-4: hsl(204, 5%, 17%);
+
+        --border-base-1: hsl(204, 5%, 12%);
+        --border-base-2: hsl(204, 5%, 15%);
+        --border-base-3: hsl(204, 5%, 18%);
+        --border-base-4: hsl(204, 5%, 21%);
+
+        --text-base: hsl(204, 5%, 85%);
+        --link-base: hsl(204, 70%, 70%);
+        --link-base-hover: hsl(204, 70%, 80%);
+
+        // Swap the two primary background colors to match darker -> lighter scheme
+        --bg-primary-1: hsl(204, 75%, 15%);
+        --bg-primary-2: hsl(204, 85%, 20%);
+
+        // Brighten the primary and secondary colors for contrast against darker backgrounds
+        --primary-color: hsl(204, 75%, 40%);
+        --secondary-color: hsl(204, 65%, 50%);
+    }
+}
+
+
+/* Fix checkbox alignment instead of Tailwind's naive `vertical-align: middle` */
+/* input[type="checkbox"] {
+    vertical-align: top;
+    height: 1em;
+    width: 1em;
+    margin-top: 0.25em;
+} */
+
+/* TODO: rewrite components to use tailwind classes directly. Probably once the components stabilize. */
+/* @layer components {
+    .pax {
+        @apply text-sm;
+    }
+
+    .pax .pax-link {
+        @apply font-bold underline;
+    }
+
+    .pax .pax-field-control-input {
+        @apply py-[0.5em] px-[0.5em] leading-normal border border-zinc-300 bg-inherit text-black dark:bg-inherit dark:text-white dark:border-zinc-700;
+        font-size: inherit;
+    }
+
+    .pax .pax-field-control-input.has-errors:not(.phx-no-feedback) {
+        @apply bg-red-200 dark:bg-red-900 ring-red-400 dark:ring-red-700;
+    }
+
+    .pax .pax-button {
+        @apply py-1 px-2 bg-black text-white dark:bg-white dark:text-black;
+    }
+
+    .pax .pax-button-secondary {
+        @apply bg-transparent text-black dark:text-white;
+    }
+} */

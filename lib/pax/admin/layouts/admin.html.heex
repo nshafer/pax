@@ -1,17 +1,23 @@
-<div class="col-start-1 row-start-1 bg-sky-950 text-zinc-100 text-2xl flex justify-center items-center p-1">
-  <%= if @pax_admin != nil do %>
-    <%= @pax_admin.config.title %>
-  <% end %>
+<div class="admin-layout-title">
+  <.admin_title pax_admin={@pax_admin} />
 </div>
 
-<header class="col-start-2 row-start-1 flex justify-between items-center bg-sky-925 text-zinc-100 ">
-  <.breadcrumbs pax={assigns[:pax]} pax_admin={@pax_admin} />
+<header class="admin-layout-header">
+  <.admin_header>
+    <:primary>
+      <.admin_breadcrumbs pax_admin={@pax_admin} pax={assigns[:pax]} />
+    </:primary>
+  </.admin_header>
 </header>
 
-<aside class="col-start-1 row-start-2 bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100">
-  <.sidebar_menu pax_admin={@pax_admin} />
+<aside class="admin-layout-sidebar">
+  <.admin_sidebar>
+    <:primary>
+      <.admin_menu pax_admin={@pax_admin} />
+    </:primary>
+  </.admin_sidebar>
 </aside>
 
-<main class="col-start-2 row-start-2 bg-zinc-50 dark:bg-zinc-850 text-zinc-900 dark:text-zinc-100">
+<main class="admin-layout-main">
   <%= @inner_content %>
 </main>

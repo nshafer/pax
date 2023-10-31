@@ -1,0 +1,63 @@
+/* Main Admin layout, which is more of an application style layout where header, sidebar stay on screen, and the main
+   content scrolls instead. */
+
+html,
+body {
+    height: 100%;
+}
+
+.admin {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 15em 1fr;
+    grid-template-rows: auto 1fr;
+}
+
+.admin-layout-title {
+    grid-column: 1;
+    grid-row: 1;
+
+    background: var(--bg-primary-2);
+    overflow: hidden;
+}
+
+.admin-layout-header {
+    grid-column: 2;
+    grid-row: 1;
+
+    background: var(--bg-primary-1);
+    overflow: hidden;
+}
+
+.admin-layout-title,
+.admin-layout-header {
+    color: var(--text-primary);
+
+    a {
+        color: var(--link-primary);
+
+        &:hover,
+        &:focus {
+            color: var(--link-primary-hover);
+        }
+    }
+}
+
+.admin-layout-sidebar {
+    grid-column: 1;
+    grid-row: 2;
+
+    background: var(--bg-base-2);
+    color: var(--text-base);
+    border-right: 1px solid var(--border-base-2);
+    overflow: auto;
+}
+
+.admin-layout-main {
+    grid-column: 2;
+    grid-row: 2;
+
+    background: var(--bg-base-1);
+    color: var(--text-base);
+    overflow: auto;
+}

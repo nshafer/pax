@@ -1,0 +1,74 @@
+.admin-menu {
+    --border-width: 6px;
+
+    display: flex;
+    flex-flow: column nowrap;
+}
+
+.admin-menu-link {
+    display: block;
+    padding: 0.4em 1em;
+    line-height: 1.2;
+    font-weight: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-left-width: var(--border-width);
+    border-left-color: transparent;
+    color: var(--text-base);
+
+    &.indented {
+        padding-left: 2em;
+    }
+
+    &:hover {
+        background: var(--bg-base-3);
+    }
+
+    &.active {
+        font-weight: bold;
+        background: var(--bg-base-3);
+        border-color: var(--primary-color);
+        color: var(--link-base);
+
+        &:hover {
+            background: var(--bg-base-4);
+        }
+    }
+}
+
+.admin-menu-section {
+    position: relative;
+}
+
+.admin-menu-section-button {
+    @extend .admin-menu-link;
+    width: 100%;
+    text-align: left;
+}
+
+.admin-menu-section-indicator {
+    position: absolute;
+    top: .25em;
+    right: 1em;
+    pointer-events: none;
+    transition: transform 0.2s ease-in-out;
+
+    .admin-menu-section.expanded & {
+        transform: rotate(90deg);
+    }
+}
+
+.admin-menu-section-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.2s ease-in-out;
+
+    .admin-menu-section.expanded & {
+        grid-template-rows: 1fr;
+    }
+}
+
+.admin-menu-section-contents {
+    overflow: hidden;
+}

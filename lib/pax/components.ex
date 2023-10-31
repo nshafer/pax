@@ -1,6 +1,18 @@
 defmodule Pax.Components do
   use Phoenix.Component
 
+  attr :level, :integer, values: [1, 2, 3], default: 1
+  attr :class, :any, default: nil
+  slot :inner_block, required: true
+
+  def pax_title(assigns) do
+    ~H"""
+    <div class={["pax-title", "pax-title-level-#{@level}", @class]} @rest>
+      <%= render_slot(@inner_block) %>
+    </div>
+    """
+  end
+
   @doc """
   Renders a link using Phoenix.Component.link. All attributes from Phoenix.Component.link are passed through.
   """
@@ -82,55 +94,42 @@ defmodule Pax.Components do
   end
 
   @doc """
-  Renders a header bar for use at the top of pages. Includes 5 sections that default in order left to right:
+  Renders a header bar for use at the top of pages or sections. Includes 3 sections for content:
 
-  1. leading: Left aligned, min-content - meant for action buttons or links
-  2. title: Left aligned, 1/3 - meant for a title
-  3. marquee: Center aligned, 1/3 - mean for a marquee element, such as a search bar
-  4. actions: Right aligned, 1/3 - meant for actions, such as buttons and links
-  5. trailing: Right aligned, min-content - meant for action buttons or links
-
-  In addition, there is a repeatable :action slot for inserting multiple actions into the actions section, if it isn't
-  overriden.
+  1. primary: Aligned to the left side by default, useful for titles.
+  2. secondary: Aligned to the right side by default, useful for links, tools, actions, etc.
+  3. tertiary: Aligned in the middle by default, useful for search bars, etc.
   """
 
-  attr :pax, :map, required: true
-
-  slot :leading
-  slot :title, required: true
-  slot :marquee
-  slot :actions
-  slot :trailing
-
-  slot :action
+  slot :primary
+  slot :secondary
+  slot :tertiary
 
   def pax_header(assigns) do
     ~H"""
     <div class="pax-header">
-      <div :if={@leading != []} class="pax-header-leading">
-        <%= render_slot(@leading) %>
+      <div :if={@primary != []} class="pax-header-primary">
+        <%= render_slot(@primary) %>
       </div>
 
-      <div class="pax-header-title">
-        <%= render_slot(@title) %>
+      <div :if={@secondary != []} class="pax-header-secondary">
+        <%= render_slot(@secondary) %>
       </div>
 
-      <div :if={@marquee != []} class="pax-header-marquee">
-        <%= render_slot(@marquee) %>
+      <div :if={@tertiary != []} class="pax-header-tertiary">
+        <%= render_slot(@tertiary) %>
       </div>
+    </div>
+    """
+  end
 
-      <div class="pax-header-tools">
-        <%= if @actions != [] do %>
-          <%= render_slot(@actions) %>
-        <% else %>
-          <div :for={action <- @action} class="pax-header-tool">
-            <%= render_slot(action) %>
-          </div>
-        <% end %>
-      </div>
+  slot :action
 
-      <div :if={@trailing != []} class="pax-header-trailing">
-        <%= render_slot(@trailing) %>
+  def pax_actions(assigns) do
+    ~H"""
+    <div class="pax-actions">
+      <div :for={action <- @action} class="pax-actions-item">
+        <%= render_slot(action) %>
       </div>
     </div>
     """

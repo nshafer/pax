@@ -5,9 +5,9 @@ defmodule Mix.Tasks.Watch do
   def run(_) do
     tasks = [
       Task.async(Esbuild, :install_and_run, [:pax, ~w(--sourcemap=inline --watch)]),
-      Task.async(Tailwind, :install_and_run, [:pax, ~w(--watch)]),
+      Task.async(DartSass, :install_and_run, [:pax, ~w(--embed-source-map --watch)]),
       Task.async(Esbuild, :install_and_run, [:admin, ~w(--sourcemap=inline --watch)]),
-      Task.async(Tailwind, :install_and_run, [:admin, ~w(--watch)])
+      Task.async(DartSass, :install_and_run, [:admin, ~w(--embed-source-map --watch)])
     ]
 
     Task.await_many(tasks, :infinity)

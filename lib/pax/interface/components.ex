@@ -10,24 +10,30 @@ defmodule Pax.Interface.Components do
   def pax_index(assigns) do
     ~H"""
     <div class={["pax pax-index", @class]}>
-      <.pax_header pax={@pax}>
-        <:title>
-          <%= @pax.plural_name %>
-        </:title>
+      <.pax_header>
+        <:primary>
+          <.pax_title>
+            <%= @pax.plural_name %>
+          </.pax_title>
+        </:primary>
 
-        <:action :if={@pax.new_path}>
-          <.pax_button navigate={@pax.new_path}>New</.pax_button>
-        </:action>
+        <:secondary :if={@pax.new_path}>
+          <.pax_actions>
+            <:action>
+              <.pax_button navigate={@pax.new_path}>New</.pax_button>
+            </:action>
+          </.pax_actions>
+        </:secondary>
       </.pax_header>
 
-      <.pax_table fields={@pax.fields} objects={@objects}>
+      <.pax_index_table fields={@pax.fields} objects={@objects}>
         <:header :let={field}>
           <.pax_field_label field={field} />
         </:header>
         <:cell :let={{field, object}}>
           <.pax_field_link_or_text field={field} object={object} />
         </:cell>
-      </.pax_table>
+      </.pax_index_table>
     </div>
     """
   end
@@ -39,14 +45,20 @@ defmodule Pax.Interface.Components do
   def pax_show(assigns) do
     ~H"""
     <div class={["pax pax-detail pax-detail-show", @class]}>
-      <.pax_header pax={@pax}>
-        <:title>
-          <%= @pax.object_name %>
-        </:title>
+      <.pax_header>
+        <:primary>
+          <.pax_title>
+            <%= @pax.object_name %>
+          </.pax_title>
+        </:primary>
 
-        <:action :if={@pax.edit_path}>
-          <.pax_button patch={@pax.edit_path}>Edit</.pax_button>
-        </:action>
+        <:secondary :if={@pax.new_path}>
+          <.pax_actions>
+            <:action :if={@pax.edit_path}>
+              <.pax_button patch={@pax.edit_path}>Edit</.pax_button>
+            </:action>
+          </.pax_actions>
+        </:secondary>
       </.pax_header>
 
       <%= for fieldset <- @pax.fieldsets do %>
@@ -91,22 +103,28 @@ defmodule Pax.Interface.Components do
     ~H"""
     <div class={["pax pax-detail pax-detail-edit", @class]}>
       <.form :let={f} for={@form} as={:detail} phx-change="pax_validate" phx-submit="pax_save">
-        <.pax_header pax={@pax}>
-          <:title :if={@new}>
-            New <%= @pax.singular_name %>
-          </:title>
+        <.pax_header>
+          <:primary>
+            <.pax_title :if={@new}>
+              New <%= @pax.singular_name %>
+            </.pax_title>
 
-          <:title :if={not @new}>
-            Edit <%= @pax.object_name %>
-          </:title>
+            <.pax_title :if={not @new}>
+              Edit <%= @pax.object_name %>
+            </.pax_title>
+          </:primary>
 
-          <:action :if={@pax.show_path}>
-            <.pax_button patch={@pax.show_path} secondary={true}>Cancel</.pax_button>
-          </:action>
+          <:secondary>
+            <.pax_actions>
+              <:action :if={@pax.show_path}>
+                <.pax_button patch={@pax.show_path} secondary={true}>Cancel</.pax_button>
+              </:action>
 
-          <:action>
-            <.pax_button type="submit" phx-disable-with="Saving...">Save</.pax_button>
-          </:action>
+              <:action>
+                <.pax_button type="submit" phx-disable-with="Saving...">Save</.pax_button>
+              </:action>
+            </.pax_actions>
+          </:secondary>
         </.pax_header>
 
         <%= for fieldset <- @pax.fieldsets do %>
@@ -119,6 +137,7 @@ defmodule Pax.Interface.Components do
             </.pax_fieldgroup>
           </.pax_fieldset>
         <% end %>
+
         <div class="pax-button-group">
           <.pax_button type="submit" phx-disable-with="Saving..." name="detail[save]" value="save">
             Save
@@ -142,7 +161,7 @@ defmodule Pax.Interface.Components do
   slot :header, required: true
   slot :cell, required: true
 
-  def pax_table(assigns) do
+  def pax_index_table(assigns) do
     ~H"""
     <div class="pax-table-wrapper" role="region" aria-label="Index table" tabindex="0">
       <table class={["pax-index-table", @class]}>

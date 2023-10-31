@@ -1,6 +1,6 @@
 defmodule Pax.Admin.Resource.Live do
   use Phoenix.Component
-  import Pax.Admin.Resource.Components
+  import Pax.Interface.Components
   import Pax.Admin.Context
 
   def render(site_mod, assigns) do
