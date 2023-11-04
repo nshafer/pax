@@ -17,7 +17,8 @@ body {
     grid-column: 1;
     grid-row: 1;
 
-    background: var(--bg-primary-2);
+    background-color: var(--bg-primary-2);
+    transition: background-color var(--speed) ease-in-out;
     overflow: hidden;
 }
 
@@ -25,7 +26,8 @@ body {
     grid-column: 2;
     grid-row: 1;
 
-    background: var(--bg-primary-1);
+    background-color: var(--bg-primary-1);
+    transition: background-color var(--speed) ease-in-out;
     overflow: hidden;
 }
 
@@ -47,9 +49,10 @@ body {
     grid-column: 1;
     grid-row: 2;
 
-    background: var(--bg-base-2);
+    background-color: var(--bg-base-2);
     color: var(--text-base);
     border-right: 1px solid var(--border-base-2);
+    transition: background-color var(--speed) ease-in-out, border-color var(--speed) ease-in-out, color var(--speed) ease-in-out;
     overflow: auto;
 }
 
@@ -57,7 +60,8 @@ body {
     grid-column: 2;
     grid-row: 2;
 
-    background: var(--bg-base-1);
+    background-color: var(--bg-base-1);
     color: var(--text-base);
+    transition: background-color var(--speed) ease-in-out, color var(--speed) ease-in-out;
     overflow: auto;
 }

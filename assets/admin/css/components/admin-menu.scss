@@ -15,24 +15,29 @@
     white-space: nowrap;
     border-left-width: var(--border-width);
     border-left-color: transparent;
+    transition: border-color var(--speed) ease-in-out;
     color: var(--text-base);
 
     &.indented {
         padding-left: 2em;
     }
 
+    .admin-menu-section.expanded &:not(.active) {
+        border-color: var(--border-base-4);
+    }
+
     &:hover {
-        background: var(--bg-base-3);
+        background-color: var(--bg-base-3);
     }
 
     &.active {
         font-weight: bold;
-        background: var(--bg-base-3);
+        background-color: var(--bg-base-3);
         border-color: var(--primary-color);
         color: var(--link-base);
 
         &:hover {
-            background: var(--bg-base-4);
+            background-color: var(--bg-base-4);
         }
     }
 }
@@ -45,6 +50,10 @@
     @extend .admin-menu-link;
     width: 100%;
     text-align: left;
+
+    .admin-menu-section.expanded & {
+        border-color: var(--border-base-4);
+    }
 }
 
 .admin-menu-section-indicator {
@@ -62,7 +71,7 @@
 .admin-menu-section-body {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 0.2s ease-in-out;
+    transition: grid-template-rows var(--speed) ease-in-out;
 
     .admin-menu-section.expanded & {
         grid-template-rows: 1fr;

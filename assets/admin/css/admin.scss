@@ -17,16 +17,18 @@
 
 /* Variables for just the admin pages */
 :root {
+    --speed: 0.2s;
+
     // Base colors, mostly main backgrounds. Lighter -> darker
     --bg-base-1: hsl(204, 5%, 97%);
     --bg-base-2: hsl(204, 5%, 94%);
     --bg-base-3: hsl(204, 5%, 91%);
     --bg-base-4: hsl(204, 5%, 88%);
 
-    --border-base-1: hsl(204, 5%, 94%);
-    --border-base-2: hsl(204, 5%, 91%);
-    --border-base-3: hsl(204, 5%, 88%);
-    --border-base-4: hsl(204, 5%, 85%);
+    --border-base-1: hsl(204, 5%, 91%);
+    --border-base-2: hsl(204, 5%, 88%);
+    --border-base-3: hsl(204, 5%, 85%);
+    --border-base-4: hsl(204, 5%, 82%);
 
     --text-base: hsl(204, 5%, 20%);
     --link-base: hsl(204, 70%, 40%);
