@@ -1,0 +1,8 @@
+.pax-header {
+    padding: 0.5em 1em;
+    background-color: var(--bg-base-2);
+    border-bottom: 1px solid var(--border-base-2);
+
+    // TODO: once we have the actionbar in, remove the margin
+    margin-bottom: 2em;
+}

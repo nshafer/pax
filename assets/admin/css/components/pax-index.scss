@@ -1,0 +1,49 @@
+.pax-index {
+    height: 100%;
+    display: flex;
+    flex-flow: column nowrap;
+}
+
+.pax-index-table {
+    // Reduce font to 14px when em = 16px.
+    font-size: 0.875em;
+}
+
+.pax-index-table-head {
+    background-color: var(--bg-base-3);
+    border-bottom: 1px solid var(--border-base-3);
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.pax-index-table-header {
+    white-space: nowrap;
+}
+
+.pax-index-table-header,
+.pax-index-table-datacell {
+    padding: 0.2em 0.5em;
+
+    &:first-child {
+        padding-left: calc(1em * (1/0.875));
+    }
+
+    &:last-child {
+        padding-right: calc(1em * (1/0.875));
+    }
+}
+
+.pax-index-table-header .pax-field-label {
+    font-size: 0.8em;
+    text-transform: uppercase;
+}
+
+.pax-index-table-row {
+    border-bottom: 1px solid var(--border-base-1);
+}
+
+.pax-index-table-row:nth-child(even) {
+    background-color: var(--bg-base-2);
+}

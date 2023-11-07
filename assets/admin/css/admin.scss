@@ -15,9 +15,16 @@
 @use 'components/admin-sidebar.scss';
 @use 'components/admin-menu.scss';
 
+/* Pax component styles */
+@use 'components/pax-header.scss';
+@use 'components/pax-title.scss';
+@use 'components/pax-button.scss';
+@use 'components/pax-index.scss';
+
 /* Variables for just the admin pages */
 :root {
     --speed: 0.2s;
+    --radius: 4px;
 
     // Base colors, mostly main backgrounds. Lighter -> darker
     --bg-base-1: hsl(204, 5%, 97%);
@@ -31,7 +38,7 @@
     --border-base-4: hsl(204, 5%, 82%);
 
     --text-base: hsl(204, 5%, 20%);
-    --link-base: hsl(204, 70%, 40%);
+    --link-base: hsl(204, 75%, 35%);
     --link-base-hover: hsl(204, 70%, 30%);
 
     // Primary colors, mostly for the main admin header
@@ -42,11 +49,14 @@
     --link-primary: hsl(204, 5%, 90%);
     --link-primary-hover: hsl(204, 70%, 80%);
 
-    // Primary color for things like highlights, buttons, etc
-    --primary-color: hsl(204, 75%, 25%);
+    // Button colors
+    --bg-button-1: hsl(204, 75%, 25%);
+    --bg-button-2: hsl(204, 5%, 40%);
 
-    // Secondary color for non-primary things like secondary buttons, etc
-    --secondary-color: hsl(204, 65%, 35%);
+    --bg-button-hover-1: hsl(204, 75%, 20%);
+    --bg-button-hover-2: hsl(204, 5%, 35%);
+
+    --text-button: hsl(204, 5%, 90%);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -63,16 +73,20 @@
         --border-base-4: hsl(204, 5%, 21%);
 
         --text-base: hsl(204, 5%, 85%);
-        --link-base: hsl(204, 70%, 70%);
+        --link-base: hsl(204, 75%, 70%);
         --link-base-hover: hsl(204, 70%, 80%);
 
         // Swap the two primary background colors to match darker -> lighter scheme
         --bg-primary-1: hsl(204, 75%, 15%);
         --bg-primary-2: hsl(204, 85%, 20%);
 
-        // Brighten the primary and secondary colors for contrast against darker backgrounds
-        --primary-color: hsl(204, 75%, 40%);
-        --secondary-color: hsl(204, 65%, 50%);
+        // Lighten the button colors for contrast against dark background
+        --bg-button-1: hsl(204, 75%, 30%);
+        --bg-button-2: hsl(204, 5%, 40%);
+
+        --bg-button-hover-1: hsl(204, 75%, 35%);
+        --bg-button-hover-2: hsl(204, 5%, 45%);
+
     }
 }
 

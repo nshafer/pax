@@ -1,0 +1,20 @@
+.pax-button {
+    background-color: var(--bg-button-1);
+    color: var(--text-button);
+    padding: .25em .5em;
+    border-radius: var(--radius);
+    font-weight: bold;
+
+    &:hover {
+        background-color: var(--bg-button-hover-1);
+        color: var(--text-button);
+    }
+}
+
+.pax-button-secondary {
+    background-color: var(--bg-button-2);
+
+    &:hover {
+        background-color: var(--bg-button-hover-2);
+    }
+}
