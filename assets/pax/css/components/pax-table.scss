@@ -4,7 +4,7 @@
 }
 
 /* Make the table accessible by adding `role="region" aria-label="Index table" tabindex="0"` to the wrapper */
-.pax-table-wrapper[tabindex]:focus {
+.pax-table-wrapper[tabindex]:focus-visible {
     /* Default to an outline that matches webkit default for a11y */
     outline: auto;
 }
