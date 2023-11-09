@@ -6,5 +6,5 @@
 /* Make the table accessible by adding `role="region" aria-label="Index table" tabindex="0"` to the wrapper */
 .pax-table-wrapper[tabindex]:focus {
     /* Default to an outline that matches webkit default for a11y */
-    outline: 2px solid #101010;
+    outline: auto;
 }

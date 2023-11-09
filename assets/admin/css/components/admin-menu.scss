@@ -22,12 +22,14 @@
         padding-left: 2em;
     }
 
-    .admin-menu-section.expanded &:not(.active) {
-        border-color: var(--border-base-4);
-    }
-
     &:hover {
         background-color: var(--bg-base-3);
+        text-decoration: none;
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--border-focus);
+        outline-offset: -2px;
     }
 
     &.active {
@@ -75,6 +77,19 @@
 
     .admin-menu-section.expanded & {
         grid-template-rows: 1fr;
+    }
+
+    .admin-menu-link {
+        visibility: hidden;
+        transition: border-color var(--speed) ease-in-out, visibility var(--speed) ease-in-out;
+
+        .admin-menu-section.expanded & {
+            visibility: visible;
+        }
+
+        .admin-menu-section.expanded &:not(.active) {
+            border-color: var(--border-base-4);
+        }
     }
 }
 

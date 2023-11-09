@@ -331,7 +331,7 @@ defmodule Pax.Admin.Site do
       def __pax__(:resources), do: @pax_resources_sorted
 
       defmodule DashboardLive do
-        use Phoenix.LiveView, container: {:div, class: "admin"}
+        use Phoenix.LiveView, container: {:div, class: "admin admin-layout"}
 
         def render(assigns), do: Pax.Admin.Dashboard.Live.render(unquote(env.module), assigns)
 
@@ -340,7 +340,7 @@ defmodule Pax.Admin.Site do
       end
 
       defmodule ResourceLive do
-        use Phoenix.LiveView, container: {:div, class: "admin"}
+        use Phoenix.LiveView, container: {:div, class: "admin admin-layout"}
         use Pax.Interface
 
         def render(assigns), do: Pax.Admin.Resource.Live.render(unquote(env.module), assigns)

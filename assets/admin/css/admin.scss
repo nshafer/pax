@@ -17,9 +17,13 @@
 
 /* Pax component styles */
 @use 'components/pax-header.scss';
+@use 'components/pax-footer.scss';
 @use 'components/pax-title.scss';
 @use 'components/pax-button.scss';
+@use 'components/pax-table.scss';
+@use 'components/pax-field.scss';
 @use 'components/pax-index.scss';
+@use 'components/pax-detail.scss';
 
 /* Variables for just the admin pages */
 :root {
@@ -38,6 +42,7 @@
     --border-base-4: hsl(204, 5%, 82%);
 
     --text-base: hsl(204, 5%, 20%);
+    --text-base-error: hsl(0, 75%, 60%);
     --link-base: hsl(204, 75%, 35%);
     --link-base-hover: hsl(204, 70%, 30%);
 
@@ -57,6 +62,21 @@
     --bg-button-hover-2: hsl(204, 5%, 35%);
 
     --text-button: hsl(204, 5%, 90%);
+
+    // Input colors
+    --bg-input: hsl(204, 5%, 97%);
+    --bg-input-error: hsl(0, 75%, 90%);
+    --color-input: hsl(204, 5%, 20%);
+    --border-input: hsl(204, 5%, 85%);
+    --border-input-error: hsl(0, 75%, 60%);
+
+    // Error pills
+    --bg-error: hsl(0, 75%, 60%);
+    --color-error: hsl(0, 75%, 98%);
+
+    // Focus ring color
+    --border-focus: hsl(204, 75%, 50%);
+
 }
 
 @media (prefers-color-scheme: dark) {
@@ -87,6 +107,16 @@
         --bg-button-hover-1: hsl(204, 75%, 35%);
         --bg-button-hover-2: hsl(204, 5%, 45%);
 
+        // Input colors darker
+        --bg-input: hsl(204, 5%, 8%);
+        --bg-input-error: hsl(0, 25%, 10%);
+        --color-input: hsl(204, 5%, 85%);
+        --border-input: hsl(204, 5%, 40%);
+        --border-input-error: hsl(0, 75%, 40%);
+
+        // Error pills darker
+        --bg-error: hsl(0, 75%, 40%);
+        --color-error: hsl(0, 75%, 98%);
     }
 }
 

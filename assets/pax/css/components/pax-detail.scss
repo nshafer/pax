@@ -5,7 +5,6 @@
 }
 
 .pax-detail-fieldset-heading {
-    font-size: 1.5em;
     margin-bottom: var(--pax-spacing);
 }
 
@@ -17,7 +16,7 @@
 @media (min-width: 640px) {
     .pax-detail-fieldgroup {
         flex-flow: row wrap;
-        gap: calc(var(--pax-spacing) * 0.5) calc(var(--pax-spacing) * 2);
+        gap: 0 calc(var(--pax-spacing) * 2);
     }
 }
 
@@ -25,8 +24,5 @@
     flex: 1 0 0%;
     display: flex;
     flex-flow: column nowrap;
-}
-
-.pax-detail-field {
-    margin-bottom: 1em;
+    margin-bottom: var(--pax-spacing);
 }

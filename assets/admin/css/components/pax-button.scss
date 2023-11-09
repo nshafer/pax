@@ -1,13 +1,19 @@
 .pax-button {
     background-color: var(--bg-button-1);
     color: var(--text-button);
-    padding: .25em .5em;
+    padding: .15em .5em;
     border-radius: var(--radius);
     font-weight: bold;
 
     &:hover {
         background-color: var(--bg-button-hover-1);
         color: var(--text-button);
+        text-decoration: none;
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--border-focus);
+        outline-offset: 2px;
     }
 }
 

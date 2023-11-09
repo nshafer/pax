@@ -6,7 +6,7 @@ body {
     height: 100%;
 }
 
-.admin {
+.admin-layout {
     height: 100%;
     display: grid;
     grid-template-columns: 15em 1fr;
@@ -37,8 +37,12 @@ body {
         color: var(--link-primary);
 
         &:hover,
-        &:focus {
+        &:focus-visible {
             color: var(--link-primary-hover);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--link-primary-hover);
         }
     }
 }

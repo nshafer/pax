@@ -12,17 +12,11 @@ defmodule Pax.Interface.Components do
     <div class={["pax pax-index", @class]}>
       <.pax_header>
         <:primary>
-          <.pax_title>
-            <%= @pax.plural_name %>
-          </.pax_title>
+          <.pax_title><%= @pax.plural_name %></.pax_title>
         </:primary>
 
-        <:secondary :if={@pax.new_path}>
-          <.pax_actions>
-            <:action>
-              <.pax_button navigate={@pax.new_path}>New</.pax_button>
-            </:action>
-          </.pax_actions>
+        <:secondary>
+          <.pax_button :if={@pax.new_path} navigate={@pax.new_path}>New <%= @pax.singular_name %></.pax_button>
         </:secondary>
       </.pax_header>
 
@@ -34,6 +28,12 @@ defmodule Pax.Interface.Components do
           <.pax_field_link_or_text field={field} object={object} />
         </:cell>
       </.pax_index_table>
+
+      <.pax_footer>
+        <:primary>
+          Page 1
+        </:primary>
+      </.pax_footer>
     </div>
     """
   end
@@ -52,32 +52,31 @@ defmodule Pax.Interface.Components do
           </.pax_title>
         </:primary>
 
-        <:secondary :if={@pax.new_path}>
-          <.pax_actions>
-            <:action :if={@pax.edit_path}>
-              <.pax_button patch={@pax.edit_path}>Edit</.pax_button>
-            </:action>
-          </.pax_actions>
+        <:secondary>
+          <.pax_button :if={@pax.edit_path} class="pax-detail-edit-button" patch={@pax.edit_path}>Edit</.pax_button>
         </:secondary>
       </.pax_header>
 
-      <%= for fieldset <- @pax.fieldsets do %>
-        <.pax_fieldset :let={fieldgroup} fieldset={fieldset}>
-          <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
-            <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
-              <.pax_field_label field={field} />
-              <.pax_field_text field={field} object={@object} />
-            </div>
-          </.pax_fieldgroup>
-        </.pax_fieldset>
-      <% end %>
-
-      <div class="pax-button-group">
-        <.pax_button :if={@pax.edit_path} patch={@pax.edit_path}>Edit</.pax_button>
-        <.pax_button :if={@pax.index_path} navigate={@pax.index_path} secondary={true}>
-          Back
-        </.pax_button>
+      <div class="pax-detail-body">
+        <%= for fieldset <- @pax.fieldsets do %>
+          <.pax_fieldset :let={fieldgroup} fieldset={fieldset}>
+            <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
+              <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
+                <.pax_field_label field={field} />
+                <.pax_field_text field={field} object={@object} />
+              </div>
+            </.pax_fieldgroup>
+          </.pax_fieldset>
+        <% end %>
       </div>
+
+      <.pax_footer>
+        <:primary>
+          <.pax_button :if={@pax.index_path} class="pax-detail-back-button" navigate={@pax.index_path} secondary={true}>
+            Back
+          </.pax_button>
+        </:primary>
+      </.pax_footer>
     </div>
     """
   end
@@ -101,32 +100,43 @@ defmodule Pax.Interface.Components do
 
   def pax_edit(assigns) do
     ~H"""
-    <div class={["pax pax-detail pax-detail-edit", @class]}>
-      <.form :let={f} for={@form} as={:detail} phx-change="pax_validate" phx-submit="pax_save">
-        <.pax_header>
-          <:primary>
-            <.pax_title :if={@new}>
-              New <%= @pax.singular_name %>
-            </.pax_title>
+    <.form
+      :let={f}
+      for={@form}
+      as={:detail}
+      class={["pax pax-detail pax-detail-edit", @class]}
+      phx-change="pax_validate"
+      phx-submit="pax_save"
+    >
+      <.pax_header>
+        <:primary>
+          <.pax_title :if={@new}>
+            New <%= @pax.singular_name %>
+          </.pax_title>
 
-            <.pax_title :if={not @new}>
-              Edit <%= @pax.object_name %>
-            </.pax_title>
-          </:primary>
+          <.pax_title :if={not @new}>
+            Edit <%= @pax.object_name %>
+          </.pax_title>
+        </:primary>
 
-          <:secondary>
-            <.pax_actions>
-              <:action :if={@pax.show_path}>
-                <.pax_button patch={@pax.show_path} secondary={true}>Cancel</.pax_button>
-              </:action>
+        <:secondary>
+          <.pax_button :if={@pax.show_path} class="pax-detail-cancel-button" patch={@pax.show_path} secondary={true}>
+            Cancel
+          </.pax_button>
 
-              <:action>
-                <.pax_button type="submit" phx-disable-with="Saving...">Save</.pax_button>
-              </:action>
-            </.pax_actions>
-          </:secondary>
-        </.pax_header>
+          <.pax_button
+            class="pax-detail-save-button"
+            type="submit"
+            phx-disable-with="Saving..."
+            name="detail[save]"
+            value="save"
+          >
+            Save
+          </.pax_button>
+        </:secondary>
+      </.pax_header>
 
+      <div class="pax-detail-body">
         <%= for fieldset <- @pax.fieldsets do %>
           <.pax_fieldset :let={fieldgroup} fieldset={fieldset}>
             <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
@@ -137,20 +147,16 @@ defmodule Pax.Interface.Components do
             </.pax_fieldgroup>
           </.pax_fieldset>
         <% end %>
+      </div>
 
-        <div class="pax-button-group">
-          <.pax_button type="submit" phx-disable-with="Saving..." name="detail[save]" value="save">
-            Save
-          </.pax_button>
-          <.pax_button :if={@pax.show_path} patch={@pax.show_path} secondary={true}>
-            Cancel
-          </.pax_button>
-          <.pax_button :if={@pax.index_path} navigate={@pax.index_path} secondary={true}>
+      <.pax_footer>
+        <:primary>
+          <.pax_button :if={@pax.index_path} class="pax-detail-back-button" navigate={@pax.index_path} secondary={true}>
             Back
           </.pax_button>
-        </div>
-      </.form>
-    </div>
+        </:primary>
+      </.pax_footer>
+    </.form>
     """
   end
 
@@ -200,7 +206,9 @@ defmodule Pax.Interface.Components do
     ~H"""
     <div class="pax-detail-fieldset">
       <div :if={@name != :default} class="pax-detail-fieldset-heading">
-        <%= @name |> to_string() |> String.capitalize() %>
+        <.pax_title level={2}>
+          <%= @name |> to_string() |> String.capitalize() %>
+        </.pax_title>
       </div>
       <div class="pax-detail-fieldset-body">
         <%= for fieldgroup <- @fieldgroups do %>

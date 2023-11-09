@@ -1,12 +1,15 @@
+/* Admin override styles for Pax.Interface.Index components */
+
 .pax-index {
     height: 100%;
     display: flex;
     flex-flow: column nowrap;
+    // Reduce font to 14px when em = 16px.
+    font-size: 0.875rem;
 }
 
-.pax-index-table {
-    // Reduce font to 14px when em = 16px.
-    font-size: 0.875em;
+.pax-index .pax-table-wrapper {
+    flex: 1;
 }
 
 .pax-index-table-head {
@@ -15,7 +18,6 @@
     position: -webkit-sticky;
     position: sticky;
     top: 0;
-    z-index: 2;
 }
 
 .pax-index-table-header {

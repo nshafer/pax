@@ -80,9 +80,11 @@ defmodule Pax.Field.Components do
   attr :error_class, :string, default: nil
 
   def pax_field_errors(assigns) do
+    assigns = assign(assigns, :errors, Pax.Field.errors(assigns.field, assigns.form))
+
     ~H"""
-    <div class={["pax-field-errors", @class]}>
-      <.pax_field_error :for={msg <- Pax.Field.errors(@field, @form)} class={@error_class}>
+    <div :if={@errors != []} class={["pax-field-errors", @class]}>
+      <.pax_field_error :for={msg <- @errors} class={@error_class}>
         <%= msg %>
       </.pax_field_error>
     </div>

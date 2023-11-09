@@ -1,0 +1,45 @@
+.pax-field-label {
+    font-weight: bold;
+}
+
+.pax-field-control-input {
+    padding: 0.2em 0.5em;
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
+    color: var(--color-input);
+    border-radius: var(--radius);
+
+    &:focus-visible {
+        outline: 2px solid var(--border-focus);
+    }
+
+    &.has-errors:not(.phx-no-feedback) {
+        background-color: var(--bg-input-error);
+        border: 1px solid var(--border-input-error);
+
+        &:focus-visible {
+            outline: 2px solid var(--border-input-error);
+        }
+    }
+}
+
+.pax-field-control-checkbox {
+    vertical-align: top;
+    height: 1em;
+    width: 1em;
+    margin-top: 0.25em;
+}
+
+.pax-field-errors {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 0.5em;
+    margin-top: .5em;
+}
+
+.pax-field-error {
+    background-color: var(--bg-error);
+    color: var(--color-error);
+    padding: 0.2em 0.5em;
+    border-radius: var(--radius);
+}

@@ -7,7 +7,7 @@ defmodule Pax.Components do
 
   def pax_title(assigns) do
     ~H"""
-    <div class={["pax-title", "pax-title-level-#{@level}", @class]} @rest>
+    <div class={["pax-title", "pax-title-level-#{@level}", @class]} role="heading" aria-level={@level}>
       <%= render_slot(@inner_block) %>
     </div>
     """
@@ -108,28 +108,41 @@ defmodule Pax.Components do
   def pax_header(assigns) do
     ~H"""
     <div class="pax-header">
-      <div :if={@primary != []} class="pax-header-primary">
+      <div class="pax-header-section pax-header-primary">
         <%= render_slot(@primary) %>
       </div>
 
-      <div :if={@secondary != []} class="pax-header-secondary">
+      <div class="pax-header-section pax-header-secondary">
         <%= render_slot(@secondary) %>
       </div>
 
-      <div :if={@tertiary != []} class="pax-header-tertiary">
+      <div class="pax-header-section pax-header-tertiary">
         <%= render_slot(@tertiary) %>
       </div>
     </div>
     """
   end
 
-  slot :action
+  @doc """
+  Renders a footer bar for use at the bottom of pages or sections. Includes 2 sections for content:
 
-  def pax_actions(assigns) do
+  1. primary: Aligned to the left side by default, useful for status lines.
+  2. secondary: Aligned to the right side by default, useful for links, tools, actions, etc.
+
+  """
+
+  slot :primary
+  slot :secondary
+
+  def pax_footer(assigns) do
     ~H"""
-    <div class="pax-actions">
-      <div :for={action <- @action} class="pax-actions-item">
-        <%= render_slot(action) %>
+    <div class="pax-footer">
+      <div class="pax-footer-section pax-footer-primary">
+        <%= render_slot(@primary) %>
+      </div>
+
+      <div class="pax-footer-section pax-footer-secondary">
+        <%= render_slot(@secondary) %>
       </div>
     </div>
     """

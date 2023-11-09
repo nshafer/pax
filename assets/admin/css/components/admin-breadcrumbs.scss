@@ -10,4 +10,12 @@
 .admin-breadcrumb-link {
     display: block;
     font-weight: bold;
+
+    &:hover {
+        text-decoration: none;
+    }
+
+    &:focus-visible {
+        text-decoration: none;
+    }
 }

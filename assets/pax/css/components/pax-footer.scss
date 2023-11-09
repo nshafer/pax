@@ -1,27 +1,15 @@
-.pax-header {
+.pax-footer {
     display: flex;
     flex-flow: row nowrap;
     justify-content: space-between;
     align-items: center;
     gap: calc(var(--pax-spacing) * 2);
-    margin-bottom: var(--pax-spacing);
+    margin-top: var(--pax-spacing);
 }
 
-.pax-header-section {
+.pax-footer-section {
     display: flex;
     flex-flow: row wrap;
     align-items: center;
     gap: calc(var(--pax-spacing) * .5);
-}
-
-.pax-header-primary {
-    order: 1;
-}
-
-.pax-header-secondary {
-    order: 3;
-}
-
-.pax-header-tertiary {
-    order: 2;
 }

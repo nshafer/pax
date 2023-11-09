@@ -7,8 +7,12 @@ a {
     font-weight: bold;
     color: var(--link-base);
 
-    &:hover,
-    &:focus {
+    &:hover {
         color: var(--link-base-hover);
+        text-decoration: underline;
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--border-focus);
     }
 }
