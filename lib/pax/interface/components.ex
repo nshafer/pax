@@ -47,9 +47,17 @@ defmodule Pax.Interface.Components do
     <div class={["pax pax-detail pax-detail-show", @class]}>
       <.pax_header>
         <:primary>
-          <.pax_title>
-            <%= @pax.object_name %>
-          </.pax_title>
+          <div class="pax-title-breadcrumbs">
+            <.pax_link :if={@pax.index_path} class="pax-detail-index-breadcrumb-link" navigate={@pax.index_path}>
+              <%= @pax.plural_name %>
+            </.pax_link>
+
+            <span class="pax-detail-index-breadcrumb-separator">/</span>
+
+            <.pax_title class="pax-detail-title">
+              <%= @pax.object_name %>
+            </.pax_title>
+          </div>
         </:primary>
 
         <:secondary>
@@ -71,11 +79,7 @@ defmodule Pax.Interface.Components do
       </div>
 
       <.pax_footer>
-        <:primary>
-          <.pax_button :if={@pax.index_path} class="pax-detail-back-button" navigate={@pax.index_path} secondary={true}>
-            Back
-          </.pax_button>
-        </:primary>
+        <:primary></:primary>
       </.pax_footer>
     </div>
     """
@@ -110,13 +114,21 @@ defmodule Pax.Interface.Components do
     >
       <.pax_header>
         <:primary>
-          <.pax_title :if={@new}>
-            New <%= @pax.singular_name %>
-          </.pax_title>
+          <div class="pax-title-breadcrumbs">
+            <.pax_link :if={@pax.index_path} class="pax-detail-index-breadcrumb-link" navigate={@pax.index_path}>
+              <%= @pax.plural_name %>
+            </.pax_link>
 
-          <.pax_title :if={not @new}>
-            Edit <%= @pax.object_name %>
-          </.pax_title>
+            <span class="pax-detail-index-breadcrumb-separator">/</span>
+
+            <.pax_title :if={@new}>
+              New <%= @pax.singular_name %>
+            </.pax_title>
+
+            <.pax_title :if={not @new}>
+              <%= @pax.object_name %>
+            </.pax_title>
+          </div>
         </:primary>
 
         <:secondary>
@@ -150,11 +162,7 @@ defmodule Pax.Interface.Components do
       </div>
 
       <.pax_footer>
-        <:primary>
-          <.pax_button :if={@pax.index_path} class="pax-detail-back-button" navigate={@pax.index_path} secondary={true}>
-            Back
-          </.pax_button>
-        </:primary>
+        <:primary></:primary>
       </.pax_footer>
     </.form>
     """

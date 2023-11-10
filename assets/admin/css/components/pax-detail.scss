@@ -7,12 +7,19 @@
     font-size: 0.875em;
 }
 
+/* Hide the default breadcrumbs since the admin does its own navigation and breadcrums */
+.pax-detail-index-breadcrumb-link {
+    display: none;
+}
+
+.pax-detail-index-breadcrumb-separator {
+    display: none;
+}
+
 .pax-detail-body {
     flex: 1;
     overflow-y: auto;
 }
-
-.pax-detail-fieldset {}
 
 .pax-detail-fieldset-heading {
     padding: 0.5em 1em;
@@ -20,10 +27,6 @@
     border-bottom: 1px solid var(--border-base-2);
 }
 
-.pax-detail-fieldgroup {}
-
 .pax-detail-fieldset-body {
     padding: 0 1em;
 }
-
-.pax-detail-field {}

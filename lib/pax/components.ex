@@ -48,6 +48,7 @@ defmodule Pax.Components do
   attr :type, :string, default: nil
   attr :class, :any, default: nil
   attr :secondary, :boolean, default: false
+  attr :tertiary, :boolean, default: false
   attr :large, :boolean, default: false
   attr :icon, :boolean, default: false
 
@@ -67,6 +68,7 @@ defmodule Pax.Components do
           @large && "pax-button-large",
           @icon && "pax-button-icon",
           @secondary && "pax-button-secondary",
+          @tertiary && "pax-button-tertiary",
           @class
         ]}
         {@rest}
@@ -83,6 +85,7 @@ defmodule Pax.Components do
           @large && "pax-button-large",
           @icon && "pax-button-icon",
           @secondary && "pax-button-secondary",
+          @tertiary && "pax-button-tertiary",
           @class
         ]}
         {@rest}
