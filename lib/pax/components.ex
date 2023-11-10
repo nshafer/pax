@@ -104,13 +104,15 @@ defmodule Pax.Components do
   3. tertiary: Aligned in the middle by default, useful for search bars, etc.
   """
 
+  attr :class, :any, default: nil
+
   slot :primary
   slot :secondary
   slot :tertiary
 
   def pax_header(assigns) do
     ~H"""
-    <div class="pax-header">
+    <div class={["pax-header", @class]}>
       <div class="pax-header-section pax-header-primary">
         <%= render_slot(@primary) %>
       </div>

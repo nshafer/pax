@@ -10,7 +10,7 @@ defmodule Pax.Interface.Components do
   def pax_index(assigns) do
     ~H"""
     <div class={["pax pax-index", @class]}>
-      <.pax_header>
+      <.pax_header class="pax-index-header">
         <:primary>
           <.pax_title><%= @pax.plural_name %></.pax_title>
         </:primary>
@@ -45,7 +45,7 @@ defmodule Pax.Interface.Components do
   def pax_show(assigns) do
     ~H"""
     <div class={["pax pax-detail pax-detail-show", @class]}>
-      <.pax_header>
+      <.pax_header class="pax-detail-header pax-detail-show-header">
         <:primary>
           <div class="pax-title-breadcrumbs">
             <.pax_link :if={@pax.index_path} class="pax-detail-index-breadcrumb-link" navigate={@pax.index_path}>
@@ -112,7 +112,7 @@ defmodule Pax.Interface.Components do
       phx-change="pax_validate"
       phx-submit="pax_save"
     >
-      <.pax_header>
+      <.pax_header class="pax-detail-header pax-detail-edit-header">
         <:primary>
           <div class="pax-title-breadcrumbs">
             <.pax_link :if={@pax.index_path} class="pax-detail-index-breadcrumb-link" navigate={@pax.index_path}>
