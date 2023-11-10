@@ -83,15 +83,15 @@
 @media (prefers-color-scheme: dark) {
     :root {
         // Dark mode: darker -> lighter
-        --bg-base-1: hsl(204, 5%, 8%);
-        --bg-base-2: hsl(204, 5%, 11%);
-        --bg-base-3: hsl(204, 5%, 14%);
-        --bg-base-4: hsl(204, 5%, 17%);
+        --bg-base-1: hsl(204, 5%, 13%);
+        --bg-base-2: hsl(204, 5%, 16%);
+        --bg-base-3: hsl(204, 5%, 19%);
+        --bg-base-4: hsl(204, 5%, 22%);
 
-        --border-base-1: hsl(204, 5%, 12%);
-        --border-base-2: hsl(204, 5%, 15%);
-        --border-base-3: hsl(204, 5%, 18%);
-        --border-base-4: hsl(204, 5%, 21%);
+        --border-base-1: hsl(204, 5%, 17%);
+        --border-base-2: hsl(204, 5%, 20%);
+        --border-base-3: hsl(204, 5%, 23%);
+        --border-base-4: hsl(204, 5%, 26%);
 
         --text-base: hsl(204, 5%, 85%);
         --text-base-muted: hsl(204, 5%, 60%);
