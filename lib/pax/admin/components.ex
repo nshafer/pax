@@ -51,6 +51,7 @@ defmodule Pax.Admin.Components do
 
   attr :pax_admin, Pax.Admin.Context, required: true
   attr :pax, Pax.Interface.Context, default: nil
+  attr :live_action, :atom, default: nil
 
   def admin_breadcrumbs(assigns) do
     ~H"""
