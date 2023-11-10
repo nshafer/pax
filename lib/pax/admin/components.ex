@@ -66,15 +66,31 @@ defmodule Pax.Admin.Components do
             <div class="admin-breadcrumb-text"><%= @pax_admin.resource.section.label %></div>
             <div class="admin-breadcrumb-divider">❯</div>
           <% end %>
-          <.pax_link
-            class="admin-breadcrumb-link"
-            navigate={@pax_admin.site_mod.resource_index_path(@pax_admin.resource.section, @pax_admin.resource)}
-          >
+          <.pax_link class="admin-breadcrumb-link" navigate={@pax.index_path}>
             <%= @pax_admin.resource.label %>
           </.pax_link>
-          <%= if @pax.object_name do %>
+          <%= if @live_action == :new do %>
+            <div class="admin-breadcrumb-divider">❯</div>
+            <div class="admin-breadcrumb-edit">New</div>
+          <% end %>
+
+          <%= if @live_action == :show do %>
             <div class="admin-breadcrumb-divider">❯</div>
             <div class="admin-breadcrumb-text"><%= @pax.object_name %></div>
+          <% end %>
+
+          <%= if @live_action == :edit do %>
+            <%= if @pax.show_path do %>
+              <div class="admin-breadcrumb-divider">❯</div>
+              <.pax_link class="admin-breadcrumb-link" navigate={@pax.show_path}>
+                <%= @pax.object_name %>
+              </.pax_link>
+            <% else %>
+              <div class="admin-breadcrumb-text"><%= @pax.object_name %></div>
+            <% end %>
+
+            <div class="admin-breadcrumb-divider">❯</div>
+            <div class="admin-breadcrumb-text">Edit</div>
           <% end %>
         <% end %>
       <% end %>
