@@ -25,5 +25,9 @@ pax-*.tar
 # Temporary files, for example, from tests.
 /tmp/
 
+# Local files that shouldn't be checked in
+/local/
+
 # Ignore static files that are produced by build tools.
-/priv/static/
+/priv/static/*.css
+/priv/static/*.js
