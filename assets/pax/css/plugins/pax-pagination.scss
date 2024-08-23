@@ -1,0 +1,13 @@
+.pax-pagination {
+    display: flex;
+    align-items: center;
+}
+
+.pax-pagination-link {
+    &.disabled {
+        cursor: auto;
+        pointer-events: none;
+    }
+
+    padding: calc(var(--pax-spacing) * .5) calc(var(--pax-spacing) * 0.75);
+}

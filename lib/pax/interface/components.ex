@@ -3,7 +3,7 @@ defmodule Pax.Interface.Components do
   import Pax.Components
   import Pax.Field.Components
 
-  attr :pax, :map, required: true
+  attr :pax, Pax.Interface.Context, required: true
   attr :objects, :list, required: true
   attr :class, :string, default: nil
 
@@ -12,12 +12,21 @@ defmodule Pax.Interface.Components do
     <div class={["pax pax-index", @class]}>
       <.pax_header class="pax-index-header">
         <:primary>
-          <.pax_title><%= @pax.plural_name %></.pax_title>
+          <.pax_title>
+            <%= @pax.plural_name %>
+          </.pax_title>
+
+          <%= plugin_component(:index_header_primary, assigns) %>
         </:primary>
 
         <:secondary>
+          <%= plugin_component(:index_header_secondary, assigns) %>
           <.pax_button :if={@pax.new_path} navigate={@pax.new_path}>New <%= @pax.singular_name %></.pax_button>
         </:secondary>
+
+        <:tertiary>
+          <%= plugin_component(:index_header_tertiary, assigns) %>
+        </:tertiary>
       </.pax_header>
 
       <.pax_index_table fields={@pax.fields} objects={@objects}>
@@ -31,14 +40,22 @@ defmodule Pax.Interface.Components do
 
       <.pax_footer>
         <:primary>
-          Page 1
+          <%= plugin_component(:index_footer_primary, assigns) %>
         </:primary>
+
+        <:secondary>
+          <%= plugin_component(:index_footer_secondary, assigns) %>
+        </:secondary>
+
+        <:tertiary>
+          <%= plugin_component(:index_footer_tertiary, assigns) %>
+        </:tertiary>
       </.pax_footer>
     </div>
     """
   end
 
-  attr :pax, :map, required: true
+  attr :pax, Pax.Interface.Context, required: true
   attr :object, :map, required: true
   attr :class, :string, default: nil
 
@@ -85,7 +102,7 @@ defmodule Pax.Interface.Components do
     """
   end
 
-  attr :pax, :map, required: true
+  attr :pax, Pax.Interface.Context, required: true
   attr :object, :map, required: true
   attr :form, :any, required: true
   attr :class, :string, default: nil
@@ -96,7 +113,7 @@ defmodule Pax.Interface.Components do
     |> pax_edit()
   end
 
-  attr :pax, :map, required: true
+  attr :pax, Pax.Interface.Context, required: true
   attr :object, :map, required: true
   attr :form, :any, required: true
   attr :class, :string, default: nil

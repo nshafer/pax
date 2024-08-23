@@ -6,8 +6,8 @@ defmodule Pax.Interface.Detail do
   import Pax.Interface.Context
   require Logger
 
-  def on_handle_params(module, adapter, params, uri, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.on_handle_params(#{module}, #{inspect(params)}, #{inspect(uri)}")
+  def on_params(module, adapter, params, uri, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.on_params(#{module}, #{inspect(params)}, #{inspect(uri)}")
     fieldsets = init_fieldsets(module, adapter, socket)
     object = init_object(module, adapter, params, uri, socket)
     object_name = init_object_name(module, adapter, socket, object)
@@ -16,19 +16,16 @@ defmodule Pax.Interface.Detail do
       socket
       |> assign_pax(:fieldsets, fieldsets)
       |> maybe_init_detail_paths(module, object)
+      # TODO: move this into the pax context
       |> assign(:object, object)
       |> assign_pax(:object_name, object_name)
       |> maybe_assign_form(adapter, fieldsets)
 
-    if function_exported?(module, :handle_params, 3) do
-      {:cont, socket}
-    else
-      {:halt, socket}
-    end
+    {:cont, socket}
   end
 
-  def on_handle_event(_module, adapter, "pax_validate", %{"detail" => params}, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.on_handle_event(:pax_validate, #{inspect(params)})")
+  def on_event(_module, adapter, "pax_validate", %{"detail" => params}, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_validate, #{inspect(params)})")
     fieldsets = socket.assigns.pax.fieldsets
 
     changeset =
@@ -38,8 +35,8 @@ defmodule Pax.Interface.Detail do
     {:halt, assign_form(socket, changeset)}
   end
 
-  def on_handle_event(_module, adapter, "pax_save", %{"detail" => params}, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.on_handle_event(:pax_save, #{inspect(params)})")
+  def on_event(_module, adapter, "pax_save", %{"detail" => params}, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_save, #{inspect(params)})")
     fieldsets = socket.assigns.pax.fieldsets
 
     changeset = changeset(adapter, fieldsets, socket.assigns.object, params)
@@ -48,8 +45,8 @@ defmodule Pax.Interface.Detail do
   end
 
   # Catch-all for all other events that we don't care about
-  def on_handle_event(_module, _adapter, event, params, socket) do
-    Logger.info("IGNORED: #{inspect(__MODULE__)}.on_handle_event(#{inspect(event)}, #{inspect(params)})")
+  def on_event(_module, _adapter, event, params, socket) do
+    Logger.info("IGNORED: #{inspect(__MODULE__)}.on_event(#{inspect(event)}, #{inspect(params)})")
     {:cont, socket}
   end
 
@@ -83,6 +80,7 @@ defmodule Pax.Interface.Detail do
   end
 
   defp assign_form(socket, nil) do
+    # TODO: move this into the pax context
     assign(socket, :form, nil)
   end
 

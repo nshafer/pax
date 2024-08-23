@@ -107,7 +107,7 @@ defmodule Pax.Field.Components do
   Renders an input control for the given field and form_field. This is for use by Pax.Field implementations.
   As such, it requires a field and form_field, and will render the appropriate input control for the field type.
 
-  The form_field is used to retrieve the input name, id and values, however they can be overriden by
+  The form_field is used to retrieve the input name, id and values, however they can be overridden by
   passing them explicitly.
 
   ## Types
@@ -165,13 +165,13 @@ defmodule Pax.Field.Components do
     assigns = assign_new(assigns, :checked, fn -> Phoenix.HTML.Form.normalize_value("checkbox", value) end)
 
     ~H"""
-    <label class={["pax-field-control-checkbox-label", @has_errors && "has-errors"]}>
+    <label class={["pax-checkbox-label pax-field-control-checkbox-label", @has_errors && "has-errors"]}>
       <input type="hidden" name={@name} value="false" />
       <input
         type="checkbox"
         id={@id}
         name={@name}
-        class="pax-field-control-checkbox"
+        class="pax-checkbox pax-field-control-checkbox"
         value="true"
         checked={@checked}
         {@rest}
@@ -225,7 +225,7 @@ defmodule Pax.Field.Components do
       name={@name || @field.name}
       id={@id}
       value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-      class={["pax-field-control-input", @has_errors && "has-errors"]}
+      class={["pax-input pax-field-control-input", @has_errors && "has-errors"]}
       phx-feedback-for={@name || @field.name}
       {@rest}
     />

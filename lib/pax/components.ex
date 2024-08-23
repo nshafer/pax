@@ -1,6 +1,38 @@
 defmodule Pax.Components do
   use Phoenix.Component
 
+  @doc """
+  Render components from plugins.
+
+  You can define your own plugin component areas in your interface, then create plugins that implement those areas.
+  """
+  def plugin_component(component, %{pax: pax} = assigns) do
+    # dbg(assigns[:page])
+
+    outputs =
+      pax.plugins
+      |> Enum.map(fn plugin -> maybe_call_plugin_component(plugin, component, assigns) end)
+      |> Enum.filter(fn output -> output != nil end)
+
+    assigns = assign(assigns, :outputs, outputs)
+
+    ~H"""
+    <%= for output <- @outputs do %>
+      <%= output %>
+    <% end %>
+    """
+  end
+
+  defp maybe_call_plugin_component(plugin, component, assigns) do
+    # Since plugin component areas can be defined by the user, we can't assume all plugins define the callbacks.
+    if function_exported?(plugin.module, component, 1) do
+      assigns = assign(assigns, :opts, plugin.opts)
+      apply(plugin.module, component, [assigns])
+    else
+      nil
+    end
+  end
+
   attr :level, :integer, values: [1, 2, 3], default: 1
   attr :class, :any, default: nil
   slot :inner_block, required: true
@@ -30,6 +62,26 @@ defmodule Pax.Components do
     <Phoenix.Component.link class={["pax-link", @class]} {@rest}>
       <%= render_slot(@inner_block) %>
     </Phoenix.Component.link>
+    """
+  end
+
+  @doc """
+  Renders a badge.
+  """
+
+  attr :class, :any, default: nil
+
+  attr :rest, :global, include: ~w(
+    navigate patch href replace method csrf_token
+    download hreflang referrerpolicy rel target type)
+
+  slot :inner_block, required: true
+
+  def pax_badge(assigns) do
+    ~H"""
+    <span class={["pax-badge", @class]} {@rest}>
+      <%= render_slot(@inner_block) %>
+    </span>
     """
   end
 
@@ -97,11 +149,67 @@ defmodule Pax.Components do
   end
 
   @doc """
+  Renders a simple select with no label.
+  """
+
+  attr :id, :any, default: nil
+  attr :name, :string
+  attr :value, :any, required: true
+  attr :class, :any, default: nil
+  attr :options, :list, required: true, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
+  attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
+  attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :has_errors, :boolean, default: false
+
+  attr :rest, :global, include: ~w(disabled form)
+
+  def pax_select(assigns) do
+    ~H"""
+    <select id={@id} class={["pax-select", @has_errors && "has-errors", @class]} name={@name} multiple={@multiple} {@rest}>
+      <option :if={@prompt} value=""><%= @prompt %></option>
+      <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
+    </select>
+    """
+  end
+
+  @doc """
+  Renders a simple text input with no label.
+  """
+
+  attr :id, :any, default: nil
+  attr :name, :string
+  attr :value, :any, required: true
+  attr :class, :any, default: nil
+  attr :has_errors, :boolean, default: false
+
+  attr :type, :string,
+    default: "text",
+    values: ~w(color date datetime-local email file hidden month number password
+               range radio search tel text time url week)
+
+  attr :rest, :global, include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
+               pattern placeholder readonly required size step inputmode)
+
+  def pax_input(assigns) do
+    ~H"""
+    <input
+      id={@id}
+      class={["pax-input", @has_errors && "has-errors", @class]}
+      type={@type}
+      name={@name}
+      value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+      phx-feedback-for={@name}
+      {@rest}
+    />
+    """
+  end
+
+  @doc """
   Renders a header bar for use at the top of pages or sections. Includes 3 sections for content:
 
-  1. primary: Aligned to the left side by default, useful for titles.
-  2. secondary: Aligned to the right side by default, useful for links, tools, actions, etc.
-  3. tertiary: Aligned in the middle by default, useful for search bars, etc.
+  1. primary: Aligned to the left side for desktops, useful for titles.
+  2. secondary: Aligned to the right side for desktops, useful for links, buttons, etc.
+  3. tertiary: Aligned in the middle for desktops, useful for search bars, etc.
   """
 
   attr :class, :any, default: nil
@@ -129,15 +237,17 @@ defmodule Pax.Components do
   end
 
   @doc """
-  Renders a footer bar for use at the bottom of pages or sections. Includes 2 sections for content:
+  Renders a footer bar for use at the bottom of pages or sections. Includes 3 sections for content:
 
-  1. primary: Aligned to the left side by default, useful for status lines.
-  2. secondary: Aligned to the right side by default, useful for links, tools, actions, etc.
+  1. primary: Aligned to the left side for desktops, useful for status lines.
+  2. secondary: Aligned to the right side for desktops, useful for links, buttons, etc.
+  3. tertiary: Aligned in the middle for desktops.
 
   """
 
   slot :primary
   slot :secondary
+  slot :tertiary
 
   def pax_footer(assigns) do
     ~H"""
@@ -148,6 +258,10 @@ defmodule Pax.Components do
 
       <div class="pax-footer-section pax-footer-secondary">
         <%= render_slot(@secondary) %>
+      </div>
+
+      <div class="pax-footer-section pax-footer-tertiary">
+        <%= render_slot(@tertiary) %>
       </div>
     </div>
     """

@@ -4,6 +4,7 @@ defmodule Pax.Adapter do
   @type adapter :: module
   @type callback_module :: module
 
+  # TODO: rename :adapter to :module
   defstruct [:adapter, :callback_module, :opts]
 
   @type t :: %__MODULE__{
@@ -28,7 +29,9 @@ defmodule Pax.Adapter do
 
   @callback plural_name(callback_module(), opts :: map()) :: String.t()
 
-  @callback list_objects(callback_module(), opts :: map(), unsigned_params(), uri :: String.t(), socket()) :: [map()]
+  @callback count_objects(callback_module(), opts :: map(), scope :: map()) :: [map()]
+
+  @callback list_objects(callback_module(), opts :: map(), scope :: map()) :: [map()]
 
   @callback new_object(callback_module(), opts :: map(), unsigned_params(), uri :: String.t(), socket()) :: map()
 
@@ -86,9 +89,14 @@ defmodule Pax.Adapter do
     adapter.plural_name(callback_module, opts)
   end
 
-  @spec list_objects(t(), unsigned_params(), String.t(), socket()) :: [map()]
-  def list_objects(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, params, uri, socket) do
-    adapter.list_objects(callback_module, opts, params, uri, socket)
+  @spec count_objects(t(), map()) :: [map()]
+  def count_objects(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, scope) do
+    adapter.count_objects(callback_module, opts, scope)
+  end
+
+  @spec list_objects(t(), map()) :: [map()]
+  def list_objects(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, scope) do
+    adapter.list_objects(callback_module, opts, scope)
   end
 
   @spec new_object(t(), unsigned_params(), String.t(), socket()) :: map()

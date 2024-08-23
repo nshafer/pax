@@ -15,6 +15,8 @@ defmodule Pax.Admin.Site do
   alias Pax.Admin.Section
   alias Pax.Admin.Resource
 
+  # TODO: add @callback render()
+
   @callback config(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
@@ -349,6 +351,7 @@ defmodule Pax.Admin.Site do
           do: Pax.Admin.Resource.Live.pax_init(unquote(env.module), params, session, socket)
 
         defdelegate adapter(socket), to: Pax.Admin.Resource.Live
+        defdelegate plugins(socket), to: Pax.Admin.Resource.Live
         defdelegate singular_name(socket), to: Pax.Admin.Resource.Live
         defdelegate plural_name(socket), to: Pax.Admin.Resource.Live
         defdelegate object_name(object, socket), to: Pax.Admin.Resource.Live

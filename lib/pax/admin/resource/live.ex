@@ -59,6 +59,15 @@ defmodule Pax.Admin.Resource.Live do
     end
   end
 
+  def plugins(socket) do
+    resource_mod = socket.assigns.pax_admin.resource.mod
+
+    case resource_mod.plugins(socket) do
+      plugins when is_list(plugins) or is_nil(plugins) -> plugins
+      _ -> raise ArgumentError, "Invalid plugins returned from #{inspect(resource_mod)}.plugins/1"
+    end
+  end
+
   def singular_name(socket) do
     resource_mod = socket.assigns.pax_admin.resource.mod
 

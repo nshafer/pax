@@ -4,22 +4,25 @@ defmodule Pax.Interface.Index do
   import Pax.Interface.Context
   require Logger
 
-  def on_handle_params(module, adapter, params, uri, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.on_handle_params(#{inspect(module)}, #{inspect(params)}, #{inspect(uri)}")
+  def on_params(module, adapter, _params, _uri, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.on_params(#{inspect(module)}, #{inspect(params)}, #{inspect(uri)}")
     fields = init_fields(module, adapter, socket)
-    objects = Pax.Adapter.list_objects(adapter, params, uri, socket)
+    object_count = Pax.Adapter.count_objects(adapter, socket.assigns.pax.scope)
+    objects = Pax.Adapter.list_objects(adapter, socket.assigns.pax.scope)
 
     socket =
       socket
       |> assign_pax(:fields, fields)
+      |> assign_pax(:object_count, object_count)
+      # TODO: move this into the pax context
       |> assign(:objects, objects)
 
     {:cont, socket}
   end
 
   # Catch-all for all other events that we don't care about
-  def on_handle_event(_module, _adapter, event, params, socket) do
-    Logger.info("IGNORED: #{inspect(__MODULE__)}.on_handle_event(#{inspect(event)}, #{inspect(params)})")
+  def on_event(_module, _adapter, event, params, socket) do
+    Logger.info("IGNORED: #{inspect(__MODULE__)}.on_event(#{inspect(event)}, #{inspect(params)})")
     {:cont, socket}
   end
 

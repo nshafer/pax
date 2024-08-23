@@ -10,6 +10,19 @@ defmodule Pax.Interface.Init do
     end
   end
 
+  def init_plugins(module, socket) do
+    for pluginspec <- get_plugins(module, socket) do
+      Pax.Plugin.init(module, pluginspec)
+    end
+  end
+
+  defp get_plugins(module, socket) do
+    case module.plugins(socket) do
+      plugins when is_list(plugins) -> plugins
+      _ -> raise ArgumentError, "Invalid plugins returned from #{inspect(module)}.plugins/1"
+    end
+  end
+
   def init_singular_name(module, adapter, socket) do
     init_optional_callback(module, :singular_name, [socket], fn ->
       Pax.Adapter.singular_name(adapter)
@@ -47,7 +60,7 @@ defmodule Pax.Interface.Init do
   end
 
   # If the module defines a callback that will take the args, call it. If it isn't defined, or
-  # returns null, run the fallback instead.
+  # returns nil, run the fallback instead.
   defp init_optional_callback(module, callback, args, fallback) do
     if function_exported?(module, callback, length(args)) do
       case apply(module, callback, args) do

@@ -10,8 +10,8 @@
 .pax-header-section {
     display: flex;
     flex-flow: row wrap;
-    align-items: center;
-    gap: calc(var(--pax-spacing) * .5);
+    align-items: baseline;
+    gap: calc(var(--pax-spacing) * 1);
 }
 
 .pax-header-primary {

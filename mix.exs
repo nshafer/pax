@@ -48,7 +48,7 @@ defmodule Pax.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.7.0"},
-      {:phoenix_live_view, "~> 0.19.0"},
+      {:phoenix_live_view, "~> 0.20.17"},
       {:ecto, "~> 3.10"},
       # {:phoenix_ecto, "~> 4.4"},
       # {:phoenix_html, "~> 3.3"},

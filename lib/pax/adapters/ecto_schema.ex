@@ -40,6 +40,7 @@ defmodule Pax.Adapters.EctoSchema do
   def init(_callback_module, opts) do
     repo = Keyword.get(opts, :repo) || raise "repo is required"
     schema = Keyword.get(opts, :schema) || raise "schema is required"
+    # TODO: Don't do this, instead assume things implement the Phoenix.Param protocol
     id_field = Keyword.get(opts, :id_field, nil)
 
     %{repo: repo, schema: schema, id_field: id_field}
@@ -84,15 +85,35 @@ defmodule Pax.Adapters.EctoSchema do
     |> Pax.Util.Inflection.pluralize()
   end
 
+  @impl Pax.Adapter
+  def count_objects(_callback_module, %{repo: repo, schema: schema}, scope) do
+    schema
+    |> build_query(scope)
+    |> repo.aggregate(:count)
+  end
+
   @doc """
   Returns all objects of the schema.
 
-  TODO: pagination, sorting, filtering, etc.
+  TODO: sorting, filtering, etc.
   """
   @impl Pax.Adapter
-  def list_objects(_callback_module, %{repo: repo, schema: schema}, _params, _uri, _socket) do
-    repo.all(schema)
+  def list_objects(_callback_module, %{repo: repo, schema: schema}, scope) do
+    schema
+    |> build_query(scope)
+    |> paginate(scope)
+    |> repo.all()
   end
+
+  defp build_query(schema, _scope) do
+    from(o in schema)
+  end
+
+  defp paginate(query, %{limit: limit, offset: offset}) do
+    from q in query, limit: ^limit, offset: ^offset
+  end
+
+  defp paginate(query, _scope), do: query
 
   @impl Pax.Adapter
   def new_object(_callback_module, %{schema: schema}, _params, _uri, _socket) do
@@ -128,6 +149,7 @@ defmodule Pax.Adapters.EctoSchema do
   found. The former will be converted to a 404 error by :phoenix_ecto, but the latter will be raised as a 500 error.
 
   """
+  # TODO: move all of this into the detail page, which will pass the info needed as a scope
   @impl Pax.Adapter
   def get_object(callback_module, %{repo: repo, schema: schema} = opts, params, uri, socket) do
     query =
@@ -188,6 +210,8 @@ defmodule Pax.Adapters.EctoSchema do
 
   @impl Pax.Adapter
   def id_field(callback_module, %{schema: schema, id_field: id_field}) do
+    # TODO: figure out if this actually works... what happens if there are multiple PKs? I think might need to
+    #       convert the last 2 conditions to a case to match on the shape. cond/1 expects truthiness.
     cond do
       function_exported?(callback_module, :pax_id_field, 1) ->
         callback_module.pax_id_field()

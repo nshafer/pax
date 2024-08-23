@@ -11,5 +11,17 @@
     display: flex;
     flex-flow: row wrap;
     align-items: center;
-    gap: calc(var(--pax-spacing) * .5);
+    gap: calc(var(--pax-spacing) * 1);
+}
+
+.pax-footer-primary {
+    order: 1;
+}
+
+.pax-footer-secondary {
+    order: 3;
+}
+
+.pax-footer-tertiary {
+    order: 2;
 }
