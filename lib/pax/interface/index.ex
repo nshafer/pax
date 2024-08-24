@@ -67,6 +67,7 @@ defmodule Pax.Interface.Index do
 
   defp resolve_field_link(field, module, socket, has_show_path, has_edit_path) do
     case Map.get(field.opts, :link) do
+      # Convert a `link: true` field into a function call to the proper callback, otherwise raise an error
       true ->
         cond do
           has_show_path -> Pax.Field.set_link(field, fn object -> module.show_path(object, socket) end)
@@ -74,6 +75,7 @@ defmodule Pax.Interface.Index do
           true -> raise "You must implement either show_path/2 or edit_path/2 to use link: true"
         end
 
+      # Otherwise just return the field as is if there is an explicit link set (callback, url, etc) or not.
       _link ->
         field
     end

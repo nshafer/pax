@@ -104,10 +104,11 @@ defmodule Pax.Field do
 
   defp resolve_link_opt(opts) do
     case Map.get(opts, :link) do
+      true -> opts
       nil -> opts
       {mod, fun} when is_atom(mod) and is_atom(fun) -> opts
       fun when is_function(fun) -> opts
-      link when is_atom(link) or is_binary(link) -> opts
+      link when is_binary(link) -> opts
       %URI{} -> opts
       _ -> raise "Invalid link option: #{inspect(opts[:link])}"
     end
