@@ -210,8 +210,6 @@ defmodule Pax.Adapters.EctoSchema do
 
   @impl Pax.Adapter
   def id_field(callback_module, %{schema: schema, id_field: id_field}) do
-    # TODO: figure out if this actually works... what happens if there are multiple PKs? I think might need to
-    #       convert the last 2 conditions to a case to match on the shape. cond/1 expects truthiness.
     cond do
       function_exported?(callback_module, :pax_id_field, 1) ->
         callback_module.pax_id_field()
@@ -219,15 +217,18 @@ defmodule Pax.Adapters.EctoSchema do
       id_field != nil ->
         id_field
 
-      [primary_key] = schema.__schema__(:primary_key) ->
-        primary_key
+      true ->
+        case schema.__schema__(:primary_key) do
+          [primary_key] ->
+            primary_key
 
-      primary_keys = schema.__schema__(:primary_key) ->
-        raise ArgumentError, """
-        Composite Primary Keys are not supported for automatic id_field generation.
-        Please implement a pax_id_field/1 callback in #{inspect(callback_module)}.
-        Got primary keys #{inspect(primary_keys)} for schema #{inspect(schema)}.
-        """
+          primary_keys ->
+            raise ArgumentError, """
+            Composite Primary Keys are not supported for automatic id_field generation.
+            Please implement a pax_id_field/1 callback in #{inspect(callback_module)}.
+            Got primary keys #{inspect(primary_keys)} for schema #{inspect(schema)}.
+            """
+        end
     end
   end
 
