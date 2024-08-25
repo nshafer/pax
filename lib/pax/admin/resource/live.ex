@@ -113,18 +113,18 @@ defmodule Pax.Admin.Resource.Live do
     site_mod = socket.assigns.pax_admin.site_mod
     adapter = socket.assigns.pax.adapter
     resource = socket.assigns.pax_admin.resource
-    id_field = Pax.Adapter.id_field(adapter)
+    object_id = Pax.Adapter.object_id(adapter, object)
 
-    Pax.Admin.Site.resource_show_path(site_mod, resource.section, resource, object, id_field)
+    Pax.Admin.Site.resource_show_path(site_mod, resource.section, resource, object_id)
   end
 
   def edit_path(object, socket) do
     site_mod = socket.assigns.pax_admin.site_mod
     adapter = socket.assigns.pax.adapter
     resource = socket.assigns.pax_admin.resource
-    id_field = Pax.Adapter.id_field(adapter)
+    object_id = Pax.Adapter.object_id(adapter, object)
 
-    Pax.Admin.Site.resource_edit_path(site_mod, resource.section, resource, object, id_field)
+    Pax.Admin.Site.resource_edit_path(site_mod, resource.section, resource, object_id)
   end
 
   def index_fields(socket) do

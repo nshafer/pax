@@ -60,11 +60,11 @@ defmodule Pax.Admin.Site do
       def resource_index_path(section \\ nil, resource),
         do: Pax.Admin.Site.resource_index_path(__MODULE__, section, resource)
 
-      def resource_show_path(section \\ nil, resource, object, field \\ nil),
-        do: Pax.Admin.Site.resource_show_path(__MODULE__, section, resource, object, field)
+      def resource_show_path(section \\ nil, resource, object_id),
+        do: Pax.Admin.Site.resource_show_path(__MODULE__, section, resource, object_id)
 
-      def resource_edit_path(section \\ nil, resource, object, field \\ nil),
-        do: Pax.Admin.Site.resource_edit_path(__MODULE__, section, resource, object, field)
+      def resource_edit_path(section \\ nil, resource, object_id),
+        do: Pax.Admin.Site.resource_edit_path(__MODULE__, section, resource, object_id)
 
       def resource_index_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource),
         do: Pax.Admin.Site.resource_index_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource)
@@ -72,27 +72,13 @@ defmodule Pax.Admin.Site do
       def resource_new_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource),
         do: Pax.Admin.Site.resource_new_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource)
 
-      def resource_show_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil),
+      def resource_show_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_id),
         do:
-          Pax.Admin.Site.resource_show_url(
-            __MODULE__,
-            conn_or_socket_or_endpoint_or_uri,
-            section,
-            resource,
-            object,
-            field
-          )
+          Pax.Admin.Site.resource_show_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource, object_id)
 
-      def resource_edit_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil),
+      def resource_edit_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_id),
         do:
-          Pax.Admin.Site.resource_edit_url(
-            __MODULE__,
-            conn_or_socket_or_endpoint_or_uri,
-            section,
-            resource,
-            object,
-            field
-          )
+          Pax.Admin.Site.resource_edit_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource, object_id)
     end
   end
 
@@ -408,135 +394,28 @@ defmodule Pax.Admin.Site do
   @doc """
   Get the path to the show page for a resource object.
   """
-  def resource_show_path(site_mod, section \\ nil, resource, object, field \\ nil)
-
-  def resource_show_path(site_mod, section, resource, object, nil) when is_map(object) do
+  def resource_show_path(site_mod, section \\ nil, resource, object_id) do
     path = site_mod.__pax__(:path)
     section_path = section_path(section)
     resource_path = resource_path(resource)
 
-    case get_object_id(object) do
-      nil ->
-        Logger.warning("could not find unique id for object #{inspect(object)}")
-        nil
-
-      id ->
-        cond do
-          section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{id}"
-          true -> "#{path}/r/#{resource_path}/#{id}"
-        end
-    end
-  end
-
-  # Special case when the call gives a field but not a section
-  def resource_show_path(site_mod, resource, object, field, nil) when is_map(object) do
-    resource_show_path(site_mod, nil, resource, object, field)
-  end
-
-  def resource_show_path(site_mod, section, resource, object, field) when is_map(object) do
-    path = site_mod.__pax__(:path)
-    section_path = section_path(section)
-    resource_path = resource_path(resource)
-
-    case Map.get(object, field) do
-      nil ->
-        Logger.warning("could not get unique id field #{inspect(field)} for object #{inspect(object)}")
-        nil
-
-      id ->
-        cond do
-          section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{id}"
-          true -> "#{path}/r/#{resource_path}/#{id}"
-        end
+    cond do
+      section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{object_id}"
+      true -> "#{path}/r/#{resource_path}/#{object_id}"
     end
   end
 
   @doc """
   Get the path to the show page for a resource object.
   """
-  def resource_edit_path(site_mod, section \\ nil, resource, object, field \\ nil)
-
-  def resource_edit_path(site_mod, section, resource, object, nil) when is_map(object) do
+  def resource_edit_path(site_mod, section \\ nil, resource, object_id) do
     path = site_mod.__pax__(:path)
     section_path = section_path(section)
     resource_path = resource_path(resource)
 
-    case get_object_id(object) do
-      nil ->
-        Logger.warning("could not find unique id for object #{inspect(object)}")
-        nil
-
-      id ->
-        cond do
-          section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{id}/edit"
-          true -> "#{path}/r/#{resource_path}/#{id}/edit"
-        end
-    end
-  end
-
-  # Special case when the call gives a field but not a section
-  def resource_edit_path(site_mod, resource, object, field, nil) when is_map(object) do
-    resource_show_path(site_mod, nil, resource, object, field)
-  end
-
-  def resource_edit_path(site_mod, section, resource, object, field) when is_map(object) do
-    path = site_mod.__pax__(:path)
-    section_path = section_path(section)
-    resource_path = resource_path(resource)
-
-    case Map.get(object, field) do
-      nil ->
-        Logger.warning("could not get unique id field #{inspect(field)} for object #{inspect(object)}")
-        nil
-
-      id ->
-        cond do
-          section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{id}/edit"
-          true -> "#{path}/r/#{resource_path}/#{id}/edit"
-        end
-    end
-  end
-
-  # Try to handle structs. Since we can find out the struct's module, then we can try a few things to introspect it to
-  # see if:
-  #
-  # 1. It's a schema, so get the configured primary_key and use that to get the object's primary key value
-  # 2. The struct has a function primary_key/1, so call that to get the object's primary key value
-  # 3. The struct has a :primary_key field, so use that
-  # 4. The struct has a function id/1, so call that to get the object's id value
-  # 5. The struct has a :id field, so use that
-  defp get_object_id(%{__struct__: struct} = object) do
     cond do
-      function_exported?(struct, :__schema__, 1) ->
-        case struct.__schema__(:primary_key) do
-          [key] -> Map.get(object, key)
-          [] -> raise "Compound primary keys are not supported"
-        end
-
-      function_exported?(struct, :primary_key, 1) ->
-        struct.primary_key(object)
-
-      Map.has_key?(object, :primary_key) ->
-        Map.get(object, :primary_key)
-
-      function_exported?(struct, :id, 1) ->
-        struct.id(object)
-
-      Map.has_key?(object, :id) ->
-        Map.get(object, :id)
-
-      true ->
-        nil
-    end
-  end
-
-  # Handle regular maps. Same as structs, but since we don't have a module to check for functions on, then just look
-  # for :primary_key and :id fields.
-  defp get_object_id(%{} = object) do
-    cond do
-      Map.has_key?(object, :primary_key) -> Map.get(object, :primary_key)
-      Map.has_key?(object, :id) -> Map.get(object, :id)
-      true -> nil
+      section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{object_id}/edit"
+      true -> "#{path}/r/#{resource_path}/#{object_id}/edit"
     end
   end
 
@@ -550,8 +429,8 @@ defmodule Pax.Admin.Site do
     Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
   end
 
-  def resource_show_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil) do
-    path = resource_show_path(site_mod, section, resource, object, field)
+  def resource_show_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_id) do
+    path = resource_show_path(site_mod, section, resource, object_id)
 
     case path do
       nil -> nil
@@ -559,8 +438,8 @@ defmodule Pax.Admin.Site do
     end
   end
 
-  def resource_edit_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object, field \\ nil) do
-    path = resource_edit_path(site_mod, section, resource, object, field)
+  def resource_edit_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_id) do
+    path = resource_edit_path(site_mod, section, resource, object_id)
 
     case path do
       nil -> nil

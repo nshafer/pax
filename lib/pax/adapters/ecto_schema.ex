@@ -222,10 +222,15 @@ defmodule Pax.Adapters.EctoSchema do
           [primary_key] ->
             primary_key
 
+          # TODO: support composite primary keys without needing a custom callback. This will require using a custom
+          #       format for the id_field, such as "col1:col2:col3" or something similar, then also modifying lookup
+          #       to handle this format. This assumes primary_keys are always returned in the same order. If not, then
+          #       we'll need to encode the column name in the object_id as well.
           primary_keys ->
             raise ArgumentError, """
             Composite Primary Keys are not supported for automatic id_field generation.
-            Please implement a pax_id_field/1 callback in #{inspect(callback_module)}.
+            Please implement a pax_object_id/2 callbacks in #{inspect(callback_module)}.
+            This means you will also most likely need to implement a pax_object_id/2 callback.
             Got primary keys #{inspect(primary_keys)} for schema #{inspect(schema)}.
             """
         end
