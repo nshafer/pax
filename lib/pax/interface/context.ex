@@ -6,6 +6,7 @@ defmodule Pax.Interface.Context do
             adapter: nil,
             plugins: [],
             objects: [],
+            object: nil,
             object_count: 0,
             url: nil,
             form: nil,

@@ -1,6 +1,5 @@
 defmodule Pax.Interface.Index do
   @moduledoc false
-  import Phoenix.Component, only: [assign: 3]
   import Pax.Interface.Context
   require Logger
 
@@ -14,8 +13,7 @@ defmodule Pax.Interface.Index do
       socket
       |> assign_pax(:fields, fields)
       |> assign_pax(:object_count, object_count)
-      # TODO: move this into the pax context
-      |> assign(:objects, objects)
+      |> assign_pax(:objects, objects)
 
     {:cont, socket}
   end

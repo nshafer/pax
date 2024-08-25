@@ -1,6 +1,6 @@
 defmodule Pax.Interface.Detail do
   @moduledoc false
-  import Phoenix.Component, only: [assign: 3, to_form: 1]
+  import Phoenix.Component, only: [to_form: 1]
   import Phoenix.LiveView
   import Pax.Interface.Init
   import Pax.Interface.Context
@@ -15,10 +15,9 @@ defmodule Pax.Interface.Detail do
     socket =
       socket
       |> assign_pax(:fieldsets, fieldsets)
-      |> maybe_init_detail_paths(module, object)
-      # TODO: move this into the pax context
-      |> assign(:object, object)
+      |> assign_pax(:object, object)
       |> assign_pax(:object_name, object_name)
+      |> maybe_init_detail_paths(module, object)
       |> maybe_assign_form(adapter, fieldsets)
 
     {:cont, socket}
@@ -29,7 +28,7 @@ defmodule Pax.Interface.Detail do
     fieldsets = socket.assigns.pax.fieldsets
 
     changeset =
-      changeset(adapter, fieldsets, socket.assigns.object, params)
+      changeset(adapter, fieldsets, socket.assigns.pax.object, params)
       |> Map.put(:action, :validate)
 
     {:halt, assign_form(socket, changeset)}
@@ -39,9 +38,9 @@ defmodule Pax.Interface.Detail do
     # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_save, #{inspect(params)})")
     fieldsets = socket.assigns.pax.fieldsets
 
-    changeset = changeset(adapter, fieldsets, socket.assigns.object, params)
+    changeset = changeset(adapter, fieldsets, socket.assigns.pax.object, params)
 
-    save_object(socket, socket.assigns.live_action, adapter, socket.assigns.object, changeset)
+    save_object(socket, socket.assigns.live_action, adapter, socket.assigns.pax.object, changeset)
   end
 
   # Catch-all for all other events that we don't care about
@@ -72,7 +71,7 @@ defmodule Pax.Interface.Detail do
 
   defp maybe_assign_form(socket, adapter, fieldsets) do
     if socket.assigns.live_action in [:edit, :new] do
-      changeset = changeset(adapter, fieldsets, socket.assigns.object)
+      changeset = changeset(adapter, fieldsets, socket.assigns.pax.object)
       assign_form(socket, changeset)
     else
       assign_form(socket, nil)
@@ -80,12 +79,11 @@ defmodule Pax.Interface.Detail do
   end
 
   defp assign_form(socket, nil) do
-    # TODO: move this into the pax context
-    assign(socket, :form, nil)
+    assign_pax(socket, :form, nil)
   end
 
   defp assign_form(socket, changeset) do
-    assign(socket, :form, to_form(changeset))
+    assign_pax(socket, :form, to_form(changeset))
   end
 
   defp changeset(adapter, fieldsets, object, params \\ %{}) do

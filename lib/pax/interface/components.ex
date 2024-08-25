@@ -4,7 +4,6 @@ defmodule Pax.Interface.Components do
   import Pax.Field.Components
 
   attr :pax, Pax.Interface.Context, required: true
-  attr :objects, :list, required: true
   attr :class, :string, default: nil
 
   def pax_index(assigns) do
@@ -29,7 +28,7 @@ defmodule Pax.Interface.Components do
         </:tertiary>
       </.pax_header>
 
-      <.pax_index_table fields={@pax.fields} objects={@objects}>
+      <.pax_index_table fields={@pax.fields} objects={@pax.objects}>
         <:header :let={field}>
           <.pax_field_label field={field} />
         </:header>
@@ -56,7 +55,6 @@ defmodule Pax.Interface.Components do
   end
 
   attr :pax, Pax.Interface.Context, required: true
-  attr :object, :map, required: true
   attr :class, :string, default: nil
 
   def pax_show(assigns) do
@@ -88,7 +86,7 @@ defmodule Pax.Interface.Components do
             <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
               <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
                 <.pax_field_label field={field} />
-                <.pax_field_text field={field} object={@object} />
+                <.pax_field_text field={field} object={@pax.object} />
               </div>
             </.pax_fieldgroup>
           </.pax_fieldset>
@@ -103,8 +101,6 @@ defmodule Pax.Interface.Components do
   end
 
   attr :pax, Pax.Interface.Context, required: true
-  attr :object, :map, required: true
-  attr :form, :any, required: true
   attr :class, :string, default: nil
 
   def pax_new(assigns) do
@@ -114,8 +110,6 @@ defmodule Pax.Interface.Components do
   end
 
   attr :pax, Pax.Interface.Context, required: true
-  attr :object, :map, required: true
-  attr :form, :any, required: true
   attr :class, :string, default: nil
   attr :new, :boolean, default: false
 
@@ -123,7 +117,7 @@ defmodule Pax.Interface.Components do
     ~H"""
     <.form
       :let={f}
-      for={@form}
+      for={@pax.form}
       as={:detail}
       class={["pax pax-detail pax-detail-edit", @class]}
       phx-change="pax_validate"
@@ -171,7 +165,7 @@ defmodule Pax.Interface.Components do
             <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
               <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
                 <.pax_field_label field={field} form={f} />
-                <.pax_field_input field={field} form={f} object={@object} />
+                <.pax_field_input field={field} form={f} object={@pax.object} />
               </div>
             </.pax_fieldgroup>
           </.pax_fieldset>

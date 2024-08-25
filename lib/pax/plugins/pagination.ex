@@ -18,7 +18,7 @@ defmodule Pax.Plugins.Pagination do
 
   @impl true
   def on_preload(opts, params, _uri, socket) do
-    IO.inspect(params, label: "Pagination.on_params")
+    # IO.inspect(params, label: "Pagination.on_params")
     page = get_page(params)
     limit = opts.objects_per_page
     offset = (page - 1) * limit
@@ -101,7 +101,6 @@ defmodule Pax.Plugins.Pagination do
 
   attr :pax, Pax.Interface.Context, required: true
   attr :opts, :map, required: true
-  attr :objects, :list, required: true
 
   def index_footer_primary(assigns) do
     ~H"""

@@ -15,10 +15,10 @@ defmodule Pax.Admin.Resource.Live do
 
   def render(assigns) do
     ~H"""
-    <.pax_index :if={@live_action == :index} pax={@pax} objects={@objects} />
-    <.pax_show :if={@live_action == :show} pax={@pax} object={@object} />
-    <.pax_new :if={@live_action == :new} pax={@pax} object={@object} form={@form} />
-    <.pax_edit :if={@live_action == :edit} pax={@pax} object={@object} form={@form} />
+    <.pax_index :if={@live_action == :index} pax={@pax} />
+    <.pax_show :if={@live_action == :show} pax={@pax} />
+    <.pax_new :if={@live_action == :new} pax={@pax} />
+    <.pax_edit :if={@live_action == :edit} pax={@pax} />
     """
   end
 
