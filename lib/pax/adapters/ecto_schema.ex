@@ -40,7 +40,6 @@ defmodule Pax.Adapters.EctoSchema do
   def init(_callback_module, opts) do
     repo = Keyword.get(opts, :repo) || raise "repo is required"
     schema = Keyword.get(opts, :schema) || raise "schema is required"
-    # TODO: Don't do this, instead assume things implement the Phoenix.Param protocol
     id_field = Keyword.get(opts, :id_field, nil)
 
     %{repo: repo, schema: schema, id_field: id_field}
