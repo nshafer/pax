@@ -28,14 +28,24 @@ defmodule Pax.Admin.Resource.Live do
 
     socket =
       socket
-      |> assign(:page_title, resource.mod.plural_name(socket) || resource.label)
       |> assign_admin(site_mod: site_mod)
       |> assign_admin(config: Pax.Admin.Site.config_for(site_mod, params, session, socket))
       |> assign_admin(active: :resource)
       |> assign_admin(resources: resources)
-      |> assign_admin(:resource, resource)
+      |> assign_admin(resource: resource)
 
     resource.mod.pax_init(params, session, socket)
+  end
+
+  def handle_params(_params, _uri, socket) do
+    config = socket.assigns.pax.config
+    resource = socket.assigns.pax_admin.resource
+
+    socket =
+      socket
+      |> assign(page_title: Pax.Config.get(config, :plural_name, [socket], resource.label))
+
+    {:noreply, socket}
   end
 
   defp get_resource(resources, params) do
@@ -68,31 +78,25 @@ defmodule Pax.Admin.Resource.Live do
     end
   end
 
-  def singular_name(socket) do
+  def pax_config(socket) do
     resource_mod = socket.assigns.pax_admin.resource.mod
 
-    case resource_mod.singular_name(socket) do
-      name when is_binary(name) or is_nil(name) -> name
-      _ -> raise ArgumentError, "Invalid name returned from #{inspect(resource_mod)}.singular_name/1"
+    case resource_mod.pax_config(socket) do
+      config_data when is_map(config_data) -> merge_config(config_data)
+      config_data when is_list(config_data) -> merge_config(Map.new(config_data))
+      _ -> raise ArgumentError, "Invalid config returned from #{inspect(resource_mod)}.pax_config/1"
     end
   end
 
-  def plural_name(socket) do
-    resource_mod = socket.assigns.pax_admin.resource.mod
+  defp merge_config(config_data) when is_map(config_data) do
+    default_config_data = %{
+      index_path: &index_path/1,
+      new_path: &new_path/1,
+      show_path: &show_path/2,
+      edit_path: &edit_path/2
+    }
 
-    case resource_mod.plural_name(socket) do
-      name when is_binary(name) or is_nil(name) -> name
-      _ -> raise ArgumentError, "Invalid name returned from #{inspect(resource_mod)}.plural_name/1"
-    end
-  end
-
-  def object_name(object, socket) do
-    resource_mod = socket.assigns.pax_admin.resource.mod
-
-    case resource_mod.object_name(object, socket) do
-      name when is_binary(name) or is_nil(name) -> name
-      _ -> raise ArgumentError, "Invalid name returned from #{inspect(resource_mod)}.object_name/2"
-    end
+    Map.merge(default_config_data, config_data)
   end
 
   def index_path(socket) do
@@ -125,23 +129,5 @@ defmodule Pax.Admin.Resource.Live do
     object_id = Pax.Adapter.object_id(adapter, object)
 
     Pax.Admin.Site.resource_edit_path(site_mod, resource.section, resource, object_id)
-  end
-
-  def index_fields(socket) do
-    resource_mod = socket.assigns.pax_admin.resource.mod
-
-    case resource_mod.index_fields(socket) do
-      fields when is_list(fields) or is_nil(fields) -> fields
-      _ -> raise ArgumentError, "Invalid fields returned from #{inspect(resource_mod)}.index_fields/1"
-    end
-  end
-
-  def fieldsets(socket) do
-    resource_mod = socket.assigns.pax_admin.resource.mod
-
-    case resource_mod.fieldsets(socket) do
-      fieldsets when is_list(fieldsets) or is_nil(fieldsets) -> fieldsets
-      _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(resource_mod)}.fieldsets/1"
-    end
   end
 end

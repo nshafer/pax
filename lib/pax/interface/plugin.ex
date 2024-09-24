@@ -1,4 +1,13 @@
 defmodule Pax.Interface.Plugin do
+  @moduledoc """
+  Pax.Interface.Plugin is a behaviour for defining plugins that can be used with Pax.Interface.
+
+  > #### `use Pax.Interface.Plugin` {: .info}
+  >
+  > When you `use Pax.Interface.Plugin`, your module will be declared as a behaviour for both `Pax.Plugin` as well
+  > as `Pax.Interface.Plugin`. It will also import some convenience functions from `Pax.Plugin`.
+  """
+
   @doc """
   on_preload occurs during the handle_params/3 step of the LV initialization, before the main interface handles the
   action.
@@ -43,14 +52,32 @@ defmodule Pax.Interface.Plugin do
 
   # TODO: add on_info() callback
 
+  @doc "The primary section of the header"
+  @doc group: "Components"
   @callback index_header_primary(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
+
+  @doc "The secondary section of the header"
+  @doc group: "Components"
   @callback index_header_secondary(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
+
+  @doc "The tertiary section of the header"
+  @doc group: "Components"
   @callback index_header_tertiary(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
+
   @optional_callbacks index_header_primary: 1, index_header_secondary: 1, index_header_tertiary: 1
 
+  @doc "The primary section of the footer"
+  @doc group: "Components"
   @callback index_footer_primary(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
+
+  @doc "The secondary section of the footer"
+  @doc group: "Components"
   @callback index_footer_secondary(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
+
+  @doc "The tertiary section of the footer"
+  @doc group: "Components"
   @callback index_footer_tertiary(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
+
   @optional_callbacks index_footer_primary: 1, index_footer_secondary: 1, index_footer_tertiary: 1
 
   defmacro __using__(_opts) do
@@ -60,6 +87,8 @@ defmodule Pax.Interface.Plugin do
       import Pax.Plugin
 
       def type(), do: :interface
+      def config_spec(), do: %{}
+      defoverridable config_spec: 0
     end
   end
 end

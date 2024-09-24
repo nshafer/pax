@@ -6,26 +6,30 @@ defmodule Pax.Interface.Detail do
   import Pax.Interface.Context
   require Logger
 
-  def on_params(module, adapter, params, uri, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.on_params(#{module}, #{inspect(params)}, #{inspect(uri)}")
-    fieldsets = init_fieldsets(module, adapter, socket)
-    object = init_object(module, adapter, params, uri, socket)
-    object_name = init_object_name(module, adapter, socket, object)
+  alias Pax.Config
+
+  def on_params(params, uri, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.on_params(#{inspect(params)}, #{inspect(uri)}")
+    %{config: config, adapter: adapter} = socket.assigns.pax
+
+    fieldsets = init_fieldsets(config, adapter, socket)
+    object = init_object(adapter, params, uri, socket)
+    object_name = init_object_name(config, adapter, object, socket)
 
     socket =
       socket
       |> assign_pax(:fieldsets, fieldsets)
       |> assign_pax(:object, object)
       |> assign_pax(:object_name, object_name)
-      |> maybe_init_detail_paths(module, object)
+      |> maybe_init_detail_paths(config, object)
       |> maybe_assign_form(adapter, fieldsets)
 
     {:cont, socket}
   end
 
-  def on_event(_module, adapter, "pax_validate", %{"detail" => params}, socket) do
+  def on_event("pax_validate", %{"detail" => params}, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_validate, #{inspect(params)})")
-    fieldsets = socket.assigns.pax.fieldsets
+    %{adapter: adapter, fieldsets: fieldsets} = socket.assigns.pax
 
     changeset =
       changeset(adapter, fieldsets, socket.assigns.pax.object, params)
@@ -34,9 +38,9 @@ defmodule Pax.Interface.Detail do
     {:halt, assign_form(socket, changeset)}
   end
 
-  def on_event(_module, adapter, "pax_save", %{"detail" => params}, socket) do
+  def on_event("pax_save", %{"detail" => params}, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_save, #{inspect(params)})")
-    fieldsets = socket.assigns.pax.fieldsets
+    %{adapter: adapter, fieldsets: fieldsets} = socket.assigns.pax
 
     changeset = changeset(adapter, fieldsets, socket.assigns.pax.object, params)
 
@@ -44,16 +48,16 @@ defmodule Pax.Interface.Detail do
   end
 
   # Catch-all for all other events that we don't care about
-  def on_event(_module, _adapter, event, params, socket) do
+  def on_event(event, params, socket) do
     Logger.info("IGNORED: #{inspect(__MODULE__)}.on_event(#{inspect(event)}, #{inspect(params)})")
     {:cont, socket}
   end
 
-  defp maybe_init_detail_paths(socket, module, object) do
+  defp maybe_init_detail_paths(socket, config, object) do
     if socket.assigns.live_action in [:show, :edit] do
       socket
-      |> assign_pax(:show_path, init_show_path(module, object, socket))
-      |> assign_pax(:edit_path, init_edit_path(module, object, socket))
+      |> assign_pax(:show_path, init_show_path(config, object, socket))
+      |> assign_pax(:edit_path, init_edit_path(config, object, socket))
     else
       socket
       |> assign_pax(:show_path, nil)
@@ -61,7 +65,7 @@ defmodule Pax.Interface.Detail do
     end
   end
 
-  defp init_object(_module, adapter, params, uri, socket) do
+  defp init_object(adapter, params, uri, socket) do
     case socket.assigns.live_action do
       action when action in [:show, :edit] -> Pax.Adapter.get_object(adapter, params, uri, socket)
       :new -> Pax.Adapter.new_object(adapter, params, uri, socket)
@@ -162,12 +166,11 @@ defmodule Pax.Interface.Detail do
   #   ] = fieldgroups2
   # ] = fieldsets
 
-  defp init_fieldsets(module, adapter, socket) do
+  defp init_fieldsets(config, adapter, socket) do
     fieldsets =
-      case module.fieldsets(socket) do
-        fieldsets when is_list(fieldsets) -> fieldsets
-        nil -> Pax.Adapter.default_detail_fieldsets(adapter)
-        _ -> raise ArgumentError, "Invalid fieldsets returned from #{inspect(module)}.fieldsets/3"
+      case Config.fetch(config, :fieldsets, [socket]) do
+        {:ok, value} -> value
+        :error -> Pax.Adapter.default_detail_fieldsets(adapter)
       end
 
     # Check if the user returned a keyword list of fieldset name -> fieldgroups, and if not, make it :default

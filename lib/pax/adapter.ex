@@ -18,6 +18,9 @@ defmodule Pax.Adapter do
 
   @callback init(callback_module, opts :: []) :: map()
 
+  @doc "A function that returns a valid Pax.Config spec for configuration keys and types accepted by the adapter."
+  @callback config_spec(callback_module(), opts :: map()) :: map()
+
   @callback default_index_fields(callback_module(), opts :: map()) :: Pax.Index.fields()
 
   @callback default_detail_fieldsets(callback_module(), opts :: map()) :: Pax.Detail.fieldsets()
@@ -59,6 +62,10 @@ defmodule Pax.Adapter do
       callback_module: callback_module,
       opts: adapter.init(callback_module, opts)
     }
+  end
+
+  def config_spec(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}) do
+    adapter.config_spec(callback_module, opts)
   end
 
   @spec default_index_fields(t()) :: Pax.Index.fields()

@@ -1,14 +1,15 @@
 # TODO
 
 ## General
-- [ ] Plugins
+- [x] Plugins
 - [ ] Make stacktraces better?
 - [ ] Reimplement mobile views as @container queries
-- [ ] Don't have separate index_fields and detail_fields, instead just have one list with the options `only` and `except` instead.
-- [ ] Redo config to be one callback instead of many individual callbacks.
-- [ ] Get rid of id_field in adapters, rely on Phoenix.Param protocol.
+- [ ] Redo callback hell to instead just use one `pax_config` callback that sets a global config that is stored in the
+      `@pax` context. This should have all config options, including any extra config for the adapters or plugins.
 - [ ] Reimplement main index table and detail view as individual plugins.
 - [ ] Upgrade to LiveView 1.0 - transition away from `phx-feedback-for`
+- [ ] Redo Adapter `get_object` to use the scope. Should we formally define the scope with a struct or not?
+- [ ] Tests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ## Index
 - [x] Pagination plugin
@@ -29,9 +30,14 @@
 - [ ] Audit log plugin with revert?
 - [ ] Collab / presence plugin
 - [ ] Action Items plugin
+- [ ] Handle unique violations better. (Duplicate: use duplicate slug or something)
 
 ## Fields
 - [x] Allow specifying just `:fieldname` and default to Field.String maybe? Or callback to adapter to figure it out?
+- [ ] Redo fields to just have one list of fields, with `only: :index` and `except: [:index, :edit]` options.
+- [ ] Redo fieldsets to just be `detail_layout` to specify how the fields are layed out. Defaults to just the list
+      of fields. Any missing fields are assumed to not be included. Should we allow `show_layout` and `edit_layout`
+      specific layouts? So the pages can have different layouts?
 
 ## Admin
 - [x] `use Pax.Admin` macros to create base admin Index/Detail modules with all settings

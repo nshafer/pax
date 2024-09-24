@@ -1,12 +1,32 @@
 defmodule Pax.Plugin do
-  @type pluginspec :: module() | {module(), opts :: keyword()}
-  @type t :: %__MODULE__{module: module(), type: atom(), opts: map()}
-
+  @moduledoc """
+  Pax.Plugin is a behaviour for defining plugins that can be used with Pax.Interface or Pax.Admin. This is the base
+  behavior that all Plugins must implement. However, most plugins will `use Pax.Interface.Plugin` or
+  `use Pax.Admin.Plugin` instead of implementing this behaviour directly.
+  """
   defstruct [:module, :type, :opts]
 
-  @callback type() :: atom()
+  @typedoc "The plugin specification, with or without init options"
+  @type pluginspec :: module() | {module(), opts :: keyword()}
+
+  @typedoc "The plugin struct"
+  @type t :: %__MODULE__{module: module(), type: atom(), opts: map()}
+
+  @doc "A function that returns a valid Pax.Config spec for configuration keys and types accepted by the plugin."
+  @callback config_spec() :: map()
+
+  @doc "The type of plugin"
+  @callback type() :: :interface | :admin
+
+  @doc """
+  The plugin initialization function, must return a map of initialized plugin state, which is passed to all other
+  callback functions in the plugin.
+  """
   @callback init(callback_module :: module(), opts :: keyword()) :: map()
 
+  @doc """
+  Initialize the given plugin with the provided callback module and options.
+  """
   @spec init(callback_module :: module(), pluginspec()) :: t()
   def init(callback_module, plugin_module) when is_atom(plugin_module), do: do_init(callback_module, plugin_module, [])
   def init(callback_module, {plugin_module, opts}), do: do_init(callback_module, plugin_module, opts)
@@ -19,21 +39,7 @@ defmodule Pax.Plugin do
     }
   end
 
-  @doc """
-  Gets an option from either the provided opts keyword list, or from an optionally defined callback of the same name.
-  """
-  def get_plugin_opt(callback_module, opts, key, default \\ nil)
-      when is_atom(callback_module) and is_list(opts) and is_atom(key) do
-    case Keyword.fetch(opts, key) do
-      {:ok, value} ->
-        value
-
-      :error ->
-        if function_exported?(callback_module, key, 0) do
-          apply(callback_module, key, [])
-        else
-          default
-        end
-    end
+  def config_spec(%__MODULE__{} = plugin) do
+    plugin.module.config_spec()
   end
 end

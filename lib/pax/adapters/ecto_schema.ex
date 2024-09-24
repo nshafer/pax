@@ -46,6 +46,15 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
+  def config_spec(_callback_module, _opts) do
+    %{
+      repo: :module,
+      schema: :struct,
+      id_field: :atom
+    }
+  end
+
+  @impl Pax.Adapter
   def default_index_fields(_callback_module, %{schema: schema}) do
     for field_name <- schema.__schema__(:fields),
         schema_type = schema.__schema__(:type, field_name),

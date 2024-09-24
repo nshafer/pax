@@ -1,6 +1,20 @@
 defmodule Pax.Interface.Init do
   @moduledoc false
 
+  alias Pax.Config
+
+  @config_spec %{
+    singular_name: [:string, {:function, 1, :string}],
+    plural_name: [:string, {:function, 1, :string}],
+    object_name: [nil, :string, {:function, 2, [nil, :string]}],
+    index_path: [:string, {:function, 1, :string}],
+    new_path: [:string, {:function, 1, :string}],
+    show_path: [:string, {:function, 2, :string}],
+    edit_path: [:string, {:function, 2, :string}],
+    index_fields: [:list, {:function, 1, :list}],
+    fieldsets: [:list, {:function, 1, :list}]
+  }
+
   def init_adapter(module, socket) do
     case module.adapter(socket) do
       {adapter, callback_module, opts} -> Pax.Adapter.init(adapter, callback_module, opts)
@@ -23,52 +37,92 @@ defmodule Pax.Interface.Init do
     end
   end
 
-  def init_singular_name(module, adapter, socket) do
-    init_optional_callback(module, :singular_name, [socket], fn ->
-      Pax.Adapter.singular_name(adapter)
-    end)
+  def init_config_spec(adapter, plugins) do
+    adapter_config_spec = Pax.Adapter.config_spec(adapter)
+
+    config_spec =
+      Map.merge(@config_spec, adapter_config_spec, fn key, val1, val2 ->
+        unless val1 == val2 do
+          raise ArgumentError,
+                "adapter defined duplicate config spec for #{inspect(key)}, " <>
+                  "already defined as #{inspect(val1)}"
+        end
+      end)
+
+    for plugin <- plugins, reduce: config_spec do
+      config_spec ->
+        plugin_config_spec = Pax.Plugin.config_spec(plugin)
+
+        Map.merge(config_spec, plugin_config_spec, fn key, val1, val2 ->
+          unless val1 == val2 do
+            raise ArgumentError,
+                  "plugin #{inspect(plugin)} defined duplicate config spec for #{inspect(key)}, " <>
+                    "already defined as #{inspect(val1)}"
+          end
+        end)
+    end
   end
 
-  def init_plural_name(module, adapter, socket) do
-    init_optional_callback(module, :plural_name, [socket], fn ->
-      Pax.Adapter.plural_name(adapter)
-    end)
+  def init_config(config_spec, module, socket) do
+    config_data = get_module_config(module, socket)
+    Pax.Config.validate!(config_spec, config_data)
   end
 
-  def init_object_name(_module, _adapter, _socket, nil), do: "Object"
-
-  def init_object_name(module, adapter, socket, object) do
-    init_optional_callback(module, :object_name, [object, socket], fn ->
-      Pax.Adapter.object_name(adapter, object)
-    end)
+  def get_module_config(module, socket) do
+    case module.pax_config(socket) do
+      config when is_map(config) or is_list(config) -> config
+      _ -> raise ArgumentError, "invalid config returned from #{inspect(module)}.pax_config/1"
+    end
   end
 
-  def init_index_path(module, socket) do
-    init_optional_callback(module, :index_path, [socket], fn -> nil end)
+  def init_singular_name(config, adapter, socket) do
+    case Config.fetch(config, :singular_name, [socket]) do
+      {:ok, value} -> value
+      :error -> Pax.Adapter.singular_name(adapter)
+    end
   end
 
-  def init_new_path(module, socket) do
-    init_optional_callback(module, :new_path, [socket], fn -> nil end)
+  def init_plural_name(config, adapter, socket) do
+    case Config.fetch(config, :plural_name, [socket]) do
+      {:ok, value} -> value
+      :error -> Pax.Adapter.plural_name(adapter)
+    end
   end
 
-  def init_show_path(module, object, socket) do
-    init_optional_callback(module, :show_path, [object, socket], fn -> nil end)
+  def init_object_name(_config, _adapter, nil, _socket), do: "Object"
+
+  def init_object_name(config, adapter, object, socket) do
+    case Config.fetch(config, :object_name, [object, socket]) do
+      {:ok, value} -> value
+      :error -> Pax.Adapter.object_name(adapter, object)
+    end
   end
 
-  def init_edit_path(module, object, socket) do
-    init_optional_callback(module, :edit_path, [object, socket], fn -> nil end)
+  def init_index_path(config, socket) do
+    case Config.fetch(config, :index_path, [socket]) do
+      {:ok, value} -> value
+      :error -> nil
+    end
   end
 
-  # If the module defines a callback that will take the args, call it. If it isn't defined, or
-  # returns nil, run the fallback instead.
-  defp init_optional_callback(module, callback, args, fallback) do
-    if function_exported?(module, callback, length(args)) do
-      case apply(module, callback, args) do
-        nil -> fallback.()
-        value -> value
-      end
-    else
-      fallback.()
+  def init_new_path(config, socket) do
+    case Config.fetch(config, :new_path, [socket]) do
+      {:ok, value} -> value
+      :error -> nil
+    end
+  end
+
+  def init_show_path(config, object, socket) do
+    case Config.fetch(config, :show_path, [object, socket]) do
+      {:ok, value} -> value
+      :error -> nil
+    end
+  end
+
+  def init_edit_path(config, object, socket) do
+    case Config.fetch(config, :edit_path, [object, socket]) do
+      {:ok, value} -> value
+      :error -> nil
     end
   end
 end

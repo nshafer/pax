@@ -5,14 +5,21 @@ defmodule Pax.Plugins.Pagination do
   import Pax.Interface.Context
   import Pax.Util.Params
 
-  @default_num_per_page 100
+  @default_objects_per_page 100
 
   # Plugin callbacks
 
   @impl true
-  def init(callback_module, opts) do
+  def config_spec() do
     %{
-      objects_per_page: get_plugin_opt(callback_module, opts, :objects_per_page, @default_num_per_page)
+      objects_per_page: [:integer, {:function, 1, :integer}]
+    }
+  end
+
+  @impl true
+  def init(_callback_module, opts) do
+    %{
+      objects_per_page: Keyword.get(opts, :objects_per_page, @default_objects_per_page)
     }
   end
 
@@ -20,11 +27,12 @@ defmodule Pax.Plugins.Pagination do
   def on_preload(opts, params, _uri, socket) do
     # IO.inspect(params, label: "Pagination.on_params")
     page = get_page(params)
-    limit = opts.objects_per_page
+    limit = get_limit(opts, socket)
     offset = (page - 1) * limit
 
     socket =
       socket
+      |> assign_pax_private(:pagination, limit: limit)
       |> assign_pax_private(:pagination, page: page)
       |> assign_pax_private(:pagination, page_input_has_errors: false)
       |> assign_pax_scope(limit: limit, offset: offset)
@@ -33,8 +41,8 @@ defmodule Pax.Plugins.Pagination do
   end
 
   @impl true
-  def on_loaded(opts, _params, _uri, socket) do
-    num_pages = calculate_num_pages(opts, socket)
+  def on_loaded(_opts, _params, _uri, socket) do
+    num_pages = calculate_num_pages(socket)
     page = socket.assigns.pax.private.pagination.page
     has_prev = page > 1
     has_next = page < num_pages
@@ -91,8 +99,13 @@ defmodule Pax.Plugins.Pagination do
     end
   end
 
-  defp calculate_num_pages(opts, socket) do
-    (socket.assigns.pax.object_count / opts.objects_per_page)
+  defp get_limit(opts, socket) do
+    default = Map.get(opts, :objects_per_page, @default_objects_per_page)
+    Pax.Config.get(socket.assigns.pax.config, :objects_per_page, [socket], default)
+  end
+
+  defp calculate_num_pages(socket) do
+    (socket.assigns.pax.object_count / socket.assigns.pax.private.pagination.limit)
     |> Float.ceil()
     |> round()
   end

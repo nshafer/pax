@@ -102,6 +102,8 @@ defmodule Pax.Admin.Site do
 
   def config_for(site_mod, params, session, socket) do
     if Code.ensure_loaded?(site_mod) and function_exported?(site_mod, :config, 3) do
+      # TODO: only pass socket
+      # TODO: use Pax.Config for the Site config
       site_mod.config(params, session, socket)
       |> merge_config()
     else
@@ -338,17 +340,8 @@ defmodule Pax.Admin.Site do
 
         defdelegate adapter(socket), to: Pax.Admin.Resource.Live
         defdelegate plugins(socket), to: Pax.Admin.Resource.Live
-        defdelegate singular_name(socket), to: Pax.Admin.Resource.Live
-        defdelegate plural_name(socket), to: Pax.Admin.Resource.Live
-        defdelegate object_name(object, socket), to: Pax.Admin.Resource.Live
-
-        defdelegate index_path(socket), to: Pax.Admin.Resource.Live
-        defdelegate new_path(socket), to: Pax.Admin.Resource.Live
-        defdelegate show_path(object, socket), to: Pax.Admin.Resource.Live
-        defdelegate edit_path(object, socket), to: Pax.Admin.Resource.Live
-
-        defdelegate index_fields(socket), to: Pax.Admin.Resource.Live
-        defdelegate fieldsets(socket), to: Pax.Admin.Resource.Live
+        defdelegate pax_config(socket), to: Pax.Admin.Resource.Live
+        defdelegate handle_params(params, uri, socket), to: Pax.Admin.Resource.Live
       end
     end
   end

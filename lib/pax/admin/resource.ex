@@ -24,17 +24,7 @@ defmodule Pax.Admin.Resource do
 
   @callback plugins(socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Plugin.pluginspec()]
 
-  @callback singular_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
-  @callback plural_name(socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
-  @callback object_name(object :: map(), socket :: Phoenix.LiveView.Socket.t()) :: String.t() | nil
-
-  @callback index_fields(socket :: Phoenix.LiveView.Socket.t()) :: list(Pax.Field.field()) | nil
-
-  @callback fieldsets(socket :: Phoenix.LiveView.Socket.t()) ::
-              list(Pax.Field.field())
-              | list(list(Pax.Field.field()) | Pax.Field.field())
-              | keyword(list(Pax.Field.field()))
-              | nil
+  @callback pax_config(socket :: Phoenix.LiveView.Socket.t()) :: keyword() | map()
 
   defmacro __using__(_opts) do
     quote do
@@ -48,20 +38,11 @@ defmodule Pax.Admin.Resource do
         ]
       end
 
-      def singular_name(_socket), do: nil
-      def plural_name(_socket), do: nil
-      def object_name(_object, _socket), do: nil
-
-      def index_fields(_socket), do: nil
-      def fieldsets(_socket), do: nil
+      def pax_config(_socket), do: []
 
       defoverridable pax_init: 3,
                      plugins: 1,
-                     singular_name: 1,
-                     plural_name: 1,
-                     object_name: 2,
-                     index_fields: 1,
-                     fieldsets: 1
+                     pax_config: 1
     end
   end
 end
