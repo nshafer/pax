@@ -52,7 +52,7 @@ defmodule Pax.MixProject do
       {:ecto, "~> 3.10"},
       # {:phoenix_ecto, "~> 4.4"},
       # {:phoenix_html, "~> 3.3"},
-      {:gettext, "~> 0.20"},
+      {:gettext, "~> 0.26"},
       {:jason, "~> 1.2", only: :dev},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:esbuild, "~> 0.7", only: :dev},
