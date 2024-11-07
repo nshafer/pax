@@ -1,11 +1,17 @@
 # Pax
 
-**TODO: Add description**
+**DO NOT USE THIS MODULE... YET**
+
+This module is under heavy development, and is not ready for anyone to use it yet.
+
+Pax (Phoenix Admin eXtensions) is a toolkit for adding CRUD functionality to LiveViews, as well as
+an admin interface built on those tools.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `pax` to your list of dependencies in `mix.exs`:
+Rough instructions for now.
+
+Add `pax` to your list of dependencies in "mix.exs":
 
 ```elixir
 def deps do
@@ -15,14 +21,15 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/pax>.
+Add a `Plug.Static` plug to load static assets at /pax directly from the pax dependency. Add the
+following to your "lib/myapp_web/endpoint.ex", after any `socket` lines, and before
+`plug Plug.Parsers`. The best place is right after any existing `plug Plug.Static` lines.
 
-## CSS and JS
+```elixir
+plug Plug.Static,
+  at: "/pax",
+  from: :pax,
+  gzip: false
+```
 
-Two modes:
 
-1. Configure your project's tailwind to scan the pax dep for used classes
-2. Configure a Plug.Static in your endpoint to load static files from the :pax app, then include the pax statics in your
-   html.
