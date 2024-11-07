@@ -198,7 +198,6 @@ defmodule Pax.Components do
       type={@type}
       name={@name}
       value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-      phx-feedback-for={@name}
       {@rest}
     />
     """

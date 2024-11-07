@@ -26,8 +26,3 @@
 .pax-field-control-checkbox:checked~.pax-field-control-checkbox-false {
     display: none;
 }
-
-/* Hide errors if the field hasn't been interacted with yet, which is set by phx-feedback-for */
-.phx-no-feedback .pax-field-error {
-    display: none;
-}

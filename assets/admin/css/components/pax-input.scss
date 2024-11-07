@@ -9,7 +9,7 @@
         outline: 2px solid var(--border-focus);
     }
 
-    &.has-errors:not(.phx-no-feedback) {
+    &.has-errors {
         background-color: var(--bg-input-error);
         border: 1px solid var(--border-input-error);
     }

@@ -7,7 +7,7 @@
 - [ ] Redo callback hell to instead just use one `pax_config` callback that sets a global config that is stored in the
       `@pax` context. This should have all config options, including any extra config for the adapters or plugins.
 - [ ] Reimplement main index table and detail view as individual plugins.
-- [ ] Upgrade to LiveView 1.0 - transition away from `phx-feedback-for`
+- [x] Upgrade to LiveView 1.0 - transition away from `phx-feedback-for`
 - [ ] Redo Adapter `get_object` to use the scope. Should we formally define the scope with a struct or not?
 - [ ] Tests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

@@ -66,7 +66,7 @@ defmodule Pax.Field.Components do
     <%= if @form == nil or Pax.Field.immutable?(@field) do %>
       <.pax_field_text class={@text_class} field={@field} object={@object} />
     <% else %>
-      <div class={["pax-field-input", @class]} phx-feedback-for={Pax.Field.feedback_for(@field, @form)}>
+      <div class={["pax-field-input", @class]}>
         <%= Pax.Field.input(@field, @form) %>
         <.pax_field_errors field={@field} form={@form} class={@errors_class} error_class={@error_class} />
       </div>
@@ -153,7 +153,7 @@ defmodule Pax.Field.Components do
     assigns
     |> assign(:form_field, nil)
     |> assign(:id, assigns.id || form_field.id)
-    |> assign(:has_errors, form_field.errors != [])
+    |> assign(:has_errors, Phoenix.Component.used_input?(form_field) and form_field.errors != [])
     |> assign_new(:name, fn -> if assigns.multiple, do: form_field.name <> "[]", else: form_field.name end)
     |> assign_new(:value, fn -> form_field.value end)
     |> pax_field_control()
@@ -208,7 +208,7 @@ defmodule Pax.Field.Components do
   #     name={@name}
   #     class={[
   #       "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
-  #       "min-h-[6rem] phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
+  #       "min-h-[6rem]",
   #       @errors == [] && "border-zinc-300 focus:border-zinc-400",
   #       @errors != [] && "border-rose-400 focus:border-rose-400"
   #     ]}
@@ -226,7 +226,6 @@ defmodule Pax.Field.Components do
       id={@id}
       value={Phoenix.HTML.Form.normalize_value(@type, @value)}
       class={["pax-input pax-field-control-input", @has_errors && "has-errors"]}
-      phx-feedback-for={@name || @field.name}
       {@rest}
     />
     """

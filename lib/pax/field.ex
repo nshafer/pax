@@ -239,15 +239,6 @@ defmodule Pax.Field do
     end
   end
 
-  def feedback_for(%Field{name: name}, nil), do: name
-
-  def feedback_for(%Field{name: name}, form) do
-    case form[name] do
-      %Phoenix.HTML.FormField{} = field -> field.name || name
-      _ -> name
-    end
-  end
-
   def input(%Field{name: name, type: type, opts: opts} = field, form) do
     form_field = form[name]
     type.input(opts, field, form_field)
@@ -257,8 +248,12 @@ defmodule Pax.Field do
   def errors(%Field{name: name}, form) do
     form_field = form[name]
 
-    for error <- form_field.errors do
-      translate_error(error)
+    if Phoenix.Component.used_input?(form_field) do
+      for error <- form_field.errors do
+        translate_error(error)
+      end
+    else
+      []
     end
   end
 

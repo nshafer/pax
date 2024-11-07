@@ -48,10 +48,10 @@ defmodule Pax.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.7.0"},
-      {:phoenix_live_view, "~> 0.20.17"},
+      {:phoenix_html, "~> 4.1"},
+      {:phoenix_ecto, "~> 4.5"},
+      {:phoenix_live_view, "~> 1.0.0-rc.7"},
       {:ecto, "~> 3.10"},
-      # {:phoenix_ecto, "~> 4.4"},
-      # {:phoenix_html, "~> 3.3"},
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2", only: :dev},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},

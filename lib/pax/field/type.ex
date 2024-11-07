@@ -6,6 +6,7 @@ defmodule Pax.Field.Type do
 
   @callback init(opts :: keyword()) :: map()
   @callback render(opts :: map(), value :: any()) :: String.t() | Phoenix.LiveView.Rendered.t() | nil
+  # TODO: make input a function component callback?
   @callback input(opts :: map(), Pax.Field.field(), form_field :: Phoenix.HTML.FormField.t()) ::
               String.t() | Phoenix.LiveView.Rendered.t() | nil
   @callback immutable?(opts :: map()) :: boolean()
