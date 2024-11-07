@@ -83,8 +83,6 @@ defmodule Pax.Interface do
     config_spec = init_config_spec(adapter, plugins)
     config = init_config(config_spec, module, socket)
 
-    dbg(socket.assigns)
-
     socket =
       socket
       |> assign_pax(:config, config)

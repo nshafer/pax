@@ -5,7 +5,7 @@ defmodule Pax.Plugins.Pagination do
   import Pax.Interface.Context
   import Pax.Util.Params
 
-  @default_objects_per_page 100
+  @default_objects_per_page 10
 
   # Plugin callbacks
 
