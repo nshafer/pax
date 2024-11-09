@@ -4,14 +4,31 @@
 - [x] Plugins
 - [ ] Make stacktraces better?
 - [ ] Reimplement mobile views as @container queries
-- [ ] Redo callback hell to instead just use one `pax_config` callback that sets a global config that is stored in the
+- [x] Redo callback hell to instead just use one `pax_config` callback that sets a global config that is stored in the
       `@pax` context. This should have all config options, including any extra config for the adapters or plugins.
 - [ ] Reimplement main index table and detail view as individual plugins.
 - [x] Upgrade to LiveView 1.0 - transition away from `phx-feedback-for`
 - [ ] Redo Adapter `get_object` to use the scope. Should we formally define the scope with a struct or not?
 - [ ] Tests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-## Index
+## Interface
+- [ ] Create `pax_interface` macro in `Pax.Router` module that defines the routes for a `Pax.Interface`, with keys like
+      the `resources` macro in Phoenix, such as `only: [:index, :show]` and `except: [:edit, :delete]`.
+- [ ] Namespace config, so that adapter and plugin configs are explicit, such as:
+      ```elixir
+      [
+        adapter: [
+            repo: Myapp.Repo,
+            schema: Myapp.Mycontext.Myschema
+        ],
+        plugins: [
+            pagination: [
+                objects_per_page: 100
+            ]
+        ]
+      ]
+
+### Index
 - [x] Pagination plugin
 - [ ] Convert table to plugin
 - [ ] Sorting plugin
@@ -22,7 +39,7 @@
 - [ ] Action Items plugin
 - [ ] More index types: table, grid, blocks, blog? (ActiveAdmin)
 
-## Detail
+### Detail
 - [x] :edit
 - [x] :new
 - [ ] :delete or DeleteLive module?
@@ -50,10 +67,10 @@
 - [ ] Flashes
 - [ ] Dashboard with widgets.
 - [ ] Section dashboards with default just list of resources contained within.
-- [ ] Create `resources MyAppWeb.MyAdmin do` macro, which gets prefixed before resources modules, so can do `resource :name, "Label", LabelResource` to save typing. Same as Phoenix router scopes.
+- [ ] Create `resources MyAppWeb.MyAdmin do` macro, which gets prefixed before resources modules, so can do
+      `resource :name, "Label", LabelResource` to save typing. Same as Phoenix router scopes. Investigate LSP hooks?
 - [ ] Bookmarks - save current params as custom link in nav bar.
 - [ ] Allow configuration of sites, resources, etc with macros instead of run-time callbacks.
-- [ ] Make a dashboard-like page for each Section, optional, that allows widgets like the main Dashboard.
 - [ ] Sidebar plugin with collapse
 - [ ] Sidebar menu icons for resources, default to squares with first letter. Section arrow instead of icon.
 
