@@ -13,7 +13,7 @@ defmodule Pax.Admin.Resource do
 
   # TODO: add @callback render()
 
-  @callback pax_init(
+  @callback init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
@@ -24,13 +24,13 @@ defmodule Pax.Admin.Resource do
 
   @callback plugins(socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Plugin.pluginspec()]
 
-  @callback pax_config(socket :: Phoenix.LiveView.Socket.t()) :: keyword() | map()
+  @callback config(socket :: Phoenix.LiveView.Socket.t()) :: keyword() | map()
 
   defmacro __using__(_opts) do
     quote do
       @behaviour Pax.Admin.Resource
 
-      def pax_init(_params, _session, socket), do: {:cont, socket}
+      def init(_params, _session, socket), do: {:cont, socket}
 
       def plugins(_socket) do
         [
@@ -38,11 +38,11 @@ defmodule Pax.Admin.Resource do
         ]
       end
 
-      def pax_config(_socket), do: []
+      def config(_socket), do: []
 
-      defoverridable pax_init: 3,
+      defoverridable init: 3,
                      plugins: 1,
-                     pax_config: 1
+                     config: 1
     end
   end
 end

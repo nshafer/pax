@@ -34,7 +34,7 @@ defmodule Pax.Admin.Resource.Live do
       |> assign_admin(resources: resources)
       |> assign_admin(resource: resource)
 
-    resource.mod.pax_init(params, session, socket)
+    resource.mod.init(params, session, socket)
   end
 
   def handle_params(_params, _uri, socket) do
@@ -66,6 +66,7 @@ defmodule Pax.Admin.Resource.Live do
       {adapter, callback_module, adapter_opts} -> {adapter, callback_module, adapter_opts}
       {adapter, adapter_opts} -> {adapter, resource_mod, adapter_opts}
       adapter when is_atom(adapter) -> {adapter, resource_mod, []}
+      _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(resource_mod)}.adapter/1"
     end
   end
 
@@ -81,10 +82,10 @@ defmodule Pax.Admin.Resource.Live do
   def pax_config(socket) do
     resource_mod = socket.assigns.pax_admin.resource.mod
 
-    case resource_mod.pax_config(socket) do
+    case resource_mod.config(socket) do
       config_data when is_map(config_data) -> merge_config(config_data)
       config_data when is_list(config_data) -> merge_config(Map.new(config_data))
-      _ -> raise ArgumentError, "Invalid config returned from #{inspect(resource_mod)}.pax_config/1"
+      _ -> raise ArgumentError, "Invalid config returned from #{inspect(resource_mod)}.config/1"
     end
   end
 
