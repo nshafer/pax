@@ -3,6 +3,7 @@
 
     display: flex;
     flex-flow: column nowrap;
+    padding: 1em 0;
 }
 
 .admin-menu-link {
@@ -44,14 +45,21 @@
     }
 }
 
+.admin-menu-link-dashboard {
+    margin-bottom: 0.5em;
+}
+
 .admin-menu-section {
     position: relative;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
 }
 
 .admin-menu-section-button {
     @extend .admin-menu-link;
     width: 100%;
     text-align: left;
+    padding-right: 2em;
 
     .admin-menu-section.expanded & {
         border-color: var(--border-base-4);

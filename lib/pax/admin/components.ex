@@ -107,6 +107,7 @@ defmodule Pax.Admin.Components do
       <.admin_menu_link
         navigate={Pax.Admin.Site.dashboard_path(@pax_admin.site_mod)}
         active={@pax_admin.active == :dashboard}
+        class="admin-menu-link-dashboard"
       >
         Dashboard
       </.admin_menu_link>
@@ -162,6 +163,7 @@ defmodule Pax.Admin.Components do
     """
   end
 
+  attr :class, :string, default: nil
   attr :active, :boolean, default: false
   attr :indented, :boolean, default: false
 
@@ -174,7 +176,7 @@ defmodule Pax.Admin.Components do
 
   def admin_menu_link(assigns) do
     ~H"""
-    <.link class={["admin-menu-link", @indented && "indented", @active && "active"]} {@rest}>
+    <.link class={["admin-menu-link", @indented && "indented", @active && "active", @class]} {@rest}>
       <%= render_slot(@inner_block) %>
     </.link>
     """
