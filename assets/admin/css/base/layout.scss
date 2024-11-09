@@ -54,7 +54,7 @@ body {
     background-color: var(--bg-base-2);
     color: var(--text-base);
     border-right: 1px solid var(--border-base-2);
-    overflow: auto;
+    overflow-y: auto;
 }
 
 .admin-layout-main {
