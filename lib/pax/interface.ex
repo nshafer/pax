@@ -25,8 +25,7 @@ defmodule Pax.Interface do
   @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               module() | {module(), keyword()} | {module(), module(), keyword()}
 
-  # TODO: rename to pax_plugins
-  @callback plugins(socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Plugin.pluginspec()]
+  @callback pax_plugins(socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Plugin.pluginspec()]
 
   @callback pax_config(socket :: Phoenix.LiveView.Socket.t()) :: keyword() | map()
 
@@ -51,11 +50,11 @@ defmodule Pax.Interface do
         """
       end
 
-      def plugins(_socket), do: []
+      def pax_plugins(_socket), do: []
 
       def pax_config(_socket), do: []
 
-      defoverridable pax_init: 3, pax_adapter: 1, plugins: 1, pax_config: 1
+      defoverridable pax_init: 3, pax_adapter: 1, pax_plugins: 1, pax_config: 1
     end
   end
 

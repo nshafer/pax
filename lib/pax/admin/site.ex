@@ -339,7 +339,7 @@ defmodule Pax.Admin.Site do
           do: Pax.Admin.Resource.Live.pax_init(unquote(env.module), params, session, socket)
 
         defdelegate pax_adapter(socket), to: Pax.Admin.Resource.Live
-        defdelegate plugins(socket), to: Pax.Admin.Resource.Live
+        defdelegate pax_plugins(socket), to: Pax.Admin.Resource.Live
         defdelegate pax_config(socket), to: Pax.Admin.Resource.Live
         defdelegate handle_params(params, uri, socket), to: Pax.Admin.Resource.Live
       end

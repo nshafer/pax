@@ -69,7 +69,7 @@ defmodule Pax.Admin.Resource.Live do
     end
   end
 
-  def plugins(socket) do
+  def pax_plugins(socket) do
     resource_mod = socket.assigns.pax_admin.resource.mod
 
     case resource_mod.plugins(socket) do

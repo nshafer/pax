@@ -31,7 +31,7 @@ defmodule Pax.Interface.Init do
   end
 
   defp get_plugins(module, socket) do
-    case module.plugins(socket) do
+    case module.pax_plugins(socket) do
       plugins when is_list(plugins) -> plugins
       _ -> raise ArgumentError, "Invalid plugins returned from #{inspect(module)}.plugins/1"
     end
