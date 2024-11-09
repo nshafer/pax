@@ -1,8 +1,9 @@
 locals_without_parens = [
-  # adapter: 1,
-  # adapter: 2,
+  # Pax.Admin.Router macros
   pax_admin: 2,
   pax_admin: 3,
+
+  # Pax.Admin.Site macros
   config: 1,
   section: 2,
   section: 3,

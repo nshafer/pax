@@ -58,7 +58,7 @@ defmodule Pax.Admin.Resource.Live do
     end
   end
 
-  def adapter(socket) do
+  def pax_adapter(socket) do
     resource_mod = socket.assigns.pax_admin.resource.mod
 
     # Set the resource_mod as the callback_module for the adapter if none were specified

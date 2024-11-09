@@ -16,11 +16,11 @@ defmodule Pax.Interface.Init do
   }
 
   def init_adapter(module, socket) do
-    case module.adapter(socket) do
-      {adapter, callback_module, opts} -> Pax.Adapter.init(adapter, callback_module, opts)
-      {adapter, opts} -> Pax.Adapter.init(adapter, module, opts)
-      adapter when is_atom(adapter) -> Pax.Adapter.init(adapter, module, [])
-      _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.adapter/1"
+    case module.pax_adapter(socket) do
+      {adapter_module, callback_module, opts} -> Pax.Adapter.init(adapter_module, callback_module, opts)
+      {adapter_module, opts} -> Pax.Adapter.init(adapter_module, module, opts)
+      adapter_module when is_atom(adapter_module) -> Pax.Adapter.init(adapter_module, module, [])
+      _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.pax_adapter/1"
     end
   end
 

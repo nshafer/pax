@@ -22,8 +22,7 @@ defmodule Pax.Interface do
               socket :: Phoenix.LiveView.Socket.t()
             ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
 
-  # TODO: rename to pax_adapter
-  @callback adapter(socket :: Phoenix.LiveView.Socket.t()) ::
+  @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               module() | {module(), keyword()} | {module(), module(), keyword()}
 
   # TODO: rename to pax_plugins
@@ -41,12 +40,12 @@ defmodule Pax.Interface do
 
       def pax_init(_params, _session, socket), do: {:cont, socket}
 
-      def adapter(_socket) do
+      def pax_adapter(_socket) do
         raise """
-        No adapter/1 callback found for #{inspect(__MODULE__)}.
-        Please configure an adapter by defining a adapter function, for example:
+        No pax_adapter/1 callback found for #{inspect(__MODULE__)}.
+        Please configure an adapter by defining a `pax_adapter/1` function, for example:
 
-            def adapter(_socket),
+            def pax_adapter(_socket),
               do: {Pax.Adapters.EctoSchema, repo: MyAppWeb.Repo, schema: MyApp.MyContext.MySchema}
 
         """
@@ -56,7 +55,7 @@ defmodule Pax.Interface do
 
       def pax_config(_socket), do: []
 
-      defoverridable pax_init: 3, adapter: 1, plugins: 1, pax_config: 1
+      defoverridable pax_init: 3, pax_adapter: 1, plugins: 1, pax_config: 1
     end
   end
 
