@@ -24,10 +24,18 @@ defmodule Pax.Interface.Init do
     end
   end
 
+  def merge_adapter_config(adapter, config, socket) do
+    Pax.Adapter.merge_config(adapter, config, socket)
+  end
+
   def init_plugins(module, socket) do
     for pluginspec <- get_plugins(module, socket) do
       Pax.Plugin.init(module, pluginspec)
     end
+  end
+
+  def merge_plugins_config(plugins, config, socket) do
+    Enum.map(plugins, fn plugin -> Pax.Plugin.merge_config(plugin, config, socket) end)
   end
 
   defp get_plugins(module, socket) do

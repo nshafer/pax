@@ -6,6 +6,9 @@ defmodule Pax.Plugin do
   """
   defstruct [:module, :type, :opts]
 
+  @typedoc "A Phoenix.LiveView socket"
+  @type socket :: Phoenix.LiveView.Socket.t()
+
   @typedoc "The plugin specification, with or without init options"
   @type pluginspec :: module() | {module(), opts :: keyword()}
 
@@ -14,6 +17,9 @@ defmodule Pax.Plugin do
 
   @doc "A function that returns a valid Pax.Config spec for configuration keys and types accepted by the plugin."
   @callback config_spec() :: map()
+
+  @doc "A function that merges any additional configuration options into the plugin's opts."
+  @callback merge_config(opts :: map(), config :: map(), socket()) :: map()
 
   @doc "The type of plugin"
   @callback type() :: :interface | :admin
@@ -41,5 +47,10 @@ defmodule Pax.Plugin do
 
   def config_spec(%__MODULE__{} = plugin) do
     plugin.module.config_spec()
+  end
+
+  def merge_config(%__MODULE__{} = plugin, config, socket) do
+    opts = plugin.module.merge_config(plugin.opts, config, socket)
+    %{plugin | opts: opts}
   end
 end

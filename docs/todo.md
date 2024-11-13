@@ -27,6 +27,7 @@
             ]
         ]
       ]
+- [ ] Stream objects
 
 ### Index
 - [x] Pagination plugin

@@ -38,19 +38,28 @@ defmodule Pax.Adapters.EctoSchema do
 
   @impl Pax.Adapter
   def init(_callback_module, opts) do
-    repo = Keyword.get(opts, :repo) || raise "repo is required"
-    schema = Keyword.get(opts, :schema) || raise "schema is required"
-    id_field = Keyword.get(opts, :id_field, nil)
-
-    %{repo: repo, schema: schema, id_field: id_field}
+    %{
+      repo: Keyword.get(opts, :repo),
+      schema: Keyword.get(opts, :schema),
+      id_field: Keyword.get(opts, :id_field)
+    }
   end
 
   @impl Pax.Adapter
   def config_spec(_callback_module, _opts) do
     %{
-      repo: :module,
-      schema: :struct,
-      id_field: :atom
+      repo: [:module, {:function, 1, :module}],
+      schema: [:module, {:function, 1, :module}],
+      id_field: [:atom, {:function, 1, :atom}]
+    }
+  end
+
+  @impl Pax.Adapter
+  def merge_config(_callback_module, opts, config, socket) do
+    %{
+      repo: Pax.Config.get(config, :repo, [socket], opts.repo),
+      schema: Pax.Config.get(config, :schema, [socket], opts.schema),
+      id_field: Pax.Config.get(config, :id_field, [socket], opts.id_field)
     }
   end
 

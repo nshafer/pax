@@ -1,25 +1,27 @@
 defmodule Pax.Adapter do
   require Logger
 
-  @type adapter :: module
+  @type adapter_module :: module
   @type callback_module :: module
 
-  # TODO: rename :adapter to :module
-  defstruct [:adapter, :callback_module, :opts]
+  defstruct [:module, :callback_module, :opts]
 
-  @type t :: %__MODULE__{
-          adapter: adapter(),
-          callback_module: callback_module(),
-          opts: map()
-        }
+  @type t :: %__MODULE__{}
 
-  @type unsigned_params :: Phoenix.LiveView.unsigned_params()
+  @typedoc "A Phoenix.LiveView socket"
   @type socket :: Phoenix.LiveView.Socket.t()
 
+  @typedoc "Unsigned params from a Phoenix.LiveView handle_params/3"
+  @type unsigned_params :: Phoenix.LiveView.unsigned_params()
+
+  @doc "The adapter initialization function, must return a map of initialized adapter state."
   @callback init(callback_module, opts :: []) :: map()
 
   @doc "A function that returns a valid Pax.Config spec for configuration keys and types accepted by the adapter."
   @callback config_spec(callback_module(), opts :: map()) :: map()
+
+  @doc "A function that merges any additional configuration options into the adapter's state."
+  @callback merge_config(callback_module(), opts :: map(), config :: map(), socket()) :: map()
 
   @callback default_index_fields(callback_module(), opts :: map()) :: Pax.Index.fields()
 
@@ -55,94 +57,100 @@ defmodule Pax.Adapter do
   @callback update_object(callback_module(), opts :: map(), object :: map(), Ecto.Changeset.t()) ::
               {:ok, map()} | {:error, Ecto.Changeset.t()}
 
-  @spec init(adapter(), callback_module(), opts :: []) :: t()
-  def init(adapter, callback_module, opts \\ []) do
+  @spec init(module(), callback_module(), opts :: []) :: t()
+  def init(adapter_module, callback_module, opts \\ []) do
     %Pax.Adapter{
-      adapter: adapter,
+      module: adapter_module,
       callback_module: callback_module,
-      opts: adapter.init(callback_module, opts)
+      opts: adapter_module.init(callback_module, opts)
     }
   end
 
-  def config_spec(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}) do
-    adapter.config_spec(callback_module, opts)
+  @spec config_spec(t()) :: map()
+  def config_spec(%Pax.Adapter{} = adapter) do
+    adapter.module.config_spec(adapter.callback_module, adapter.opts)
+  end
+
+  def merge_config(%Pax.Adapter{} = adapter, config, socket) do
+    opts = adapter.module.merge_config(adapter.callback_module, adapter.opts, config, socket)
+    %Pax.Adapter{adapter | opts: opts}
   end
 
   @spec default_index_fields(t()) :: Pax.Index.fields()
-  def default_index_fields(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}) do
-    adapter.default_index_fields(callback_module, opts)
+  def default_index_fields(%Pax.Adapter{} = adapter) do
+    adapter.module.default_index_fields(adapter.callback_module, adapter.opts)
   end
 
   @spec default_detail_fieldsets(t()) :: Pax.Detail.fieldsets()
-  def default_detail_fieldsets(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}) do
-    adapter.default_detail_fieldsets(callback_module, opts)
+  def default_detail_fieldsets(%Pax.Adapter{} = adapter) do
+    adapter.module.default_detail_fieldsets(adapter.callback_module, adapter.opts)
   end
 
   @spec field_type!(t(), field_name :: atom()) :: atom()
-  def field_type!(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, field_name) do
-    case adapter.field_type(callback_module, opts, field_name) do
+  def field_type!(%Pax.Adapter{} = adapter, field_name) do
+    case adapter.module.field_type(adapter.callback_module, adapter.opts, field_name) do
       {:ok, field_type} -> field_type
       {:error, error} -> raise error
     end
   end
 
   @spec singular_name(t()) :: String.t()
-  def singular_name(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}) do
-    adapter.singular_name(callback_module, opts)
+  def singular_name(%Pax.Adapter{} = adapter) do
+    adapter.module.singular_name(adapter.callback_module, adapter.opts)
   end
 
   @spec plural_name(t()) :: String.t()
-  def plural_name(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}) do
-    adapter.plural_name(callback_module, opts)
+  def plural_name(%Pax.Adapter{} = adapter) do
+    adapter.module.plural_name(adapter.callback_module, adapter.opts)
   end
 
   @spec count_objects(t(), map()) :: [map()]
-  def count_objects(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, scope) do
-    adapter.count_objects(callback_module, opts, scope)
+  def count_objects(%Pax.Adapter{} = adapter, scope) do
+    adapter.module.count_objects(adapter.callback_module, adapter.opts, scope)
   end
 
   @spec list_objects(t(), map()) :: [map()]
-  def list_objects(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, scope) do
-    adapter.list_objects(callback_module, opts, scope)
+  def list_objects(%Pax.Adapter{} = adapter, scope) do
+    adapter.module.list_objects(adapter.callback_module, adapter.opts, scope)
   end
 
   @spec new_object(t(), unsigned_params(), String.t(), socket()) :: map()
-  def new_object(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, params, uri, socket) do
-    adapter.new_object(callback_module, opts, params, uri, socket)
+  def new_object(%Pax.Adapter{} = adapter, params, uri, socket) do
+    adapter.module.new_object(adapter.callback_module, adapter.opts, params, uri, socket)
   end
 
   @spec get_object(t(), unsigned_params(), String.t(), socket()) :: map()
-  def get_object(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, params, uri, socket) do
-    adapter.get_object(callback_module, opts, params, uri, socket)
+  def get_object(%Pax.Adapter{} = adapter, params, uri, socket) do
+    adapter.module.get_object(adapter.callback_module, adapter.opts, params, uri, socket)
   end
 
   @spec id_field(t()) :: atom() | binary()
-  def id_field(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}) do
-    adapter.id_field(callback_module, opts)
+  def id_field(%Pax.Adapter{} = adapter) do
+    adapter.module.id_field(adapter.callback_module, adapter.opts)
   end
 
   @spec object_id(t(), object :: map()) :: String.Chars.t()
-  def object_id(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, object) do
-    adapter.object_id(callback_module, opts, object)
+  def object_id(%Pax.Adapter{} = adapter, object) do
+    adapter.module.object_id(adapter.callback_module, adapter.opts, object)
   end
 
   @spec object_name(t(), object :: map()) :: String.t()
-  def object_name(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, object) do
-    adapter.object_name(callback_module, opts, object)
+  def object_name(%Pax.Adapter{} = adapter, object) do
+    adapter.module.object_name(adapter.callback_module, adapter.opts, object)
   end
 
   @spec cast(t(), object :: any(), unsigned_params(), fields :: list(Pax.Field.t())) :: Ecto.Changeset.t()
-  def cast(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, object, params, fields) do
-    adapter.cast(callback_module, opts, object, params, fields)
+  def cast(%Pax.Adapter{} = adapter, object, params, fields) do
+    adapter.module.cast(adapter.callback_module, adapter.opts, object, params, fields)
   end
 
   @spec update_object(t(), object :: any(), Ecto.Changeset.t()) :: {:ok, any()} | {:error, Ecto.Changeset.t()}
-  def create_object(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, object, changeset) do
-    adapter.create_object(callback_module, opts, object, changeset)
+  def create_object(%Pax.Adapter{} = adapter, object, changeset) do
+    adapter.module.create_object(adapter.callback_module, adapter.opts, object, changeset)
   end
 
   @spec update_object(t(), object :: any(), Ecto.Changeset.t()) :: {:ok, any()} | {:error, Ecto.Changeset.t()}
-  def update_object(%Pax.Adapter{adapter: adapter, callback_module: callback_module, opts: opts}, object, changeset) do
-    adapter.update_object(callback_module, opts, object, changeset)
+  def update_object(%Pax.Adapter{} = adapter, object, changeset) do
+    adapter.module.update_object(adapter.callback_module, adapter.opts, object, changeset)
   end
 end

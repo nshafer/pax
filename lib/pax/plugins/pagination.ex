@@ -10,13 +10,6 @@ defmodule Pax.Plugins.Pagination do
   # Plugin callbacks
 
   @impl true
-  def config_spec() do
-    %{
-      objects_per_page: [:integer, {:function, 1, :integer}]
-    }
-  end
-
-  @impl true
   def init(_callback_module, opts) do
     %{
       objects_per_page: Keyword.get(opts, :objects_per_page, @default_objects_per_page)
@@ -24,10 +17,24 @@ defmodule Pax.Plugins.Pagination do
   end
 
   @impl true
+  def config_spec() do
+    %{
+      objects_per_page: [:integer, {:function, 1, :integer}]
+    }
+  end
+
+  @impl true
+  def merge_config(opts, config, socket) do
+    %{
+      objects_per_page: Pax.Config.get(config, :objects_per_page, [socket], opts[:objects_per_page])
+    }
+  end
+
+  @impl true
   def on_preload(opts, params, _uri, socket) do
     # IO.inspect(params, label: "Pagination.on_params")
     page = get_page(params)
-    limit = get_limit(opts, socket)
+    limit = opts.objects_per_page
     offset = (page - 1) * limit
 
     socket =
@@ -97,11 +104,6 @@ defmodule Pax.Plugins.Pagination do
     else
       _ -> default
     end
-  end
-
-  defp get_limit(opts, socket) do
-    default = Map.get(opts, :objects_per_page, @default_objects_per_page)
-    Pax.Config.get(socket.assigns.pax.config, :objects_per_page, [socket], default)
   end
 
   defp calculate_num_pages(socket) do

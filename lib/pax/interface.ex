@@ -80,6 +80,8 @@ defmodule Pax.Interface do
     plugins = init_plugins(module, socket)
     config_spec = init_config_spec(adapter, plugins)
     config = init_config(config_spec, module, socket)
+    adapter = merge_adapter_config(adapter, config, socket)
+    plugins = merge_plugins_config(plugins, config, socket)
 
     socket =
       socket
