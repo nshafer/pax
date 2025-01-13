@@ -8,7 +8,7 @@ defmodule Pax.Admin.Components do
   def admin_title(assigns) do
     ~H"""
     <div class="admin-title">
-      <%= if @pax_admin != nil do %>
+      <%= if @pax_admin.config.title != nil do %>
         <%= @pax_admin.config.title %>
       <% else %>
         Pax Admin

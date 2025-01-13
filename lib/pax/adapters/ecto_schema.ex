@@ -138,7 +138,7 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @doc """
-  Will get the object by querying the schema with the following lookups, in order of precedence:application
+  Will get the object by querying the schema with the following lookups, in order of precedence:
 
   ## 1. Module callback `lookup/4`
 

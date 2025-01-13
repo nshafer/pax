@@ -424,19 +424,11 @@ defmodule Pax.Admin.Site do
 
   def resource_show_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_id) do
     path = resource_show_path(site_mod, section, resource, object_id)
-
-    case path do
-      nil -> nil
-      path -> Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
-    end
+    Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
   end
 
   def resource_edit_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_id) do
     path = resource_edit_path(site_mod, section, resource, object_id)
-
-    case path do
-      nil -> nil
-      path -> Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
-    end
+    Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
   end
 end

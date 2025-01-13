@@ -1,4 +1,45 @@
 defmodule Pax.Interface.Context do
+  @moduledoc """
+  The Pax Interface Context contains information on how to build the page; Accessed with `@pax` in templates.
+
+  This module defines a struct and some helper functions for assigned values into it easily.
+
+  ## Context fields
+
+  * `module` - The module that is using the Pax Interface
+  * `adapter` - The adapter module to use for the interface
+  * `plugins` - A list of plugins to use for the interface
+  * `objects` - A list of objects to display, for the `:index` action
+  * `object` - The current object being displayed in `:show`, `:edit` or `:delete` actions
+  * `object_count` - The number of objects in the `:objects` list
+  * `url` - The URL of the current page
+  * `form` - The form to use for the current object in `:new` or `:edit` actions
+  * `singular_name` - The singular name of the object
+  * `plural_name` - The plural name of the object
+  * `object_name` - The name of the object being displayed
+  * `index_path` - The path to the index page
+  * `new_path` - The path to the new page
+  * `show_path` - The path to the show page
+  * `edit_path` - The path to the edit page
+  * `fields` - A list of fields to display in the index page
+  * `fieldsets` - A list of fieldsets to display in the show and edit pages
+  * `scope` - A map of scope values to use for the adapter, see the [Scope](#scope) section
+  * `private` - A map of private values for pax internals and plugins to use.
+
+  ## Scope
+
+  The `:scope` map is used to pass information to the adapter for it to do some of its basic operations, such as
+  fetching objects for the index pages, or fetching individual objects for the show, edit and delete pages. The main
+  purpose of the scope is to decouple the interface, plugins and implementing module from the adapter, so that the
+  adapter is not concerned with any of those things, it simply operates on a set of expected keys in the scope. In this
+  way the adapter is only loosely coupled with the rest of the system.
+
+  Any keys can be set in the scope, since it's a map, but adapter(s) will only be expecting certain keys to be set,
+  and the interface and plugins will only set certain keys. All of these interactions should be documented in the
+  respective modules.
+
+  """
+
   import Phoenix.Component, only: [assign: 3]
   alias Pax.Interface.Context
 

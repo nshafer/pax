@@ -1,3 +1,3 @@
 defmodule Pax.Admin.Config do
-  defstruct title: "Pax Admin"
+  defstruct [:title]
 end

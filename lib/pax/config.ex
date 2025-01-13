@@ -418,7 +418,6 @@ defmodule Pax.Config do
     case fetch(config, key, args) do
       {:ok, value} -> value
       :error -> default
-      {:error, reason} -> raise ArgumentError, reason
     end
   end
 
