@@ -67,15 +67,15 @@ defmodule Pax.Admin.Router do
 
         live "#{path}/r/:resource", modules.resource, :index, opts.resource
         live "#{path}/r/:resource/new", modules.resource, :new, opts.resource
-        live "#{path}/r/:resource/:id", modules.resource, :show, opts.resource
-        live "#{path}/r/:resource/:id/edit", modules.resource, :edit, opts.resource
-        live "#{path}/r/:resource/:id/delete", modules.resource, :delete, opts.resource
+        live "#{path}/r/:resource/edit/*ids", modules.resource, :edit, opts.resource
+        live "#{path}/r/:resource/delete/*ids", modules.resource, :delete, opts.resource
+        live "#{path}/r/:resource/*ids", modules.resource, :show, opts.resource
 
         live "#{path}/:section/r/:resource", modules.resource, :index, opts.resource
         live "#{path}/:section/r/:resource/new", modules.resource, :new, opts.resource
-        live "#{path}/:section/r/:resource/:id", modules.resource, :show, opts.resource
-        live "#{path}/:section/r/:resource/:id/edit", modules.resource, :edit, opts.resource
-        live "#{path}/:section/r/:resource/:id/delete", modules.resource, :delete, opts.resource
+        live "#{path}/:section/r/:resource/edit/*ids", modules.resource, :edit, opts.resource
+        live "#{path}/:section/r/:resource/delete/*ids", modules.resource, :delete, opts.resource
+        live "#{path}/:section/r/:resource/*ids", modules.resource, :show, opts.resource
       end
     end
   end

@@ -60,11 +60,11 @@ defmodule Pax.Admin.Site do
       def resource_index_path(section \\ nil, resource),
         do: Pax.Admin.Site.resource_index_path(__MODULE__, section, resource)
 
-      def resource_show_path(section \\ nil, resource, object_id),
-        do: Pax.Admin.Site.resource_show_path(__MODULE__, section, resource, object_id)
+      def resource_show_path(section \\ nil, resource, object_ids),
+        do: Pax.Admin.Site.resource_show_path(__MODULE__, section, resource, object_ids)
 
-      def resource_edit_path(section \\ nil, resource, object_id),
-        do: Pax.Admin.Site.resource_edit_path(__MODULE__, section, resource, object_id)
+      def resource_edit_path(section \\ nil, resource, object_ids),
+        do: Pax.Admin.Site.resource_edit_path(__MODULE__, section, resource, object_ids)
 
       def resource_index_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource),
         do: Pax.Admin.Site.resource_index_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource)
@@ -72,13 +72,13 @@ defmodule Pax.Admin.Site do
       def resource_new_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource),
         do: Pax.Admin.Site.resource_new_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource)
 
-      def resource_show_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_id),
+      def resource_show_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_ids),
         do:
-          Pax.Admin.Site.resource_show_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource, object_id)
+          Pax.Admin.Site.resource_show_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource, object_ids)
 
-      def resource_edit_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_id),
+      def resource_edit_url(conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_ids),
         do:
-          Pax.Admin.Site.resource_edit_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource, object_id)
+          Pax.Admin.Site.resource_edit_url(__MODULE__, conn_or_socket_or_endpoint_or_uri, section, resource, object_ids)
     end
   end
 
@@ -352,15 +352,27 @@ defmodule Pax.Admin.Site do
   end
 
   defp section_path(nil), do: nil
-  defp section_path(%Section{} = section), do: section.path
-  defp section_path(section_path) when is_binary(section_path), do: section_path
-  defp section_path(section_name) when is_atom(section_name), do: to_string(section_name)
+  defp section_path(%Section{} = section), do: encode_path(section)
+  defp section_path(section_path) when is_binary(section_path), do: encode_path(section_path)
+  defp section_path(section_name) when is_atom(section_name), do: encode_path(section_name)
   defp section_path(arg), do: raise("invalid section path: #{inspect(arg)}")
 
-  defp resource_path(%Resource{} = resource), do: resource.path
-  defp resource_path(resource_path) when is_binary(resource_path), do: resource_path
-  defp resource_path(resource_name) when is_atom(resource_name), do: to_string(resource_name)
+  defp resource_path(%Resource{} = resource), do: encode_path(resource)
+  defp resource_path(resource_path) when is_binary(resource_path), do: encode_path(resource_path)
+  defp resource_path(resource_name) when is_atom(resource_name), do: encode_path(resource_name)
   defp resource_path(arg), do: raise("invalid resource path: #{inspect(arg)}")
+
+  defp object_path(object_ids) when is_list(object_ids) do
+    object_ids
+    |> Enum.map(&encode_path/1)
+    |> Enum.join("/")
+  end
+
+  defp encode_path(path) do
+    path
+    |> Phoenix.Param.to_param()
+    |> URI.encode(&URI.char_unreserved?/1)
+  end
 
   def resource_index_path(site_mod, section \\ nil, resource) do
     path = site_mod.__pax__(:path)
@@ -387,28 +399,30 @@ defmodule Pax.Admin.Site do
   @doc """
   Get the path to the show page for a resource object.
   """
-  def resource_show_path(site_mod, section \\ nil, resource, object_id) do
+  def resource_show_path(site_mod, section \\ nil, resource, object_ids) do
     path = site_mod.__pax__(:path)
     section_path = section_path(section)
     resource_path = resource_path(resource)
+    object_path = object_path(object_ids)
 
     cond do
-      section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{object_id}"
-      true -> "#{path}/r/#{resource_path}/#{object_id}"
+      section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{object_path}"
+      true -> "#{path}/r/#{resource_path}/#{object_path}"
     end
   end
 
   @doc """
   Get the path to the show page for a resource object.
   """
-  def resource_edit_path(site_mod, section \\ nil, resource, object_id) do
+  def resource_edit_path(site_mod, section \\ nil, resource, object_ids) do
     path = site_mod.__pax__(:path)
     section_path = section_path(section)
     resource_path = resource_path(resource)
+    object_path = object_path(object_ids)
 
     cond do
-      section_path -> "#{path}/#{section_path}/r/#{resource_path}/#{object_id}/edit"
-      true -> "#{path}/r/#{resource_path}/#{object_id}/edit"
+      section_path -> "#{path}/#{section_path}/r/#{resource_path}/edit/#{object_path}"
+      true -> "#{path}/r/#{resource_path}/edit/#{object_path}"
     end
   end
 
@@ -422,13 +436,13 @@ defmodule Pax.Admin.Site do
     Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
   end
 
-  def resource_show_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_id) do
-    path = resource_show_path(site_mod, section, resource, object_id)
+  def resource_show_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_ids) do
+    path = resource_show_path(site_mod, section, resource, object_ids)
     Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
   end
 
-  def resource_edit_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_id) do
-    path = resource_edit_path(site_mod, section, resource, object_id)
+  def resource_edit_url(site_mod, conn_or_socket_or_endpoint_or_uri, section \\ nil, resource, object_ids) do
+    path = resource_edit_path(site_mod, section, resource, object_ids)
     Phoenix.VerifiedRoutes.unverified_url(conn_or_socket_or_endpoint_or_uri, path)
   end
 end

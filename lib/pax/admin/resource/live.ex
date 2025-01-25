@@ -91,6 +91,7 @@ defmodule Pax.Admin.Resource.Live do
 
   defp merge_config(config_data) when is_map(config_data) do
     default_config_data = %{
+      lookup_glob: "ids",
       index_path: &index_path/1,
       new_path: &new_path/1,
       show_path: &show_path/2,
@@ -116,19 +117,34 @@ defmodule Pax.Admin.Resource.Live do
 
   def show_path(object, socket) do
     site_mod = socket.assigns.pax_admin.site_mod
-    adapter = socket.assigns.pax.adapter
     resource = socket.assigns.pax_admin.resource
-    object_id = Pax.Adapter.object_id(adapter, object)
+    object_ids = object_ids(object, socket)
 
-    Pax.Admin.Site.resource_show_path(site_mod, resource.section, resource, object_id)
+    Pax.Admin.Site.resource_show_path(site_mod, resource.section, resource, object_ids)
   end
 
   def edit_path(object, socket) do
     site_mod = socket.assigns.pax_admin.site_mod
-    adapter = socket.assigns.pax.adapter
     resource = socket.assigns.pax_admin.resource
-    object_id = Pax.Adapter.object_id(adapter, object)
+    object_ids = object_ids(object, socket)
 
-    Pax.Admin.Site.resource_edit_path(site_mod, resource.section, resource, object_id)
+    Pax.Admin.Site.resource_edit_path(site_mod, resource.section, resource, object_ids)
+  end
+
+  # Build a list of ids for this object based on the value of the `id_fields` config option. These will be appended to
+  # the path by the Site module, separated by slashes, so they match the default `/*ids` glob in the default routes.
+  defp object_ids(object, socket) do
+    adapter = socket.assigns.pax.adapter
+    config = socket.assigns.pax.config
+
+    id_fields =
+      case Pax.Config.fetch(config, :id_fields, [socket]) do
+        {:ok, id_fields} -> id_fields
+        :error -> Pax.Adapter.id_fields(adapter)
+      end
+
+    for id_field <- id_fields do
+      Map.get(object, id_field)
+    end
   end
 end

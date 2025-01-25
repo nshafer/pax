@@ -8,7 +8,9 @@
       `@pax` context. This should have all config options, including any extra config for the adapters or plugins.
 - [ ] Reimplement main index table and detail view as individual plugins.
 - [x] Upgrade to LiveView 1.0 - transition away from `phx-feedback-for`
-- [ ] Redo Adapter `get_object` to use the scope. Should we formally define the scope with a struct or not?
+- [x] Redo Adapter `get_object` to use the scope. Should we formally define the scope with a struct or not?
+- [ ] Allow override or modification of EctoSchema queries before executing.
+- [ ] Permissions system, such as `can_view`, `can_edit`, `can_delete` or whatever.
 - [ ] Tests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ## Interface
@@ -28,6 +30,8 @@
         ]
       ]
 - [ ] Stream objects
+- [ ] Fix breadcrumbs when no `index_path` or nil `object_name` given.
+- [ ] Returnable `%URL{}` structs from `*_path` config options?
 
 ### Index
 - [x] Pagination plugin
@@ -53,7 +57,7 @@
 ## Fields
 - [x] Allow specifying just `:fieldname` and default to Field.String maybe? Or callback to adapter to figure it out?
 - [ ] Redo fields to just have one list of fields, with `only: :index` and `except: [:index, :edit]` options.
-- [ ] Redo fieldsets to just be `detail_layout` to specify how the fields are layed out. Defaults to just the list
+- [ ] Redo fieldsets to just be `detail_layout` to specify how the fields are laid out. Defaults to just the list
       of fields. Any missing fields are assumed to not be included. Should we allow `show_layout` and `edit_layout`
       specific layouts? So the pages can have different layouts?
 
@@ -82,3 +86,8 @@
 - [ ] Rejig `mix assets.deploy` to output to pax.min.css
 - [x] Make basic pax.css using minimal css instead of tailwind?
 - [x] Maybe don't use tailwind for pax.css? Use ~~postcss~~ sass instead?
+
+## Rename?
+- ~~kite~~ taken on hex
+- jib
+- pixy

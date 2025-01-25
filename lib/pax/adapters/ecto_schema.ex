@@ -40,8 +40,7 @@ defmodule Pax.Adapters.EctoSchema do
   def init(_callback_module, opts) do
     %{
       repo: Keyword.get(opts, :repo),
-      schema: Keyword.get(opts, :schema),
-      id_field: Keyword.get(opts, :id_field)
+      schema: Keyword.get(opts, :schema)
     }
   end
 
@@ -49,8 +48,7 @@ defmodule Pax.Adapters.EctoSchema do
   def config_spec(_callback_module, _opts) do
     %{
       repo: [:module, {:function, 1, :module}],
-      schema: [:module, {:function, 1, :module}],
-      id_field: [:atom, {:function, 1, :atom}]
+      schema: [:module, {:function, 1, :module}]
     }
   end
 
@@ -58,8 +56,7 @@ defmodule Pax.Adapters.EctoSchema do
   def merge_config(_callback_module, opts, config, socket) do
     %{
       repo: Pax.Config.get(config, :repo, [socket], opts.repo),
-      schema: Pax.Config.get(config, :schema, [socket], opts.schema),
-      id_field: Pax.Config.get(config, :id_field, [socket], opts.id_field)
+      schema: Pax.Config.get(config, :schema, [socket], opts.schema)
     }
   end
 
@@ -133,135 +130,31 @@ defmodule Pax.Adapters.EctoSchema do
   defp paginate(query, _scope), do: query
 
   @impl Pax.Adapter
-  def new_object(_callback_module, %{schema: schema}, _params, _uri, _socket) do
+  def new_object(_callback_module, %{schema: schema}, _socket) do
     struct(schema)
   end
 
-  @doc """
-  Will get the object by querying the schema with the following lookups, in order of precedence:
-
-  ## 1. Module callback `lookup/4`
-
-  If the module defines a callback `lookup/4`, it will be called with the query, params, uri and socket and expects
-  a query in return. For example:
-
-        def lookup(query, %{"id" => id}, _uri, _socket) do
-          from q in query, where: q.id == ^id
+  @doc "Gets the object based on the lookup map"
+  @impl Pax.Adapter
+  def get_object(_callback_module, %{repo: repo, schema: schema}, lookup, _socket) do
+    filters =
+      Enum.map(lookup, fn {field, value} ->
+        if not is_atom(field) do
+          raise ArgumentError,
+                "Field #{inspect(field)} in lookup is not an atom. " <>
+                  "Check the `lookup` and `id_fields` configuration."
         end
 
-  ## 2. Primary key lookup
+        {field, value}
+      end)
 
-  If the params contain all the primary keys of the schema, it will be looked up by those. For example, if the schema
-  has a primary key of `id` and the params contain `id`, it will be looked up by `id`. If the schema has a composite
-  primary key of `id` and `slug` and the params contain `id` and `slug`, it will be looked up by `id` and `slug`.
-
-  ## 3. Field lookup
-
-  If the params contain any of the fields of the schema, it will be looked up by those. For example, if the schema
-  has a field of `slug` and the params contain `slug`, it will be looked up by `slug`. It will lookup all matching
-  fields provided in the params, so extra fields are added (such as in the query string) that don't match, then the
-  lookup will fail.
-
-  This will raise Ecto.NoResultsError if no object is found, and Ecto.MultipleResultsError if more than one object is
-  found. The former will be converted to a 404 error by :phoenix_ecto, but the latter will be raised as a 500 error.
-
-  """
-  # TODO: move all of this into the detail page, which will pass the info needed as a scope
-  @impl Pax.Adapter
-  def get_object(callback_module, %{repo: repo, schema: schema} = opts, params, uri, socket) do
-    query =
-      from(s in schema)
-      |> lookup(callback_module, opts, schema, params, uri, socket)
-
-    repo.one!(query)
-  end
-
-  defp lookup(query, callback_module, opts, schema, params, uri, socket) do
-    cond do
-      # First option: an explicit callback to lookup the object
-      function_exported?(callback_module, :pax_lookup, 4) ->
-        callback_module.pax_lookup(query, params, uri, socket)
-
-      # Second option: try to find based on the "id" param, and match to our discovered id_field
-      lookup = lookup_by_id_field(query, callback_module, opts, params) ->
-        lookup
-
-      # Third option: try to match all of the primary keys if they are all present in params
-      lookup = lookup_by_primary_keys(query, schema, params) ->
-        lookup
-
-      # Fourth option: try to match any of the fields passed in as params
-      lookup = lookup_by_fields(query, schema, params) ->
-        lookup
-
-      # Fifth option: no lookup possible, so raise an error
-      true ->
-        raise "Could not figure out how to perform lookup. Please implement a pax_lookup/4 callback in #{inspect(callback_module)}"
-    end
-  end
-
-  defp lookup_by_id_field(query, callback_module, opts, params) do
-    id_field = id_field(callback_module, opts)
-    id = Map.get(params, "id")
-
-    if id_field && id do
-      from(q in query, where: ^[{id_field, id}])
-    end
-  end
-
-  defp lookup_by_primary_keys(query, schema, params) do
-    primary_keys = schema.__schema__(:primary_key)
-
-    if Enum.all?(primary_keys, &Map.has_key?(params, to_string(&1))) do
-      filters = Enum.map(primary_keys, &{&1, Map.get(params, to_string(&1))})
-      from(q in query, where: ^filters)
-    end
-  end
-
-  defp lookup_by_fields(query, schema, params) do
-    fields = schema.__schema__(:fields)
-    matched_fields = Enum.filter(fields, &Map.has_key?(params, to_string(&1)))
-    filters = Enum.map(matched_fields, &{&1, Map.get(params, to_string(&1))})
-    from(q in query, where: ^filters)
+    from(schema, where: ^filters)
+    |> repo.one!()
   end
 
   @impl Pax.Adapter
-  def id_field(callback_module, %{schema: schema, id_field: id_field}) do
-    cond do
-      function_exported?(callback_module, :pax_id_field, 1) ->
-        callback_module.pax_id_field()
-
-      id_field != nil ->
-        id_field
-
-      true ->
-        case schema.__schema__(:primary_key) do
-          [primary_key] ->
-            primary_key
-
-          # TODO: support composite primary keys without needing a custom callback. This will require using a custom
-          #       format for the id_field, such as "col1:col2:col3" or something similar, then also modifying lookup
-          #       to handle this format. This assumes primary_keys are always returned in the same order. If not, then
-          #       we'll need to encode the column name in the object_id as well.
-          primary_keys ->
-            raise ArgumentError, """
-            Composite Primary Keys are not supported for automatic id_field generation.
-            Please implement a pax_object_id/2 callbacks in #{inspect(callback_module)}.
-            This means you will also most likely need to implement a pax_object_id/2 callback.
-            Got primary keys #{inspect(primary_keys)} for schema #{inspect(schema)}.
-            """
-        end
-    end
-  end
-
-  @impl Pax.Adapter
-  def object_id(callback_module, opts, object) do
-    if function_exported?(callback_module, :pax_object_id, 1) do
-      callback_module.pax_object_id(object)
-    else
-      id_field = id_field(callback_module, opts)
-      Map.get(object, id_field)
-    end
+  def id_fields(_callback_module, %{schema: schema}) do
+    schema.__schema__(:primary_key)
   end
 
   @impl Pax.Adapter

@@ -1,4 +1,6 @@
 defmodule Pax.Admin.Section do
+  @derive {Phoenix.Param, key: :path}
+
   @type t() :: %__MODULE__{
           name: atom(),
           path: String.t(),

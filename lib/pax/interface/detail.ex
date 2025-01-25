@@ -10,10 +10,11 @@ defmodule Pax.Interface.Detail do
 
   def on_params(params, uri, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_params(#{inspect(params)}, #{inspect(uri)}")
+    # dbg(socket, structs: false)
     %{config: config, adapter: adapter} = socket.assigns.pax
 
     fieldsets = init_fieldsets(config, adapter, socket)
-    object = init_object(adapter, params, uri, socket)
+    object = init_object(config, adapter, params, uri, socket)
     object_name = init_object_name(config, adapter, object, socket)
 
     socket =
@@ -65,11 +66,91 @@ defmodule Pax.Interface.Detail do
     end
   end
 
-  defp init_object(adapter, params, uri, socket) do
+  defp init_object(config, adapter, params, uri, socket) do
     case socket.assigns.live_action do
-      action when action in [:show, :edit] -> Pax.Adapter.get_object(adapter, params, uri, socket)
-      :new -> Pax.Adapter.new_object(adapter, params, uri, socket)
-      _ -> nil
+      action when action in [:show, :edit] ->
+        lookup = init_lookup(config, adapter, params, uri, socket)
+        Pax.Adapter.get_object(adapter, lookup, socket)
+
+      :new ->
+        Pax.Adapter.new_object(adapter, socket)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp init_lookup(config, adapter, params, uri, socket) do
+    # Check if the user has defined a `:lookup` config option, which can only be a function, and call it.
+    # Otherwise, construct a lookup map using config, the adapter, and some sensible defaults.
+    case Config.fetch(config, :lookup, [params, uri, socket]) do
+      {:ok, value} -> value
+      :error -> construct_lookup_map(config, adapter, params, socket)
+    end
+  end
+
+  defp construct_lookup_map(config, adapter, params, socket) do
+    # Get the list of params, which could be individually specified as `lookup_params` or a list of strings from
+    # `lookup_glob` depending on how they configured their router.
+    param_values = lookup_params(config, params, socket)
+
+    # Get the list of id fields for the object, which should be a list of atoms or strings.
+    # If none are defined in the config, then use the adapter to figure out a default. If the adapter can't help
+    # then just use a default.
+    id_fields =
+      case Config.fetch(config, :id_fields, [socket]) do
+        {:ok, value} ->
+          value
+
+        :error ->
+          case Pax.Adapter.id_fields(adapter) do
+            nil -> Pax.Interface.Config.default_id_fields()
+            fields -> fields
+          end
+      end
+
+    # Make sure that the number of lookup params matches the number of id fields
+    if length(param_values) != length(id_fields) do
+      raise ArgumentError, "The number of params must match the number of id_fields"
+    end
+
+    # Zip the id fields with the param values to create a map of id field -> param value
+    Enum.zip(id_fields, param_values)
+    |> Map.new()
+  end
+
+  defp lookup_params(config, params, socket) do
+    lookup_params = Config.get(config, :lookup_params, [socket])
+    lookup_glob = Config.get(config, :lookup_glob, [socket])
+
+    cond do
+      lookup_params != nil and lookup_glob != nil ->
+        raise ArgumentError, "You can't define both :lookup_params and :lookup_glob in the config"
+
+      lookup_params != nil ->
+        fetch_lookup_params(lookup_params, params)
+
+      lookup_glob != nil ->
+        fetch_lookup_glob(lookup_glob, params)
+
+      true ->
+        Pax.Interface.Config.default_lookup_params() |> fetch_lookup_params(params)
+    end
+  end
+
+  defp fetch_lookup_params(lookup_params, params) do
+    for lookup_param <- lookup_params do
+      case Map.fetch(params, to_string(lookup_param)) do
+        {:ok, value} -> value
+        :error -> raise ArgumentError, "Missing param: #{lookup_param}"
+      end
+    end
+  end
+
+  defp fetch_lookup_glob(lookup_glob, params) do
+    case Map.fetch(params, lookup_glob) do
+      {:ok, value} -> value
+      :error -> raise ArgumentError, "Missing param: #{lookup_glob}"
     end
   end
 

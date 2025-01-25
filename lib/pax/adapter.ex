@@ -38,13 +38,11 @@ defmodule Pax.Adapter do
 
   @callback list_objects(callback_module(), opts :: map(), scope :: map()) :: [map()]
 
-  @callback new_object(callback_module(), opts :: map(), unsigned_params(), uri :: String.t(), socket()) :: map()
+  @callback new_object(callback_module(), opts :: map(), socket()) :: map()
 
-  @callback get_object(callback_module(), opts :: map(), unsigned_params(), uri :: String.t(), socket()) :: map()
+  @callback get_object(callback_module(), opts :: map(), lookup :: map(), socket()) :: map()
 
-  @callback id_field(callback_module(), opts :: map()) :: atom() | binary()
-
-  @callback object_id(callback_module(), opts :: map(), object :: map()) :: String.Chars.t()
+  @callback id_fields(callback_module(), opts :: map()) :: [atom() | binary()] | nil
 
   @callback object_name(callback_module(), opts :: map(), object :: map()) :: String.t()
 
@@ -114,24 +112,19 @@ defmodule Pax.Adapter do
     adapter.module.list_objects(adapter.callback_module, adapter.opts, scope)
   end
 
-  @spec new_object(t(), unsigned_params(), String.t(), socket()) :: map()
-  def new_object(%Pax.Adapter{} = adapter, params, uri, socket) do
-    adapter.module.new_object(adapter.callback_module, adapter.opts, params, uri, socket)
+  @spec new_object(t(), socket()) :: map()
+  def new_object(%Pax.Adapter{} = adapter, socket) do
+    adapter.module.new_object(adapter.callback_module, adapter.opts, socket)
   end
 
-  @spec get_object(t(), unsigned_params(), String.t(), socket()) :: map()
-  def get_object(%Pax.Adapter{} = adapter, params, uri, socket) do
-    adapter.module.get_object(adapter.callback_module, adapter.opts, params, uri, socket)
+  @spec get_object(t(), map(), socket()) :: map()
+  def get_object(%Pax.Adapter{} = adapter, lookup, socket) do
+    adapter.module.get_object(adapter.callback_module, adapter.opts, lookup, socket)
   end
 
-  @spec id_field(t()) :: atom() | binary()
-  def id_field(%Pax.Adapter{} = adapter) do
-    adapter.module.id_field(adapter.callback_module, adapter.opts)
-  end
-
-  @spec object_id(t(), object :: map()) :: String.Chars.t()
-  def object_id(%Pax.Adapter{} = adapter, object) do
-    adapter.module.object_id(adapter.callback_module, adapter.opts, object)
+  @spec id_fields(t()) :: [atom() | binary()] | nil
+  def id_fields(%Pax.Adapter{} = adapter) do
+    adapter.module.id_fields(adapter.callback_module, adapter.opts)
   end
 
   @spec object_name(t(), object :: map()) :: String.t()
