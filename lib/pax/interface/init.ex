@@ -3,18 +3,6 @@ defmodule Pax.Interface.Init do
 
   alias Pax.Config
 
-  @config_spec %{
-    singular_name: [:string, {:function, 1, :string}],
-    plural_name: [:string, {:function, 1, :string}],
-    object_name: [nil, :string, {:function, 2, [nil, :string]}],
-    index_path: [:string, {:function, 1, :string}],
-    new_path: [:string, {:function, 1, :string}],
-    show_path: [:string, {:function, 2, :string}],
-    edit_path: [:string, {:function, 2, :string}],
-    index_fields: [:list, {:function, 1, :list}],
-    fieldsets: [:list, {:function, 1, :list}]
-  }
-
   def init_adapter(module, socket) do
     case module.pax_adapter(socket) do
       {adapter_module, callback_module, opts} -> Pax.Adapter.init(adapter_module, callback_module, opts)
@@ -46,10 +34,11 @@ defmodule Pax.Interface.Init do
   end
 
   def init_config_spec(adapter, plugins) do
+    config_spec = Pax.Interface.Config.config_spec()
     adapter_config_spec = Pax.Adapter.config_spec(adapter)
 
     config_spec =
-      Map.merge(@config_spec, adapter_config_spec, fn key, val1, val2 ->
+      Map.merge(config_spec, adapter_config_spec, fn key, val1, val2 ->
         unless val1 == val2 do
           raise ArgumentError,
                 "adapter defined duplicate config spec for #{inspect(key)}, " <>
