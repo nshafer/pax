@@ -94,9 +94,8 @@ defmodule Pax.Interface.Detail do
     # `lookup_glob` depending on how they configured their router.
     param_values = lookup_params(config, params, socket)
 
-    # Get the list of id fields for the object, which should be a list of atoms or strings.
-    # If none are defined in the config, then use the adapter to figure out a default. If the adapter can't help
-    # then just use a default.
+    # Get the list of id fields for the object, which should be a list of atoms. If none are defined in the config,
+    # then use the adapter to figure out a default. If the adapter can't help then just use a default.
     id_fields =
       case Config.fetch(config, :id_fields, [socket]) do
         {:ok, value} ->
@@ -115,8 +114,13 @@ defmodule Pax.Interface.Detail do
     end
 
     # Zip the id fields with the param values to create a map of id field -> param value
-    Enum.zip(id_fields, param_values)
-    |> Map.new()
+    Enum.zip_reduce(id_fields, param_values, %{}, fn id_field, param_value, acc ->
+      if not is_atom(id_field) do
+        raise ArgumentError, "id_fields must be a list of atoms, got #{inspect(id_field)}"
+      end
+
+      Map.put(acc, id_field, param_value)
+    end)
   end
 
   defp lookup_params(config, params, socket) do

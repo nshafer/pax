@@ -45,7 +45,7 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def config_spec(_callback_module, _opts) do
+  def config_spec(_opts) do
     %{
       repo: [:module, {:function, 1, :module}],
       schema: [:module, {:function, 1, :module}]
@@ -53,15 +53,15 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def merge_config(_callback_module, opts, config, socket) do
+  def merge_config(%{repo: repo, schema: schema}, config, socket) do
     %{
-      repo: Pax.Config.get(config, :repo, [socket], opts.repo),
-      schema: Pax.Config.get(config, :schema, [socket], opts.schema)
+      repo: Pax.Config.get(config, :repo, [socket], repo),
+      schema: Pax.Config.get(config, :schema, [socket], schema)
     }
   end
 
   @impl Pax.Adapter
-  def default_index_fields(_callback_module, %{schema: schema}) do
+  def default_index_fields(%{schema: schema}) do
     for field_name <- schema.__schema__(:fields),
         schema_type = schema.__schema__(:type, field_name),
         {:ok, field_type} = schema_to_field_type(schema, schema_type) do
@@ -70,15 +70,15 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def default_detail_fieldsets(callback_module, opts) do
-    [default: default_index_fields(callback_module, opts)]
+  def default_detail_fieldsets(opts) do
+    [default: default_index_fields(opts)]
   end
 
   @doc """
   Returns the field type for the given field name.
   """
   @impl Pax.Adapter
-  def field_type(_callback_module, %{schema: schema}, field_name) do
+  def field_type(%{schema: schema}, field_name) do
     schema_type = schema.__schema__(:type, field_name)
 
     if schema_type do
@@ -89,18 +89,18 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def singular_name(_callback_module, %{schema: schema}) do
+  def singular_name(%{schema: schema}) do
     Pax.Util.Introspection.name_from_struct(schema)
   end
 
   @impl Pax.Adapter
-  def plural_name(_callback_module, %{schema: schema}) do
+  def plural_name(%{schema: schema}) do
     Pax.Util.Introspection.name_from_struct(schema)
     |> Pax.Util.Inflection.pluralize()
   end
 
   @impl Pax.Adapter
-  def count_objects(_callback_module, %{repo: repo, schema: schema}, scope) do
+  def count_objects(%{repo: repo, schema: schema}, scope) do
     schema
     |> build_query(scope)
     |> repo.aggregate(:count)
@@ -112,7 +112,7 @@ defmodule Pax.Adapters.EctoSchema do
   TODO: sorting, filtering, etc.
   """
   @impl Pax.Adapter
-  def list_objects(_callback_module, %{repo: repo, schema: schema}, scope) do
+  def list_objects(%{repo: repo, schema: schema}, scope) do
     schema
     |> build_query(scope)
     |> paginate(scope)
@@ -130,35 +130,26 @@ defmodule Pax.Adapters.EctoSchema do
   defp paginate(query, _scope), do: query
 
   @impl Pax.Adapter
-  def new_object(_callback_module, %{schema: schema}, _socket) do
+  def new_object(%{schema: schema}, _socket) do
     struct(schema)
   end
 
   @doc "Gets the object based on the lookup map"
   @impl Pax.Adapter
-  def get_object(_callback_module, %{repo: repo, schema: schema}, lookup, _socket) do
-    filters =
-      Enum.map(lookup, fn {field, value} ->
-        if not is_atom(field) do
-          raise ArgumentError,
-                "Field #{inspect(field)} in lookup is not an atom. " <>
-                  "Check the `lookup` and `id_fields` configuration."
-        end
-
-        {field, value}
-      end)
+  def get_object(%{repo: repo, schema: schema}, lookup, _socket) do
+    filters = Map.to_list(lookup)
 
     from(schema, where: ^filters)
     |> repo.one!()
   end
 
   @impl Pax.Adapter
-  def id_fields(_callback_module, %{schema: schema}) do
+  def id_fields(%{schema: schema}) do
     schema.__schema__(:primary_key)
   end
 
   @impl Pax.Adapter
-  def object_name(_callback_module, %{schema: schema}, object) do
+  def object_name(%{schema: schema}, object) do
     name = Pax.Util.Introspection.name_from_struct(schema)
 
     case schema.__schema__(:primary_key) do
@@ -178,23 +169,23 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def cast(callback_module, %{schema: schema} = opts, nil, params, fields) do
+  def cast(%{schema: schema} = opts, nil, params, fields) do
     # Cast with a default/empty schema struct, e.g. %User{}
-    cast(callback_module, opts, struct(schema), params, fields)
+    cast(opts, struct(schema), params, fields)
   end
 
-  def cast(_callback_module, _opts, object, params, fields) do
+  def cast(_opts, object, params, fields) do
     field_names = Enum.map(fields, fn %Pax.Field{name: name} -> name end)
     Ecto.Changeset.cast(object, params, field_names)
   end
 
   @impl Pax.Adapter
-  def create_object(_callback_module, %{repo: repo}, _object, changeset) do
+  def create_object(%{repo: repo}, _object, changeset) do
     repo.insert(changeset)
   end
 
   @impl Pax.Adapter
-  def update_object(_callback_module, %{repo: repo}, _object, changeset) do
+  def update_object(%{repo: repo}, _object, changeset) do
     repo.update(changeset)
   end
 end
