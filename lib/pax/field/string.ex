@@ -3,13 +3,24 @@ defmodule Pax.Field.String do
   @behaviour Pax.Field.Type
 
   @impl Pax.Field.Type
-  def init(_opts) do
-    # TODO: add length limit
-    %{}
+  def init(opts) do
+    %{
+      truncate: Keyword.get(opts, :truncate, nil)
+    }
   end
 
   @impl Pax.Field.Type
   def render(_opts, nil), do: nil
+
+  def render(%{truncate: truncate}, value) when not is_nil(truncate) do
+    if String.length(value) > truncate do
+      value
+      |> String.slice(0, truncate - 3)
+      |> Kernel.<>("...")
+    else
+      to_string(value)
+    end
+  end
 
   def render(_opts, value) do
     to_string(value)
