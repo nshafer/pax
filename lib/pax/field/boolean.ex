@@ -4,7 +4,6 @@ defmodule Pax.Field.Boolean do
 
   @impl Pax.Field.Type
   def init(opts) do
-    # TODO: add formatting options: human, scientific, etc
     %{
       true: Keyword.get(opts, true, "True"),
       false: Keyword.get(opts, false, "False")

@@ -6,14 +6,14 @@ defmodule Pax.Field.Float do
   def init(opts) do
     # TODO: add formatting options: human, scientific, etc
     %{
-      round: Keyword.get(opts, :round, 5)
+      round: Keyword.get(opts, :round, nil)
     }
   end
 
   @impl Pax.Field.Type
   def render(_opts, nil), do: nil
 
-  def render(%{round: round}, value) do
+  def render(%{round: round}, value) when not is_nil(round) do
     value
     |> Float.round(round)
     |> Float.to_string()
