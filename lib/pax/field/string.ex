@@ -15,8 +15,8 @@ defmodule Pax.Field.String do
   def render(%{truncate: truncate}, value) when not is_nil(truncate) do
     if String.length(value) > truncate do
       value
-      |> String.slice(0, truncate - 3)
-      |> Kernel.<>("...")
+      |> String.slice(0, truncate - 1)
+      |> Kernel.<>("…")
     else
       to_string(value)
     end
