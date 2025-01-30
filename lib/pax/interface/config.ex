@@ -35,9 +35,9 @@ defmodule Pax.Interface.Config do
   If not given, will introspect from the Adapter.
 
   Valid values:
-  * `nil` - The default object name.
   * `string` - A string value.
-  * `function` - A function that takes the object and the socket and returns a string.
+  * `function` - A function that takes the object and the socket and returns a string. If the function returns `nil`,
+    then the object name will be introspected from the Adapter.
 
   ### `index_path`
 
@@ -245,8 +245,7 @@ defmodule Pax.Interface.Config do
   @config_spec %{
     singular_name: [:string, {:function, 1, :string}],
     plural_name: [:string, {:function, 1, :string}],
-    # TODO: don't allow `nil`?
-    object_name: [nil, :string, {:function, 2, [nil, :string]}],
+    object_name: [:string, {:function, 2, [nil, :string]}],
     index_path: [:string, {:function, 1, :string}],
     new_path: [:string, {:function, 1, :string}],
     # TODO: should this only allow a function?

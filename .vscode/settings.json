@@ -5,6 +5,7 @@
         "fieldset",
         "Fieldsets",
         "fieldspec",
-        "fieldspecs"
+        "fieldspecs",
+        "pluginspec"
     ]
 }

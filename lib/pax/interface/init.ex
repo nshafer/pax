@@ -90,6 +90,7 @@ defmodule Pax.Interface.Init do
 
   def init_object_name(config, adapter, object, socket) do
     case Config.fetch(config, :object_name, [object, socket]) do
+      {:ok, nil} -> Pax.Adapter.object_name(adapter, object)
       {:ok, value} -> value
       :error -> Pax.Adapter.object_name(adapter, object)
     end
