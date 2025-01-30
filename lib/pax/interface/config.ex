@@ -84,7 +84,6 @@ defmodule Pax.Interface.Config do
   and no edit page is available.
 
   Valid values:
-  * `string` - A string path.
   * `function` - A function that takes the object and the socket and returns a string.
 
   ### `edit_path`
@@ -105,7 +104,6 @@ defmodule Pax.Interface.Config do
   straight to the edit page of each object.
 
   Valid values:
-  * `string` - A string path.
   * `function` - A function that takes the object and the socket and returns a string.
 
   ### `index_fields`
@@ -248,10 +246,8 @@ defmodule Pax.Interface.Config do
     object_name: [:string, {:function, 2, [nil, :string]}],
     index_path: [:string, {:function, 1, :string}],
     new_path: [:string, {:function, 1, :string}],
-    # TODO: should this only allow a function?
-    show_path: [:string, {:function, 2, :string}],
-    # TODO: should this only allow a function?
-    edit_path: [:string, {:function, 2, :string}],
+    show_path: {:function, 2, :string},
+    edit_path: {:function, 2, :string},
     index_fields: [:list, {:function, 1, :list}],
     fieldsets: [:list, {:function, 1, :list}],
     lookup: {:function, 3, :map},
