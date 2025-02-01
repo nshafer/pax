@@ -351,121 +351,123 @@ defmodule Pax.ConfigTest do
     end
 
     test "raises an error when a value is not of the correct type" do
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: nil}, %{foo: "nil"}) end
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: :atom}, %{foo: "bar"}) end
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: :string}, %{foo: :bar}) end
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: :boolean}, %{foo: "true"}) end
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: :integer}, %{foo: "123"}) end
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: :float}, %{foo: "3.14"}) end
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: :tuple}, %{foo: [1, 2, 3]}) end
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: :list}, %{foo: {1, 2, 3}}) end
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: :map}, %{foo: [foo: :bar]}) end
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: :module}, %{foo: "Pax"}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: nil}, %{foo: "nil"}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: :atom}, %{foo: "bar"}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: :string}, %{foo: :bar}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: :boolean}, %{foo: "true"}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: :integer}, %{foo: "123"}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: :float}, %{foo: "3.14"}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: :tuple}, %{foo: [1, 2, 3]}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: :list}, %{foo: {1, 2, 3}}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: :map}, %{foo: [foo: :bar]}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: :module}, %{foo: "Pax"}) end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: :struct}, %{foo: %{field: "value"}})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: {:struct, TestStruct}}, %{foo: %Date{year: 2024, month: 01, day: 01}})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: :date}, %{foo: ~T[12:34:56]}) end
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: :time}, %{foo: ~D[2024-08-31]}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: :date}, %{foo: ~T[12:34:56]}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: :time}, %{foo: ~D[2024-08-31]}) end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: :naive_datetime}, %{foo: ~U[2024-08-31 12:34:56Z]})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: :datetime}, %{foo: ~N[2024-08-31 12:34:56]})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: :uri}, %{foo: "not a uri"}) end
+      assert_raise Pax.Config.TypeError, fn -> Config.validate!(%{foo: :uri}, %{foo: "not a uri"}) end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: :function}, %{foo: :not_a_function})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: {:function, 2}}, %{foo: :not_a_function})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: {:function, :atom}}, %{foo: :not_a_function})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: {:function, [:atom, :string]}}, %{foo: :not_a_function})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: {:function, 2, :boolean}}, %{foo: :not_a_function})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: {:function, 2, [:boolean, :integer]}}, %{foo: :not_a_function})
       end
     end
 
     test "raises an error when value doesn't match any types" do
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn -> Config.validate!(%{foo: [nil, :atom]}, %{foo: 42}) end
+      assert_raise Pax.Config.TypeError, fn ->
+        Config.validate!(%{foo: [nil, :atom]}, %{foo: 42})
+      end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [:string, :boolean]}, %{foo: 42})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [:integer, :float]}, %{foo: "42"})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [:tuple, :list]}, %{foo: %{1 => 2}})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [:map, :module]}, %{foo: [1, 2, 3]})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [:struct, nil]}, %{foo: "not a struct"})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [:date, :time]}, %{foo: ~U[2024-08-31 12:34:56Z]})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [:naive_datetime, :datetime]}, %{foo: ~T[12:34:56]})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [:uri, :string]}, %{foo: 123})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [:function, :atom]}, %{foo: 42})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [{:function, 1}, :atom]}, %{foo: fn -> :ok end})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [{:function, :atom}, :atom]}, %{foo: 42})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [{:function, 1, :atom}, :atom]}, %{foo: fn -> 42 end})
       end
 
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: [{:function, 1, [:atom, nil]}, :atom]}, %{foo: 42})
       end
     end
 
     test "raises when recursive spec given in data when none expected" do
-      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+      assert_raise Pax.Config.TypeError, fn ->
         Config.validate!(%{foo: :atom}, %{foo: %{bar: 5}})
       end
     end

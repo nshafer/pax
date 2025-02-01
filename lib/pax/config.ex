@@ -116,8 +116,6 @@ defmodule Pax.Config do
 
   """
 
-  # TODO: make the error messages much easier to read by dev that is unfamiliar with this module
-
   @validate_config_spec Application.compile_env(:pax, :validate_config_spec, false)
 
   @valid_spec_types ~w(
@@ -223,13 +221,7 @@ defmodule Pax.Config do
           end
 
         {:ok, allowed_type_or_types} ->
-          case validate_value_type(key, value, allowed_type_or_types) do
-            {:ok, type} ->
-              {key, {type, value}}
-
-            {:error, reason} ->
-              raise Pax.ConfigError, reason
-          end
+          {key, {validate_value_type!(key, value, allowed_type_or_types), value}}
 
         :error ->
           raise Pax.ConfigError, "invalid key #{key_path(stack, key)} in config"
@@ -264,12 +256,6 @@ defmodule Pax.Config do
   defp validate_spec_key!(key) do
     unless is_atom(key) do
       raise Pax.Config.SpecError, "invalid key '#{inspect(key)}` in spec, must be an atom"
-    end
-  end
-
-  defp validate_spec_arity!(arity) do
-    unless is_integer(arity) and arity >= 0 do
-      raise Pax.Config.SpecError, "invalid arity '#{inspect(arity)}` in spec for function"
     end
   end
 
@@ -315,24 +301,26 @@ defmodule Pax.Config do
     raise Pax.Config.SpecError, "invalid type '#{inspect(type)}` in spec"
   end
 
-  # validate the given value against a list of allowed types, returning the first type to match
-  defp validate_value_type(key, value, allowed_types) when is_list(allowed_types) do
-    case Enum.find(allowed_types, :nomatch, &type_match?(value, &1)) do
-      :nomatch ->
-        {:error,
-         "invalid value for key #{inspect(key)}, must be one of #{inspect(allowed_types)} but got '#{inspect(value)}'"}
+  defp validate_spec_arity!(arity) do
+    unless is_integer(arity) and arity >= 0 do
+      raise Pax.Config.SpecError, "invalid arity '#{inspect(arity)}` in spec for function"
+    end
+  end
 
-      type ->
-        {:ok, type}
+  # validate the given value against a list of allowed types, returning the first type to match
+  defp validate_value_type!(key, value, allowed_types) when is_list(allowed_types) do
+    case Enum.find(allowed_types, :no_match, &type_match?(value, &1)) do
+      :no_match -> raise Pax.Config.TypeError, key: key, value: value, types: allowed_types
+      type -> type
     end
   end
 
   # validate the given value against a single allowed type
-  defp validate_value_type(key, value, allowed_type) do
+  defp validate_value_type!(key, value, allowed_type) do
     if type_match?(value, allowed_type) do
-      {:ok, allowed_type}
+      allowed_type
     else
-      {:error, "invalid value for key #{inspect(key)}, must be #{inspect(allowed_type)} but got '#{inspect(value)}'"}
+      raise Pax.Config.TypeError, key: key, value: value, type: allowed_type
     end
   end
 
@@ -450,7 +438,7 @@ defmodule Pax.Config do
     fetch!(Map.fetch!(config, key), rest, args)
   end
 
-  def fetch!(config, key, args) when is_map(config) do
+  def fetch!(config, key, args) when is_atom(key) and is_map(config) do
     case Map.fetch!(config, key) do
       {:function, value} ->
         value.()
@@ -465,20 +453,20 @@ defmodule Pax.Config do
       {{:function, return_type}, value} when is_atom(return_type) or is_list(return_type) ->
         value
         |> apply(args)
-        |> check_return(return_type)
+        |> check_value_type!(return_type, key, true)
 
       {{:function, arity, return_type_or_types}, value}
       when is_integer(arity) and (is_atom(return_type_or_types) or is_list(return_type_or_types)) ->
         if length(args) == arity do
           value
           |> apply(args)
-          |> check_return(return_type_or_types)
+          |> check_value_type!(return_type_or_types, key, true)
         else
           raise Pax.Config.ArityError, "function for #{inspect(key)} requires #{arity} args, but got #{length(args)}"
         end
 
       {type, value} ->
-        check_return(value, type)
+        check_value_type!(value, type, key)
 
       _ ->
         raise ArgumentError, "invalid config data for key '#{inspect(key)}', should be a map with :value and :type"
@@ -514,30 +502,33 @@ defmodule Pax.Config do
   @spec get(config :: map(), key_or_keys :: atom | nonempty_list(atom), args :: list(), default :: any()) :: any()
   def get(config, key_or_keys, args \\ [], default \\ nil)
 
-  def get(config, key_or_keys, args, default) when is_map(config) and is_list(args) do
+  def get(config, key_or_keys, args, default)
+      when (is_list(key_or_keys) or is_atom(key_or_keys)) and is_map(config) and is_list(args) do
     case fetch(config, key_or_keys, args) do
       {:ok, value} -> value
       :error -> default
     end
   end
 
-  def get(config, key_or_keys, default, nil) when is_map(config) do
+  def get(config, key_or_keys, default, nil) when (is_list(key_or_keys) or is_atom(key_or_keys)) and is_map(config) do
     get(config, key_or_keys, [], default)
   end
 
-  defp check_return(value, types) when is_list(types) do
+  defp check_value_type!(value, types, key, is_return \\ false)
+
+  defp check_value_type!(value, types, key, is_return) when is_list(types) do
     if Enum.any?(types, &type_match?(value, &1)) do
       value
     else
-      raise Pax.Config.TypeError, "invalid type for value '#{inspect(value)}', should be one of #{inspect(types)}"
+      raise Pax.Config.TypeError, key: key, value: value, types: types, is_return: is_return
     end
   end
 
-  defp check_return(value, type) do
+  defp check_value_type!(value, type, key, is_return) do
     if type_match?(value, type) do
       value
     else
-      raise Pax.Config.TypeError, "invalid type for value '#{inspect(value)}', should be #{inspect(type)}"
+      raise Pax.Config.TypeError, key: key, value: value, type: type, is_return: is_return
     end
   end
 end
