@@ -17,6 +17,9 @@ defmodule Pax.Plugins.Pagination do
   end
 
   @impl true
+  def config_key(), do: :pagination
+
+  @impl true
   def config_spec() do
     %{
       objects_per_page: [:integer, {:function, 1, :integer}]
@@ -26,7 +29,7 @@ defmodule Pax.Plugins.Pagination do
   @impl true
   def merge_config(opts, config, socket) do
     %{
-      objects_per_page: Pax.Config.get(config, :objects_per_page, [socket], opts[:objects_per_page])
+      objects_per_page: Pax.Config.get(config, :objects_per_page, [socket], opts.objects_per_page)
     }
   end
 

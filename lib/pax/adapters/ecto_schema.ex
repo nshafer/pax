@@ -53,11 +53,34 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def merge_config(%{repo: repo, schema: schema}, config, socket) do
-    %{
-      repo: Pax.Config.get(config, :repo, [socket], repo),
-      schema: Pax.Config.get(config, :schema, [socket], schema)
+  def merge_config(opts, config, socket) do
+    opts = %{
+      repo: Pax.Config.get(config, :repo, [socket], opts.repo),
+      schema: Pax.Config.get(config, :schema, [socket], opts.schema)
     }
+
+    # Ensure that the repo and schema are provided either via init opts or config
+    if opts.repo && opts.schema do
+      opts
+    else
+      raise """
+      Missing required configuration for EctoSchema adapter. You must provide a `repo` and `schema` in the config.
+
+      Examples:
+          def pax_adapter(_socket) do
+            {Pax.Adapters.EctoSchema, repo: MyApp.Repo, schema: MyApp.MyContext.MySchema}
+          end
+
+          def pax_config(socket) do
+            [
+              adapter: [
+                repo: MyApp.Repo,
+                schema: MyApp.MyContext.MySchema
+              ]
+            ]
+          end
+      """
+    end
   end
 
   @impl Pax.Adapter

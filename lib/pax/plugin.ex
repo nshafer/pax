@@ -4,7 +4,7 @@ defmodule Pax.Plugin do
   behavior that all Plugins must implement. However, most plugins will `use Pax.Interface.Plugin` or
   `use Pax.Admin.Plugin` instead of implementing this behaviour directly.
   """
-  defstruct [:module, :type, :opts]
+  defstruct [:module, :type, :config_key, :opts]
 
   @typedoc "A Phoenix.LiveView socket"
   @type socket :: Phoenix.LiveView.Socket.t()
@@ -14,6 +14,9 @@ defmodule Pax.Plugin do
 
   @typedoc "The plugin struct"
   @type t :: %__MODULE__{module: module(), type: atom(), opts: map()}
+
+  @doc "A function that returns the key for the plugin's configuration. Must be unique."
+  @callback config_key() :: atom()
 
   @doc "A function that returns a valid Pax.Config spec for configuration keys and types accepted by the plugin."
   @callback config_spec() :: map()
@@ -41,8 +44,13 @@ defmodule Pax.Plugin do
     %__MODULE__{
       module: plugin_module,
       type: plugin_module.type(),
+      config_key: plugin_module.config_key(),
       opts: plugin_module.init(callback_module, opts)
     }
+  end
+
+  def config_key(%__MODULE__{} = plugin) do
+    plugin.module.config_key()
   end
 
   def config_spec(%__MODULE__{} = plugin) do

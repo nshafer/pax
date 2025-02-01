@@ -13,7 +13,8 @@ defmodule Pax.Interface.Init do
   end
 
   def merge_adapter_config(adapter, config, socket) do
-    Pax.Adapter.merge_config(adapter, config, socket)
+    adapter_config = Map.get(config, :adapter, %{})
+    Pax.Adapter.merge_config(adapter, adapter_config, socket)
   end
 
   def init_plugins(module, socket) do
@@ -23,7 +24,12 @@ defmodule Pax.Interface.Init do
   end
 
   def merge_plugins_config(plugins, config, socket) do
-    Enum.map(plugins, fn plugin -> Pax.Plugin.merge_config(plugin, config, socket) end)
+    plugins_config = Map.get(config, :plugins, %{})
+
+    Enum.map(plugins, fn plugin ->
+      plugin_config = Map.get(plugins_config, plugin.config_key, %{})
+      Pax.Plugin.merge_config(plugin, plugin_config, socket)
+    end)
   end
 
   defp get_plugins(module, socket) do
@@ -36,27 +42,25 @@ defmodule Pax.Interface.Init do
   def init_config_spec(adapter, plugins) do
     config_spec = Pax.Interface.Config.config_spec()
     adapter_config_spec = Pax.Adapter.config_spec(adapter)
+    plugins_config_spec = init_plugins_config_spec(plugins)
 
-    config_spec =
-      Map.merge(config_spec, adapter_config_spec, fn key, val1, val2 ->
-        unless val1 == val2 do
-          raise ArgumentError,
-                "adapter defined duplicate config spec for #{inspect(key)}, " <>
-                  "already defined as #{inspect(val1)}"
-        end
-      end)
+    config_spec
+    |> Map.put(:adapter, adapter_config_spec)
+    |> Map.put(:plugins, plugins_config_spec)
+  end
 
-    for plugin <- plugins, reduce: config_spec do
-      config_spec ->
+  def init_plugins_config_spec(plugins) do
+    for plugin <- plugins, reduce: %{} do
+      plugins_config_spec ->
         plugin_config_spec = Pax.Plugin.config_spec(plugin)
 
-        Map.merge(config_spec, plugin_config_spec, fn key, val1, val2 ->
-          unless val1 == val2 do
-            raise ArgumentError,
-                  "plugin #{inspect(plugin)} defined duplicate config spec for #{inspect(key)}, " <>
-                    "already defined as #{inspect(val1)}"
-          end
-        end)
+        if Map.has_key?(plugins_config_spec, plugin.config_key) do
+          raise ArgumentError,
+                "plugin #{inspect(plugin)} defined duplicate config spec for #{inspect(plugin.config_key)}, " <>
+                  "already defined as #{inspect(Map.get(plugins_config_spec, plugin.config_key))}"
+        end
+
+        Map.put(plugins_config_spec, plugin.config_key, plugin_config_spec)
     end
   end
 
