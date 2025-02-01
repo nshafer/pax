@@ -44,8 +44,8 @@ defmodule Pax.Config do
 
   Any extra keys in the config data that are not expected will return an error.
 
-  A map of validated configuration is returned, with the same keys, pointing to a map of `%{value: value, type: type}`
-  based on the detected type.
+  A map of validated configuration is returned that can be used with `fetch/3`, `fetch!/3` and `get/4` to resolve the
+  configuration values.
 
   ## Nested Configuration
 
@@ -69,8 +69,8 @@ defmodule Pax.Config do
       ...> {:ok, _config} = Pax.Config.validate(spec, data)
       {:ok,
         %{
-          foo: %{type: :integer, value: 42},
-          bar: %{baz: %{type: :string, value: "hello"}}
+          foo: {:integer, 42},
+          bar: %{baz: {:string, "hello"}}
         }}
 
   To fetch the configured value of nested keys, you can use the `fetch/3`, `fetch!/3` and `get/4` functions with a
@@ -139,9 +139,8 @@ defmodule Pax.Config do
 
   If the `spec` has has any errors then a `Pax.Config.SpecError` will be raised.
 
-  If the `data` does conform to the spec, then `{:ok, config}` will be returned, where `config` is a map using the same
-  keys as the spec, but with a map of `%{value: value, type: type}` based on the detected type. This will be used by
-  the `fetch/3` and `get/4` functions to resolve the function with the detected type.
+  If the `data` does conform to the spec, then `{:ok, config}` will be returned, where `config` is a map of
+  validated configuration that can be used with the `fetch/3`, `fetch!/3` and `get/4` functions to resolve the value.
 
   If the data not not conform to the spec, then `{:error, reason}` will be returned, where `reason` is a string
   describing the error.
@@ -173,9 +172,8 @@ defmodule Pax.Config do
   The `spec` is a map of expected keys and the type (or types) that the data should provide. Please see
   [Supported Types](`m:Pax.Config#module-supported-types`) for the list of allowed types.
 
-  If the `data` does conform to the spec, then `config` will be returned, where `config` is a map using the same keys
-  as the spec, but with a map of `%{value: value, type: type}` based on the detected type. This will be used by the
-  `fetch/3` and `get/4` functions to resolve the function with the detected type.
+  If the `data` does conform to the spec, then `{:ok, config}` will be returned, where `config` is a map of
+  validated configuration that can be used with the `fetch/3`, `fetch!/3` and `get/4` functions to resolve the value.
 
   Only keys that are given in the data will be returned in the config. If the spec has a key that is not in the data,
   then it will not be in the config.
@@ -227,7 +225,7 @@ defmodule Pax.Config do
         {:ok, allowed_type_or_types} ->
           case validate_value_type(key, value, allowed_type_or_types) do
             {:ok, type} ->
-              {key, %{value: value, type: type}}
+              {key, {type, value}}
 
             {:error, reason} ->
               raise Pax.ConfigError, reason
@@ -454,22 +452,22 @@ defmodule Pax.Config do
 
   def fetch!(config, key, args) when is_map(config) do
     case Map.fetch!(config, key) do
-      %{value: value, type: :function} ->
+      {:function, value} ->
         value.()
 
-      %{value: value, type: {:function, arity}} when is_integer(arity) ->
+      {{:function, arity}, value} when is_integer(arity) ->
         if length(args) == arity do
           apply(value, args)
         else
           raise Pax.Config.ArityError, "function for #{inspect(key)} requires #{arity} args, but got #{length(args)}"
         end
 
-      %{value: value, type: {:function, return_type}} when is_atom(return_type) or is_list(return_type) ->
+      {{:function, return_type}, value} when is_atom(return_type) or is_list(return_type) ->
         value
         |> apply(args)
         |> check_return(return_type)
 
-      %{value: value, type: {:function, arity, return_type_or_types}}
+      {{:function, arity, return_type_or_types}, value}
       when is_integer(arity) and (is_atom(return_type_or_types) or is_list(return_type_or_types)) ->
         if length(args) == arity do
           value
@@ -479,7 +477,7 @@ defmodule Pax.Config do
           raise Pax.Config.ArityError, "function for #{inspect(key)} requires #{arity} args, but got #{length(args)}"
         end
 
-      %{value: value, type: type} ->
+      {type, value} ->
         check_return(value, type)
 
       _ ->

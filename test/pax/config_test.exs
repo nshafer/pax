@@ -182,137 +182,137 @@ defmodule Pax.ConfigTest do
   describe "validate/2 (config data)" do
     test "accepts basic types with data" do
       assert {:ok, config} = Config.validate(%{foo: nil}, %{foo: nil})
-      assert config[:foo] == %{value: nil, type: nil}
+      assert config[:foo] == {nil, nil}
       assert {:ok, config} = Config.validate(%{foo: :atom}, %{foo: :foo})
-      assert config[:foo] == %{value: :foo, type: :atom}
+      assert config[:foo] == {:atom, :foo}
       assert {:ok, config} = Config.validate(%{foo: :string}, %{foo: "bar"})
-      assert config[:foo] == %{value: "bar", type: :string}
+      assert config[:foo] == {:string, "bar"}
       assert {:ok, config} = Config.validate(%{foo: :boolean}, %{foo: true})
-      assert config[:foo] == %{value: true, type: :boolean}
+      assert config[:foo] == {:boolean, true}
       assert {:ok, config} = Config.validate(%{foo: :integer}, %{foo: 42})
-      assert config[:foo] == %{value: 42, type: :integer}
+      assert config[:foo] == {:integer, 42}
       assert {:ok, config} = Config.validate(%{foo: :float}, %{foo: 3.14})
-      assert config[:foo] == %{value: 3.14, type: :float}
+      assert config[:foo] == {:float, 3.14}
       assert {:ok, config} = Config.validate(%{foo: :tuple}, %{foo: {1, 2, 3}})
-      assert config[:foo] == %{value: {1, 2, 3}, type: :tuple}
+      assert config[:foo] == {:tuple, {1, 2, 3}}
       assert {:ok, config} = Config.validate(%{foo: :list}, %{foo: [1, 2, 3]})
-      assert config[:foo] == %{value: [1, 2, 3], type: :list}
+      assert config[:foo] == {:list, [1, 2, 3]}
       assert {:ok, config} = Config.validate(%{foo: :map}, %{foo: %{foo: "bar"}})
-      assert config[:foo] == %{value: %{foo: "bar"}, type: :map}
+      assert config[:foo] == {:map, %{foo: "bar"}}
       assert {:ok, config} = Config.validate(%{foo: :module}, %{foo: Pax.Config})
-      assert config[:foo] == %{value: Pax.Config, type: :module}
+      assert config[:foo] == {:module, Pax.Config}
       assert {:ok, config} = Config.validate(%{foo: :struct}, %{foo: %TestStruct{field: "value"}})
-      assert config[:foo] == %{value: %TestStruct{field: "value"}, type: :struct}
+      assert config[:foo] == {:struct, %TestStruct{field: "value"}}
       assert {:ok, config} = Config.validate(%{foo: {:struct, TestStruct}}, %{foo: %TestStruct{field: "value"}})
-      assert config[:foo] == %{value: %TestStruct{field: "value"}, type: {:struct, TestStruct}}
+      assert config[:foo] == {{:struct, TestStruct}, %TestStruct{field: "value"}}
       assert {:ok, config} = Config.validate(%{foo: :date}, %{foo: ~D[2024-08-31]})
-      assert config[:foo] == %{value: ~D[2024-08-31], type: :date}
+      assert config[:foo] == {:date, ~D[2024-08-31]}
       assert {:ok, config} = Config.validate(%{foo: :time}, %{foo: ~T[12:34:56]})
-      assert config[:foo] == %{value: ~T[12:34:56], type: :time}
+      assert config[:foo] == {:time, ~T[12:34:56]}
       assert {:ok, config} = Config.validate(%{foo: :naive_datetime}, %{foo: ~N[2024-08-31 12:34:56]})
-      assert config[:foo] == %{value: ~N[2024-08-31 12:34:56], type: :naive_datetime}
+      assert config[:foo] == {:naive_datetime, ~N[2024-08-31 12:34:56]}
       assert {:ok, config} = Config.validate(%{foo: :datetime}, %{foo: ~U[2024-08-31 12:34:56Z]})
-      assert config[:foo] == %{value: ~U[2024-08-31 12:34:56Z], type: :datetime}
+      assert config[:foo] == {:datetime, ~U[2024-08-31 12:34:56Z]}
       assert {:ok, config} = Config.validate(%{foo: :uri}, %{foo: URI.parse("http://example.com")})
-      assert config[:foo] == %{value: URI.parse("http://example.com"), type: :uri}
+      assert config[:foo] == {:uri, URI.parse("http://example.com")}
       assert {:ok, config} = Config.validate(%{foo: :function}, data = %{foo: fn -> :ok end})
-      assert config[:foo] == %{value: data[:foo], type: :function}
+      assert config[:foo] == {:function, data[:foo]}
       assert {:ok, config} = Config.validate(%{foo: {:function, 2}}, data = %{foo: fn a, b -> a + b end})
-      assert config[:foo] == %{value: data[:foo], type: {:function, 2}}
+      assert config[:foo] == {{:function, 2}, data[:foo]}
       assert {:ok, config} = Config.validate(%{foo: {:function, :atom}}, data = %{foo: fn -> :ok end})
-      assert config[:foo] == %{value: data[:foo], type: {:function, :atom}}
+      assert config[:foo] == {{:function, :atom}, data[:foo]}
       assert {:ok, config} = Config.validate(%{foo: {:function, [:atom, :string]}}, data = %{foo: fn -> :ok end})
-      assert config[:foo] == %{value: data[:foo], type: {:function, [:atom, :string]}}
+      assert config[:foo] == {{:function, [:atom, :string]}, data[:foo]}
       assert {:ok, config} = Config.validate(%{foo: {:function, 2, :boolean}}, data = %{foo: fn a, b -> a == b end})
-      assert config[:foo] == %{value: data[:foo], type: {:function, 2, :boolean}}
+      assert config[:foo] == {{:function, 2, :boolean}, data[:foo]}
       assert {:ok, config} = Config.validate(%{foo: {:function, 2, [:atom, nil]}}, data = %{foo: fn a, b -> a || b end})
-      assert config[:foo] == %{value: data[:foo], type: {:function, 2, [:atom, nil]}}
+      assert config[:foo] == {{:function, 2, [:atom, nil]}, data[:foo]}
     end
 
     test "accepts lists of types with data" do
       assert {:ok, config} = Config.validate(%{foo: [nil, :atom]}, %{foo: nil})
-      assert config[:foo] == %{value: nil, type: nil}
+      assert config[:foo] == {nil, nil}
       assert {:ok, config} = Config.validate(%{foo: [nil, :atom]}, %{foo: :bar})
-      assert config[:foo] == %{value: :bar, type: :atom}
+      assert config[:foo] == {:atom, :bar}
 
       assert {:ok, config} = Config.validate(%{foo: [:string, :boolean]}, %{foo: "bar"})
-      assert config[:foo] == %{value: "bar", type: :string}
+      assert config[:foo] == {:string, "bar"}
       assert {:ok, config} = Config.validate(%{foo: [:string, :boolean]}, %{foo: true})
-      assert config[:foo] == %{value: true, type: :boolean}
+      assert config[:foo] == {:boolean, true}
 
       assert {:ok, config} = Config.validate(%{foo: [:integer, :float]}, %{foo: 42})
-      assert config[:foo] == %{value: 42, type: :integer}
+      assert config[:foo] == {:integer, 42}
       assert {:ok, config} = Config.validate(%{foo: [:integer, :float]}, %{foo: 3.14})
-      assert config[:foo] == %{value: 3.14, type: :float}
+      assert config[:foo] == {:float, 3.14}
 
       assert {:ok, config} = Config.validate(%{foo: [:tuple, :list]}, %{foo: {1, 2, 3}})
-      assert config[:foo] == %{value: {1, 2, 3}, type: :tuple}
+      assert config[:foo] == {:tuple, {1, 2, 3}}
       assert {:ok, config} = Config.validate(%{foo: [:tuple, :list]}, %{foo: [1, 2, 3]})
-      assert config[:foo] == %{value: [1, 2, 3], type: :list}
+      assert config[:foo] == {:list, [1, 2, 3]}
 
       assert {:ok, config} = Config.validate(%{foo: [:map, :module]}, %{foo: %{foo: "bar"}})
-      assert config[:foo] == %{value: %{foo: "bar"}, type: :map}
+      assert config[:foo] == {:map, %{foo: "bar"}}
       assert {:ok, config} = Config.validate(%{foo: [:map, :module]}, %{foo: Pax.Config})
-      assert config[:foo] == %{value: Pax.Config, type: :module}
+      assert config[:foo] == {:module, Pax.Config}
 
       assert {:ok, config} = Config.validate(%{foo: [:struct, nil]}, %{foo: %TestStruct{field: "value"}})
-      assert config[:foo] == %{value: %TestStruct{field: "value"}, type: :struct}
+      assert config[:foo] == {:struct, %TestStruct{field: "value"}}
       assert {:ok, config} = Config.validate(%{foo: [:struct, nil]}, %{foo: nil})
-      assert config[:foo] == %{value: nil, type: nil}
+      assert config[:foo] == {nil, nil}
 
       assert {:ok, config} = Config.validate(%{foo: [{:struct, TestStruct}, nil]}, %{foo: %TestStruct{field: "value"}})
-      assert config[:foo] == %{value: %TestStruct{field: "value"}, type: {:struct, TestStruct}}
+      assert config[:foo] == {{:struct, TestStruct}, %TestStruct{field: "value"}}
       assert {:ok, config} = Config.validate(%{foo: [{:struct, TestStruct}, nil]}, %{foo: nil})
-      assert config[:foo] == %{value: nil, type: nil}
+      assert config[:foo] == {nil, nil}
 
       assert {:ok, config} = Config.validate(%{foo: [:date, :time]}, %{foo: ~D[2024-08-31]})
-      assert config[:foo] == %{value: ~D[2024-08-31], type: :date}
+      assert config[:foo] == {:date, ~D[2024-08-31]}
       assert {:ok, config} = Config.validate(%{foo: [:date, :time]}, %{foo: ~T[12:34:56]})
-      assert config[:foo] == %{value: ~T[12:34:56], type: :time}
+      assert config[:foo] == {:time, ~T[12:34:56]}
 
       assert {:ok, config} = Config.validate(%{foo: [:naive_datetime, :datetime]}, %{foo: ~N[2024-08-31 12:34:56]})
-      assert config[:foo] == %{value: ~N[2024-08-31 12:34:56], type: :naive_datetime}
+      assert config[:foo] == {:naive_datetime, ~N[2024-08-31 12:34:56]}
       assert {:ok, config} = Config.validate(%{foo: [:naive_datetime, :datetime]}, %{foo: ~U[2024-08-31 12:34:56Z]})
-      assert config[:foo] == %{value: ~U[2024-08-31 12:34:56Z], type: :datetime}
+      assert config[:foo] == {:datetime, ~U[2024-08-31 12:34:56Z]}
 
       assert {:ok, config} = Config.validate(%{foo: [:uri, :string]}, %{foo: URI.parse("http://example.com")})
-      assert config[:foo] == %{value: URI.parse("http://example.com"), type: :uri}
+      assert config[:foo] == {:uri, URI.parse("http://example.com")}
       assert {:ok, config} = Config.validate(%{foo: [:uri, :string]}, %{foo: "http://example.com"})
-      assert config[:foo] == %{value: "http://example.com", type: :string}
+      assert config[:foo] == {:string, "http://example.com"}
 
       assert {:ok, config} = Config.validate(%{foo: [:atom, :function]}, %{foo: :bar})
-      assert config[:foo] == %{value: :bar, type: :atom}
+      assert config[:foo] == {:atom, :bar}
       assert {:ok, config} = Config.validate(%{foo: [:atom, :function]}, data = %{foo: fn -> :ok end})
-      assert config[:foo] == %{value: data[:foo], type: :function}
+      assert config[:foo] == {:function, data[:foo]}
 
       assert {:ok, config} = Config.validate(%{foo: [:string, {:function, 1}]}, %{foo: "bar"})
-      assert config[:foo] == %{value: "bar", type: :string}
+      assert config[:foo] == {:string, "bar"}
       assert {:ok, config} = Config.validate(%{foo: [:string, {:function, 1}]}, data = %{foo: fn a -> to_string(a) end})
-      assert config[:foo] == %{value: data[:foo], type: {:function, 1}}
+      assert config[:foo] == {{:function, 1}, data[:foo]}
 
       assert {:ok, config} = Config.validate(%{foo: [:boolean, {:function, :boolean}]}, %{foo: true})
-      assert config[:foo] == %{value: true, type: :boolean}
+      assert config[:foo] == {:boolean, true}
       assert {:ok, config} = Config.validate(%{foo: [:boolean, {:function, :boolean}]}, data = %{foo: fn _ -> true end})
-      assert config[:foo] == %{value: data[:foo], type: {:function, :boolean}}
+      assert config[:foo] == {{:function, :boolean}, data[:foo]}
 
       assert {:ok, config} = Config.validate(%{foo: [:integer, {:function, 1, :integer}]}, %{foo: 42})
-      assert config[:foo] == %{value: 42, type: :integer}
+      assert config[:foo] == {:integer, 42}
       data = %{foo: fn a -> String.to_integer(a) end}
       assert {:ok, config} = Config.validate(%{foo: [:integer, {:function, 1, :integer}]}, data)
-      assert config[:foo] == %{value: data[:foo], type: {:function, 1, :integer}}
+      assert config[:foo] == {{:function, 1, :integer}, data[:foo]}
 
       assert {:ok, config} = Config.validate(%{foo: [:float, nil, {:function, 1, [:float, nil]}]}, %{foo: 3.14})
-      assert config[:foo] == %{value: 3.14, type: :float}
+      assert config[:foo] == {:float, 3.14}
       assert {:ok, config} = Config.validate(%{foo: [:float, nil, {:function, 1, [:float, nil]}]}, %{foo: nil})
-      assert config[:foo] == %{value: nil, type: nil}
+      assert config[:foo] == {nil, nil}
       data = %{foo: fn a -> a end}
       assert {:ok, config} = Config.validate(%{foo: [:float, nil, {:function, 1, [:float, nil]}]}, data)
-      assert config[:foo] == %{value: data[:foo], type: {:function, 1, [:float, nil]}}
+      assert config[:foo] == {{:function, 1, [:float, nil]}, data[:foo]}
     end
 
     test "accepts a keyword list as data" do
       assert {:ok, config} = Config.validate(%{foo: :atom}, foo: :foo)
-      assert config[:foo] == %{value: :foo, type: :atom}
+      assert config[:foo] == {:atom, :foo}
     end
 
     test "accepts recursive specs and data" do
@@ -338,7 +338,7 @@ defmodule Pax.ConfigTest do
 
       assert {:ok, config} = Config.validate(spec, data, validate_config_spec: true)
 
-      assert config[:bar][:qux][:quux] == %{value: 42, type: :integer}
+      assert config[:bar][:qux][:quux] == {:integer, 42}
     end
 
     test "raises an error when a key is not in the spec" do
