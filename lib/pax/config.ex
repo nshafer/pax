@@ -47,6 +47,43 @@ defmodule Pax.Config do
   A map of validated configuration is returned, with the same keys, pointing to a map of `%{value: value, type: type}`
   based on the detected type.
 
+  ## Nested Configuration
+
+  The spec can be a map of keys to either types, or another map of keys to types. This allows for nested configuration
+  data.
+
+  For example, you can have a spec like the following, then the data must conform to the spec with the same nesting.
+
+      iex> spec = %{
+      ...>   foo: [:integer, {:function, 1, :integer}],
+      ...>   bar: %{
+      ...>     baz: [:string]
+      ...>   }
+      ...> }
+      ...> data = [
+      ...>   foo: 42,
+      ...>   bar: [
+      ...>     baz: "hello"
+      ...>   ]
+      ...> ]
+      ...> {:ok, _config} = Pax.Config.validate(spec, data)
+      {:ok,
+        %{
+          foo: %{type: :integer, value: 42},
+          bar: %{baz: %{type: :string, value: "hello"}}
+        }}
+
+  To fetch the configured value of nested keys, you can use the `fetch/3`, `fetch!/3` and `get/4` functions with a
+  list of keys, similar to the `get_in/2` function in Elixir.
+
+      iex> spec = %{foo: [:integer, {:function, 1, :integer}], bar: %{:baz => [:string]}}
+      ...> data = [foo: 42, bar: [baz: "hello"]]
+      ...> config = Pax.Config.validate!(spec, data)
+      ...> Pax.Config.fetch(config, :foo)
+      {:ok, 42}
+      ...> Pax.Config.get(config, [:bar, :baz])
+      "hello"
+
   ## Resolving configuration values
 
   Since configuration values can be functions, this module provides a way to call those functions and get the resolved
@@ -55,29 +92,27 @@ defmodule Pax.Config do
   resolve the function. The args are only used if the user supplied an anonymous function as the value for that config
   key.
 
-  For example, if your spec is:
+  For example, if your spec is like the following, then when you fetch the config value for the `:foo` config key, you
+  must pass the argument expected by the function, even if the user hasn't provided a function, and instead just
+  provided a value.
 
-      spec =
-        %{
-          foo: [:integer, {:function, 1, :integer}]
-        }
-
-  Then when you fetch the config value for the `:foo` config key, you must pass the argument expected by the function,
-  even if the user hasn't provided a function, and instead just provided an integer.
-
-      # The user has provided an integer instead of a function returning an integer
-      iex> {:ok, config} = Pax.Config.validate(spec, %{foo: 42}))
-
-      # But when you fetch the value, you must pass the argument expected by the function
-      iex> Pax.Config.fetch(config, :foo, [socket])
-      42
-
-      # This is so if the user provided a function, then fetching the value will be able
-      # to pass that arg to the user-supplied function.
-      iex> data = %{foo: fn socket -> if connected?(socket), do: 1, else: 0 end}
-      iex> {:ok, config} = Pax.Config.validate(spec, data)
-      iex> Pax.Config.fetch(config, :foo, [socket])
-      0
+      iex> spec = %{
+      ...>   foo: [:integer, {:function, 1, :integer}]
+      ...> }
+      ...>
+      ...> # The user has provided an integer instead of a function returning an integer, but when
+      ...> # fetching the value, you still must pass the argument expected by the function
+      ...> data = %{foo: 42}
+      ...> config = Pax.Config.validate!(spec, data)
+      ...> Pax.Config.fetch(config, :foo, [:arg])
+      {:ok, 42}
+      ...>
+      ...> # This is so if the user provided a function, then fetching the value will be able
+      ...> # to pass that arg to the user-supplied function.
+      ...> data = %{foo: fn arg -> if arg == :one, do: 1, else: 0 end}
+      ...> {:ok, config} = Pax.Config.validate(spec, data)
+      ...> Pax.Config.fetch(config, :foo, [:one])
+      {:ok, 1}
 
   """
 
@@ -107,6 +142,9 @@ defmodule Pax.Config do
   If the `data` does conform to the spec, then `{:ok, config}` will be returned, where `config` is a map using the same
   keys as the spec, but with a map of `%{value: value, type: type}` based on the detected type. This will be used by
   the `fetch/3` and `get/4` functions to resolve the function with the detected type.
+
+  If the data not not conform to the spec, then `{:error, reason}` will be returned, where `reason` is a string
+  describing the error.
 
   Only keys that are given in the data will be returned in the config. If the spec has a key that is not in the data,
   then it will not be in the config.
@@ -142,8 +180,17 @@ defmodule Pax.Config do
   Only keys that are given in the data will be returned in the config. If the spec has a key that is not in the data,
   then it will not be in the config.
 
-  a `Pax.ConfigError` will be raised if the provided data has any keys that don't exist in the spec, or they have an
-  invalid type.
+  If the data does not form to the spec, then a `Pax.ConfigError` will be raised.
+
+  ## Options
+
+  - `:validate_config_spec` - Validate the spec itself. This is useful to turn on when developing an adapter or plugin,
+    but should be turned off in production to avoid unnecessary checks. Defaults to `false` unless the application env
+    `:validate_config_spec` is set to `true` in the `:pax` application at compile time. E.g. in "config/dev.exs":
+
+        config :pax, validate_config_spec: true
+
+    If it is changed, you will need to `mix deps.compile --force pax` to recompile pax with the new value.
   """
   @spec validate!(spec :: map(), data :: map() | keyword(), opts :: keyword()) :: map()
   def validate!(spec, data, opts \\ [])
@@ -153,8 +200,30 @@ defmodule Pax.Config do
       validate_spec!(spec)
     end
 
+    do_validate!(spec, data, [], opts)
+  end
+
+  def validate!(spec, data, opts) when is_map(spec) and is_list(data) do
+    validate!(spec, Map.new(data), opts)
+  end
+
+  defp do_validate!(%{} = spec, %{} = data, stack, opts) do
     for {key, value} <- data, into: %{} do
       case Map.fetch(spec, key) do
+        {:ok, %{} = sub_spec} ->
+          case value do
+            value when is_map(value) ->
+              {key, do_validate!(sub_spec, value, [key | stack], opts)}
+
+            value when is_list(value) ->
+              {key, do_validate!(sub_spec, Map.new(value), [key | stack], opts)}
+
+            value ->
+              raise Pax.ConfigError,
+                    "invalid value for key #{key_path(stack, key)}, " <>
+                      "must be a map or a keyword list, but got #{inspect(value)}"
+          end
+
         {:ok, allowed_type_or_types} ->
           case validate_value_type(key, value, allowed_type_or_types) do
             {:ok, type} ->
@@ -165,20 +234,32 @@ defmodule Pax.Config do
           end
 
         :error ->
-          raise Pax.ConfigError, "invalid key #{inspect(key)} in config"
+          raise Pax.ConfigError, "invalid key #{key_path(stack, key)} in config"
       end
     end
   end
 
-  def validate!(spec, data, opts) when is_map(spec) and is_list(data) do
-    validate!(spec, Map.new(data), opts)
+  defp key_path(stack, key) do
+    path =
+      [key | stack]
+      |> Enum.map(&inspect/1)
+      |> Enum.reverse()
+
+    Enum.join(path, "/")
   end
 
   # Validate that the spec is a map of keys (atoms) to either allowed types, or list of allowed types.
   defp validate_spec!(spec) do
     for {key, type} <- spec do
-      validate_spec_key!(key)
-      validate_spec_type!(type)
+      case {key, type} do
+        {key, %{} = sub_spec} ->
+          validate_spec_key!(key)
+          validate_spec!(sub_spec)
+
+        {key, type} ->
+          validate_spec_key!(key)
+          validate_spec_type!(type)
+      end
     end
   end
 
@@ -310,12 +391,16 @@ defmodule Pax.Config do
   defp is_valid_function(_, _, _), do: false
 
   @doc """
-  Fetch a value for a specific `key` from a `config` map.
+  Fetch a value for a specific `key` from a `config` map. Returns `{:ok, value}` if the key is found in the config,
+  otherwise `:error`.
 
   The `config` map must be the result of a call to `validate/3`.
 
-  In the case that a function is allowed in the spec, then the correct args must be passed to this function to resolve
-  the value. If no functions are allowed by the spec, the args can be omitted.
+  Either an individual `key` can be given, or a list of `keys` if the configuration data is nested. See
+  [Nested Configuration](`m:Pax.Config#module-nested-configuration`) for more information.
+
+  In the case that a function is allowed in the spec, then the correct `args` must be passed to this function to
+  resolve the value. If no functions are allowed by the spec, the args can be omitted.
 
   An `ArgumentError` will be raised if the config is not a map with the correct structure, as returned from
   `validate/3`.
@@ -326,9 +411,9 @@ defmodule Pax.Config do
   A `Pax.Config.ArityError` will be raised if the count of args given to this function do not match one of the specs
   for the given key.
   """
-  @spec fetch(config :: map(), key :: atom, args :: list()) :: {:ok, any()} | :error
-  def fetch(config, key, args \\ []) when is_map(config) do
-    {:ok, fetch!(config, key, args)}
+  @spec fetch(config :: map(), key_or_keys :: atom, args :: list()) :: {:ok, any()} | :error
+  def fetch(config, key_or_keys, args \\ []) when is_map(config) do
+    {:ok, fetch!(config, key_or_keys, args)}
   rescue
     KeyError -> :error
   end
@@ -338,7 +423,10 @@ defmodule Pax.Config do
 
   The `config` map must be the result of a call to `validate/3`.
 
-  In the case that a function is allowed in the spec, then the correct args must be passed to this function to resolve
+  Either an individual `key` can be given, or a list of `keys` if the configuration data is nested. See
+  [Nested Configuration](`m:Pax.Config#module-nested-configuration`) for more information.
+
+  In the case that a function is allowed in the spec, then the correct `args` must be passed to this function to resolve
   the value. If no functions are allowed by the spec, the args can be omitted.
 
   A `KeyError` will be raised if the key is not found in the configuration, which means it was not in the data given to
@@ -353,8 +441,18 @@ defmodule Pax.Config do
   A `Pax.Config.ArityError` will be raised if the count of args given to this function do not match one of the specs
   for the given key.
   """
-  @spec fetch!(config :: map(), key :: atom, args :: list()) :: any()
-  def fetch!(config, key, args \\ []) when is_map(config) do
+  @spec fetch!(config :: map(), key_or_keys :: atom | nonempty_list(atom), args :: list()) :: any()
+  def fetch!(config, key_or_keys, args \\ [])
+
+  def fetch!(config, [key], args) when is_map(config) do
+    fetch!(config, key, args)
+  end
+
+  def fetch!(config, [key | rest], args) when is_map(config) do
+    fetch!(Map.fetch!(config, key), rest, args)
+  end
+
+  def fetch!(config, key, args) when is_map(config) do
     case Map.fetch!(config, key) do
       %{value: value, type: :function} ->
         value.()
@@ -394,6 +492,9 @@ defmodule Pax.Config do
 
   The `config` map must be the result of a call to `validate/3`.
 
+  Either an individual `key` can be given, or a list of `keys` if the configuration data is nested. See
+  [Nested Configuration](`m:Pax.Config#module-nested-configuration`) for more information.
+
   In the case that a function is allowed in the spec, then the correct `args` must be passed to this function to
   resolve the value. If no functions are allowed by the spec, the `args` can be omitted.
 
@@ -412,17 +513,18 @@ defmodule Pax.Config do
   A `Pax.Config.ArityError` will be raised if the count of args given to this function do not match one of the specs
   for the given key.
   """
-  def get(config, key, args \\ [], default \\ nil)
+  @spec get(config :: map(), key_or_keys :: atom | nonempty_list(atom), args :: list(), default :: any()) :: any()
+  def get(config, key_or_keys, args \\ [], default \\ nil)
 
-  def get(config, key, args, default) when is_map(config) and is_list(args) do
-    case fetch(config, key, args) do
+  def get(config, key_or_keys, args, default) when is_map(config) and is_list(args) do
+    case fetch(config, key_or_keys, args) do
       {:ok, value} -> value
       :error -> default
     end
   end
 
-  def get(config, key, default, nil) when is_map(config) do
-    get(config, key, [], default)
+  def get(config, key_or_keys, default, nil) when is_map(config) do
+    get(config, key_or_keys, [], default)
   end
 
   defp check_return(value, types) when is_list(types) do

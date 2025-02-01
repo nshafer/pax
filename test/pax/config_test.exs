@@ -2,44 +2,80 @@ defmodule Pax.ConfigTest do
   use ExUnit.Case, async: true
   alias Pax.Config
 
+  doctest Pax.Config
+
   defmodule TestStruct do
     defstruct [:field]
   end
 
   describe "validate/2 (config specs)" do
     test "accepts all possible config specs" do
-      assert {:ok, %{}} = Config.validate(%{foo: nil}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :atom}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :string}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :boolean}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :integer}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :float}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :tuple}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :list}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :map}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :module}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :struct}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: {:struct, TestStruct}}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :date}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :time}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :naive_datetime}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :datetime}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :uri}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: :function}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: {:function, 2}}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: {:function, :atom}}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: {:function, [:atom, :string]}}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: {:function, 2, :boolean}}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: {:function, 2, [:boolean, :integer]}}, %{})
+      assert {:ok, %{}} = Config.validate(%{foo: nil}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :atom}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :string}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :boolean}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :integer}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :float}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :tuple}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :list}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :map}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :module}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :struct}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: {:struct, TestStruct}}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :date}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :time}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :naive_datetime}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :datetime}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :uri}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :function}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: {:function, 2}}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: {:function, :atom}}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: {:function, [:atom, :string]}}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: {:function, 2, :boolean}}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: {:function, 2, [:boolean, :integer]}}, %{}, validate_config_spec: true)
     end
 
     test "accepts specs with lists of types" do
-      assert {:ok, %{}} = Config.validate(%{foo: [nil, :atom, :string, :boolean, :integer, :float]}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: [:tuple, :list, :map, :module, :struct, {:struct, TestStruct}]}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: [:date, :time, :naive_datetime, :datetime, :uri]}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: [:function, {:function, 2}]}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: [{:function, :atom}, {:function, [:atom, :string]}]}, %{})
-      assert {:ok, %{}} = Config.validate(%{foo: [{:function, 2, :boolean}, {:function, 2, [:boolean, :integer]}]}, %{})
+      assert {:ok, %{}} =
+               Config.validate(%{foo: [nil, :atom, :string, :boolean, :integer, :float]}, %{},
+                 validate_config_spec: true
+               )
+
+      assert {:ok, %{}} =
+               Config.validate(%{foo: [:tuple, :list, :map, :module, :struct, {:struct, TestStruct}]}, %{},
+                 validate_config_spec: true
+               )
+
+      assert {:ok, %{}} =
+               Config.validate(%{foo: [:date, :time, :naive_datetime, :datetime, :uri]}, %{},
+                 validate_config_spec: true
+               )
+
+      assert {:ok, %{}} = Config.validate(%{foo: [:function, {:function, 2}]}, %{}, validate_config_spec: true)
+
+      assert {:ok, %{}} =
+               Config.validate(%{foo: [{:function, :atom}, {:function, [:atom, :string]}]}, %{},
+                 validate_config_spec: true
+               )
+
+      assert {:ok, %{}} =
+               Config.validate(%{foo: [{:function, 2, :boolean}, {:function, 2, [:boolean, :integer]}]}, %{},
+                 validate_config_spec: true
+               )
+    end
+
+    test "accepts recursive specs" do
+      spec = %{
+        foo: :atom,
+        bar: %{
+          baz: :string,
+          qux: %{
+            quux: :integer
+          }
+        }
+      }
+
+      assert {:ok, %{}} = Config.validate(spec, %{}, validate_config_spec: true)
     end
 
     test "does not raise if validate_config_spec is not set to true" do
@@ -279,6 +315,32 @@ defmodule Pax.ConfigTest do
       assert config[:foo] == %{value: :foo, type: :atom}
     end
 
+    test "accepts recursive specs and data" do
+      spec = %{
+        foo: :atom,
+        bar: %{
+          baz: :string,
+          qux: %{
+            quux: :integer
+          }
+        }
+      }
+
+      data = %{
+        foo: :foo,
+        bar: %{
+          baz: "baz",
+          qux: %{
+            quux: 42
+          }
+        }
+      }
+
+      assert {:ok, config} = Config.validate(spec, data, validate_config_spec: true)
+
+      assert config[:bar][:qux][:quux] == %{value: 42, type: :integer}
+    end
+
     test "raises an error when a key is not in the spec" do
       assert_raise Pax.ConfigError, ~r/invalid key/, fn ->
         Config.validate!(%{foo: :atom}, %{made_up: :foo})
@@ -399,6 +461,24 @@ defmodule Pax.ConfigTest do
 
       assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
         Config.validate!(%{foo: [{:function, 1, [:atom, nil]}, :atom]}, %{foo: 42})
+      end
+    end
+
+    test "raises when recursive spec given in data when none expected" do
+      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+        Config.validate!(%{foo: :atom}, %{foo: %{bar: 5}})
+      end
+    end
+
+    test "raises when recursive spec expected in data but other given" do
+      spec = %{
+        foo: %{
+          baz: :string
+        }
+      }
+
+      assert_raise Pax.ConfigError, ~r/invalid value/, fn ->
+        Config.validate!(spec, %{foo: :foo})
       end
     end
   end
@@ -559,6 +639,34 @@ defmodule Pax.ConfigTest do
 
       assert Config.get(config, :foo, [:baz], :default) == :baz
       assert Config.get(config, :invalid, [:baz], :default) == :default
+    end
+
+    test "handles fetching recursive config data" do
+      spec = %{
+        foo: :atom,
+        bar: %{
+          baz: :string,
+          qux: %{
+            quux: :integer
+          }
+        }
+      }
+
+      data = %{
+        foo: :foo,
+        bar: %{
+          baz: "baz",
+          qux: %{
+            quux: 42
+          }
+        }
+      }
+
+      assert {:ok, config} = Config.validate(spec, data, validate_config_spec: true)
+
+      assert Config.fetch(config, :foo) == {:ok, :foo}
+      assert Config.fetch(config, [:bar, :baz]) == {:ok, "baz"}
+      assert Config.fetch(config, [:bar, :qux, :quux]) == {:ok, 42}
     end
 
     test "raises when not passing correct args for functions" do
