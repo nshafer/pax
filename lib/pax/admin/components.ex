@@ -9,7 +9,7 @@ defmodule Pax.Admin.Components do
     ~H"""
     <div class="admin-title">
       <%= if @pax_admin.config.title != nil do %>
-        <%= @pax_admin.config.title %>
+        {@pax_admin.config.title}
       <% else %>
         Pax Admin
       <% end %>
@@ -24,10 +24,10 @@ defmodule Pax.Admin.Components do
     ~H"""
     <div class="admin-header">
       <div :if={@primary != []} class="admin-header-section">
-        <%= render_slot(@primary) %>
+        {render_slot(@primary)}
       </div>
       <div :if={@secondary != []} class="admin-header-section">
-        <%= render_slot(@secondary) %>
+        {render_slot(@secondary)}
       </div>
     </div>
     """
@@ -40,10 +40,10 @@ defmodule Pax.Admin.Components do
     ~H"""
     <div class="admin-sidebar">
       <div :if={@primary != []} class="admin-sidebar-section">
-        <%= render_slot(@primary) %>
+        {render_slot(@primary)}
       </div>
       <div :if={@secondary != []} class="admin-sidebar-section">
-        <%= render_slot(@secondary) %>
+        {render_slot(@secondary)}
       </div>
     </div>
     """
@@ -64,11 +64,11 @@ defmodule Pax.Admin.Components do
         <%= if @pax_admin.resource do %>
           <div class="admin-breadcrumb-divider">❯</div>
           <%= if @pax_admin.resource.section do %>
-            <div class="admin-breadcrumb-text"><%= @pax_admin.resource.section.label %></div>
+            <div class="admin-breadcrumb-text">{@pax_admin.resource.section.label}</div>
             <div class="admin-breadcrumb-divider">❯</div>
           <% end %>
           <.pax_link class="admin-breadcrumb-link" navigate={@pax.index_path}>
-            <%= @pax_admin.resource.label %>
+            {@pax_admin.resource.label}
           </.pax_link>
           <%= if @live_action == :new do %>
             <div class="admin-breadcrumb-divider">❯</div>
@@ -77,17 +77,17 @@ defmodule Pax.Admin.Components do
 
           <%= if @live_action == :show do %>
             <div class="admin-breadcrumb-divider">❯</div>
-            <div class="admin-breadcrumb-text"><%= @pax.object_name %></div>
+            <div class="admin-breadcrumb-text">{@pax.object_name}</div>
           <% end %>
 
           <%= if @live_action == :edit do %>
             <%= if @pax.show_path do %>
               <div class="admin-breadcrumb-divider">❯</div>
               <.pax_link class="admin-breadcrumb-link" navigate={@pax.show_path}>
-                <%= @pax.object_name %>
+                {@pax.object_name}
               </.pax_link>
             <% else %>
-              <div class="admin-breadcrumb-text"><%= @pax.object_name %></div>
+              <div class="admin-breadcrumb-text">{@pax.object_name}</div>
             <% end %>
 
             <div class="admin-breadcrumb-divider">❯</div>
@@ -121,7 +121,7 @@ defmodule Pax.Admin.Components do
               navigate={Pax.Admin.Site.resource_index_path(@pax_admin.site_mod, resource.section, resource)}
               active={resource == @pax_admin.resource}
             >
-              <%= resource.label %>
+              {resource.label}
             </.admin_menu_link>
           <% end %>
         <% end %>
@@ -141,7 +141,7 @@ defmodule Pax.Admin.Components do
     ~H"""
     <div id={"admin_menu_section_#{@section.name}"} class={["admin-menu-section", @active && "expanded"]}>
       <button class="admin-menu-section-button" phx-click={toggle_class("expanded", "#admin_menu_section_#{@section.name}")}>
-        <%= @section.label %>
+        {@section.label}
       </button>
       <div class="admin-menu-section-indicator">
         <i class="fa-solid fa-chevron-right "></i>
@@ -154,7 +154,7 @@ defmodule Pax.Admin.Components do
               active={resource == @pax_admin.resource}
               indented={true}
             >
-              <%= resource.label %>
+              {resource.label}
             </.admin_menu_link>
           <% end %>
         </div>
@@ -177,7 +177,7 @@ defmodule Pax.Admin.Components do
   def admin_menu_link(assigns) do
     ~H"""
     <.link class={["admin-menu-link", @indented && "indented", @active && "active", @class]} {@rest}>
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </.link>
     """
   end

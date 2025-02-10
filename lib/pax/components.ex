@@ -18,7 +18,7 @@ defmodule Pax.Components do
 
     ~H"""
     <%= for output <- @outputs do %>
-      <%= output %>
+      {output}
     <% end %>
     """
   end
@@ -40,7 +40,7 @@ defmodule Pax.Components do
   def pax_title(assigns) do
     ~H"""
     <div class={["pax-title", "pax-title-level-#{@level}", @class]} role="heading" aria-level={@level}>
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </div>
     """
   end
@@ -60,7 +60,7 @@ defmodule Pax.Components do
   def pax_link(assigns) do
     ~H"""
     <Phoenix.Component.link class={["pax-link", @class]} {@rest}>
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </Phoenix.Component.link>
     """
   end
@@ -80,7 +80,7 @@ defmodule Pax.Components do
   def pax_badge(assigns) do
     ~H"""
     <span class={["pax-badge", @class]} {@rest}>
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </span>
     """
   end
@@ -125,7 +125,7 @@ defmodule Pax.Components do
         ]}
         {@rest}
       >
-        <%= render_slot(@inner_block) %>
+        {render_slot(@inner_block)}
       </Phoenix.Component.link>
       """
     else
@@ -142,7 +142,7 @@ defmodule Pax.Components do
         ]}
         {@rest}
       >
-        <%= render_slot(@inner_block) %>
+        {render_slot(@inner_block)}
       </button>
       """
     end
@@ -166,8 +166,8 @@ defmodule Pax.Components do
   def pax_select(assigns) do
     ~H"""
     <select id={@id} class={["pax-select", @has_errors && "has-errors", @class]} name={@name} multiple={@multiple} {@rest}>
-      <option :if={@prompt} value=""><%= @prompt %></option>
-      <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
+      <option :if={@prompt} value="">{@prompt}</option>
+      {Phoenix.HTML.Form.options_for_select(@options, @value)}
     </select>
     """
   end
@@ -221,15 +221,15 @@ defmodule Pax.Components do
     ~H"""
     <div class={["pax-header", @class]}>
       <div class="pax-header-section pax-header-primary">
-        <%= render_slot(@primary) %>
+        {render_slot(@primary)}
       </div>
 
       <div class="pax-header-section pax-header-secondary">
-        <%= render_slot(@secondary) %>
+        {render_slot(@secondary)}
       </div>
 
       <div class="pax-header-section pax-header-tertiary">
-        <%= render_slot(@tertiary) %>
+        {render_slot(@tertiary)}
       </div>
     </div>
     """
@@ -252,15 +252,15 @@ defmodule Pax.Components do
     ~H"""
     <div class="pax-footer">
       <div class="pax-footer-section pax-footer-primary">
-        <%= render_slot(@primary) %>
+        {render_slot(@primary)}
       </div>
 
       <div class="pax-footer-section pax-footer-secondary">
-        <%= render_slot(@secondary) %>
+        {render_slot(@secondary)}
       </div>
 
       <div class="pax-footer-section pax-footer-tertiary">
-        <%= render_slot(@tertiary) %>
+        {render_slot(@tertiary)}
       </div>
     </div>
     """

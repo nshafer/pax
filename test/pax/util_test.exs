@@ -36,7 +36,7 @@ defmodule Pax.UtilTest do
       end)
 
       assert_raise(ArgumentError, fn ->
-        with_params("/test", page: %{foo: "bar"}) 
+        with_params("/test", page: %{foo: "bar"})
       end)
     end
 

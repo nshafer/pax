@@ -11,7 +11,7 @@ defmodule Pax.Field.Components do
   def pax_field_label(assigns) do
     ~H"""
     <label for={@for || Pax.Field.label_for(@field, @form)} class={["pax-field-label", @class]}>
-      <%= @label || Pax.Field.label(@field) %>
+      {@label || Pax.Field.label(@field)}
     </label>
     """
   end
@@ -35,7 +35,7 @@ defmodule Pax.Field.Components do
   def pax_field_text(assigns) do
     ~H"""
     <div class={["pax-field-text", @class]}>
-      <%= Pax.Field.render(@field, @object) %>
+      {Pax.Field.render(@field, @object)}
     </div>
     """
   end
@@ -48,7 +48,7 @@ defmodule Pax.Field.Components do
   def pax_field_link(assigns) do
     ~H"""
     <.pax_link class={["pax-field-link", @class]} navigate={@link}>
-      <%= Pax.Field.render(@field, @object) %>
+      {Pax.Field.render(@field, @object)}
     </.pax_link>
     """
   end
@@ -67,7 +67,7 @@ defmodule Pax.Field.Components do
       <.pax_field_text class={@text_class} field={@field} object={@object} />
     <% else %>
       <div class={["pax-field-input", @class]}>
-        <%= Pax.Field.input(@field, @form) %>
+        {Pax.Field.input(@field, @form)}
         <.pax_field_errors field={@field} form={@form} class={@errors_class} error_class={@error_class} />
       </div>
     <% end %>
@@ -85,7 +85,7 @@ defmodule Pax.Field.Components do
     ~H"""
     <div :if={@errors != []} class={["pax-field-errors", @class]}>
       <.pax_field_error :for={msg <- @errors} class={@error_class}>
-        <%= msg %>
+        {msg}
       </.pax_field_error>
     </div>
     """
@@ -98,7 +98,7 @@ defmodule Pax.Field.Components do
     # TODO: add icon?
     ~H"""
     <div class={["pax-field-error", @class]}>
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </div>
     """
   end
@@ -177,10 +177,10 @@ defmodule Pax.Field.Components do
         {@rest}
       />
       <span class="pax-field-control-checkbox-true">
-        <%= @true_value %>
+        {@true_value}
       </span>
       <span class="pax-field-control-checkbox-false">
-        <%= @false_value %>
+        {@false_value}
       </span>
     </label>
     """

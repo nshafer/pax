@@ -25,8 +25,8 @@ defmodule Pax.Field.Datetime do
     }
 
     ~H"""
-    <span><%= @date %></span>
-    <span><%= @time %></span>
+    <span>{@date}</span>
+    <span>{@time}</span>
     """
   end
 

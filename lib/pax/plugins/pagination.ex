@@ -122,8 +122,8 @@ defmodule Pax.Plugins.Pagination do
 
   def index_footer_primary(assigns) do
     ~H"""
-    <div><b>Page:</b> <%= @pax.private.pagination.page %> / <%= @pax.private.pagination.num_pages %></div>
-    <div><b>Total:</b> <%= @pax.object_count %></div>
+    <div><b>Page:</b> {@pax.private.pagination.page} / {@pax.private.pagination.num_pages}</div>
+    <div><b>Total:</b> {@pax.object_count}</div>
     """
   end
 

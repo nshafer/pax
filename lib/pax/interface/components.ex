@@ -12,19 +12,19 @@ defmodule Pax.Interface.Components do
       <.pax_header class="pax-index-header">
         <:primary>
           <.pax_title>
-            <%= @pax.plural_name %>
+            {@pax.plural_name}
           </.pax_title>
 
-          <%= plugin_component(:index_header_primary, assigns) %>
+          {plugin_component(:index_header_primary, assigns)}
         </:primary>
 
         <:secondary>
-          <%= plugin_component(:index_header_secondary, assigns) %>
-          <.pax_button :if={@pax.new_path} navigate={@pax.new_path}>New <%= @pax.singular_name %></.pax_button>
+          {plugin_component(:index_header_secondary, assigns)}
+          <.pax_button :if={@pax.new_path} navigate={@pax.new_path}>New {@pax.singular_name}</.pax_button>
         </:secondary>
 
         <:tertiary>
-          <%= plugin_component(:index_header_tertiary, assigns) %>
+          {plugin_component(:index_header_tertiary, assigns)}
         </:tertiary>
       </.pax_header>
 
@@ -39,15 +39,15 @@ defmodule Pax.Interface.Components do
 
       <.pax_footer>
         <:primary>
-          <%= plugin_component(:index_footer_primary, assigns) %>
+          {plugin_component(:index_footer_primary, assigns)}
         </:primary>
 
         <:secondary>
-          <%= plugin_component(:index_footer_secondary, assigns) %>
+          {plugin_component(:index_footer_secondary, assigns)}
         </:secondary>
 
         <:tertiary>
-          <%= plugin_component(:index_footer_tertiary, assigns) %>
+          {plugin_component(:index_footer_tertiary, assigns)}
         </:tertiary>
       </.pax_footer>
     </div>
@@ -64,13 +64,13 @@ defmodule Pax.Interface.Components do
         <:primary>
           <div class="pax-title-breadcrumbs">
             <.pax_link :if={@pax.index_path} class="pax-detail-index-breadcrumb-link" navigate={@pax.index_path}>
-              <%= @pax.plural_name %>
+              {@pax.plural_name}
             </.pax_link>
 
             <span class="pax-detail-index-breadcrumb-separator">/</span>
 
             <.pax_title class="pax-detail-title">
-              <%= @pax.object_name %>
+              {@pax.object_name}
             </.pax_title>
           </div>
         </:primary>
@@ -127,17 +127,17 @@ defmodule Pax.Interface.Components do
         <:primary>
           <div class="pax-title-breadcrumbs">
             <.pax_link :if={@pax.index_path} class="pax-detail-index-breadcrumb-link" navigate={@pax.index_path}>
-              <%= @pax.plural_name %>
+              {@pax.plural_name}
             </.pax_link>
 
             <span class="pax-detail-index-breadcrumb-separator">/</span>
 
             <.pax_title :if={@new}>
-              New <%= @pax.singular_name %>
+              New {@pax.singular_name}
             </.pax_title>
 
             <.pax_title :if={not @new}>
-              <%= @pax.object_name %>
+              {@pax.object_name}
             </.pax_title>
           </div>
         </:primary>
@@ -194,7 +194,7 @@ defmodule Pax.Interface.Components do
           <tr class="pax-index-table-head-row">
             <%= for field <- @fields do %>
               <th class="pax-index-table-header">
-                <%= render_slot(@header, field) %>
+                {render_slot(@header, field)}
               </th>
             <% end %>
           </tr>
@@ -204,7 +204,7 @@ defmodule Pax.Interface.Components do
             <tr class="pax-index-table-row">
               <%= for field <- @fields do %>
                 <td class="pax-index-table-datacell">
-                  <%= render_slot(@cell, {field, object}) %>
+                  {render_slot(@cell, {field, object})}
                 </td>
               <% end %>
             </tr>
@@ -226,12 +226,12 @@ defmodule Pax.Interface.Components do
     <div class="pax-detail-fieldset">
       <div :if={@name != :default} class="pax-detail-fieldset-heading">
         <.pax_title level={2}>
-          <%= @name |> to_string() |> String.capitalize() %>
+          {@name |> to_string() |> String.capitalize()}
         </.pax_title>
       </div>
       <div class="pax-detail-fieldset-body">
         <%= for fieldgroup <- @fieldgroups do %>
-          <%= render_slot(@inner_block, fieldgroup) %>
+          {render_slot(@inner_block, fieldgroup)}
         <% end %>
       </div>
     </div>
@@ -249,7 +249,7 @@ defmodule Pax.Interface.Components do
     ~H"""
     <div class={["pax-detail-fieldgroup", "pax-fieldgroup-count-#{Enum.count(@fieldgroup)}"]}>
       <%= for field <- @fieldgroup do %>
-        <%= render_slot(@inner_block, field) %>
+        {render_slot(@inner_block, field)}
       <% end %>
     </div>
     """
