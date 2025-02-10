@@ -15,10 +15,13 @@ defmodule Pax.Admin.Resource.Live do
 
   def render(assigns) do
     ~H"""
-    <.pax_index :if={@live_action == :index} pax={@pax} />
-    <.pax_show :if={@live_action == :show} pax={@pax} />
-    <.pax_new :if={@live_action == :new} pax={@pax} />
-    <.pax_edit :if={@live_action == :edit} pax={@pax} />
+    <%= if assigns[:pax] do %>
+      <.pax_interface pax={@pax} action={@live_action} />
+    <% else %>
+      <div class="admin-loading">
+        Loading...
+      </div>
+    <% end %>
     """
   end
 
@@ -34,18 +37,26 @@ defmodule Pax.Admin.Resource.Live do
       |> assign_admin(resources: resources)
       |> assign_admin(resource: resource)
 
-    resource.mod.init(params, session, socket)
+    if Phoenix.LiveView.connected?(socket) do
+      resource.mod.init(params, session, socket)
+    else
+      {:halt, socket}
+    end
   end
 
   def handle_params(_params, _uri, socket) do
-    config = socket.assigns.pax.config
-    resource = socket.assigns.pax_admin.resource
+    if socket.assigns[:pax] do
+      config = socket.assigns.pax.config
+      resource = socket.assigns.pax_admin.resource
 
-    socket =
-      socket
-      |> assign(page_title: Pax.Config.get(config, :plural_name, [socket], resource.label))
+      socket =
+        socket
+        |> assign(page_title: Pax.Config.get(config, :plural_name, [socket], resource.label))
 
-    {:noreply, socket}
+      {:noreply, socket}
+    else
+      {:noreply, socket}
+    end
   end
 
   defp get_resource(resources, params) do

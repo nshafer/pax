@@ -44,8 +44,13 @@ defmodule Pax.Interface do
         No pax_adapter/1 callback found for #{inspect(__MODULE__)}.
         Please configure an adapter by defining a `pax_adapter/1` function, for example:
 
-            def pax_adapter(_socket),
-              do: {Pax.Adapters.EctoSchema, repo: MyAppWeb.Repo, schema: MyApp.MyContext.MySchema}
+            def pax_adapter(_socket), do: Pax.Adapters.EctoSchema
+
+        or
+
+            def pax_adapter(_socket) do
+              {Pax.Adapters.EctoSchema, repo: MyAppWeb.Repo, schema: MyApp.MyContext.MySchema}
+            end
 
         """
       end

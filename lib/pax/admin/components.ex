@@ -61,7 +61,7 @@ defmodule Pax.Admin.Components do
           Dashboard
         </.pax_link>
 
-        <%= if @pax_admin.resource do %>
+        <%= if assigns[:pax] && @pax_admin.resource do %>
           <div class="admin-breadcrumb-divider">❯</div>
           <%= if @pax_admin.resource.section do %>
             <div class="admin-breadcrumb-text">{@pax_admin.resource.section.label}</div>

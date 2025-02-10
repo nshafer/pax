@@ -19,8 +19,13 @@
 @use './plugins/pax-pagination.scss';
 
 /* Variables for use in all Pax CSS. Easily override this in your own CSS on the .pax class */
-/* TODO: should this be .pax-interface? */
-.pax {
+.pax-interface {
     /* Generic spacing used in a few places */
     --pax-spacing: 1em;
+}
+
+.pax-loading {
+    margin: calc(var(--pax-spacing) * 2);
+    font-size: 1.5em;
+    text-align: center;
 }

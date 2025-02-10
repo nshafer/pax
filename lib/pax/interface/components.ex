@@ -4,11 +4,30 @@ defmodule Pax.Interface.Components do
   import Pax.Field.Components
 
   attr :pax, Pax.Interface.Context, required: true
+  attr :action, :atom, required: true
+  attr :class, :string, default: nil
+  attr :index_class, :string, default: nil
+  attr :show_class, :string, default: nil
+  attr :new_class, :string, default: nil
+  attr :edit_class, :string, default: nil
+
+  def pax_interface(assigns) do
+    ~H"""
+    <div class="pax-interface">
+      <.pax_index :if={@action == :index} pax={@pax} class={@index_class} />
+      <.pax_show :if={@action == :show} pax={@pax} class={@show_class} />
+      <.pax_new :if={@action == :new} pax={@pax} class={@new_class} />
+      <.pax_edit :if={@action == :edit} pax={@pax} class={@edit_class} />
+    </div>
+    """
+  end
+
+  attr :pax, Pax.Interface.Context, required: true
   attr :class, :string, default: nil
 
   def pax_index(assigns) do
     ~H"""
-    <div class={["pax pax-index", @class]}>
+    <div class={["pax-index", @class]}>
       <.pax_header class="pax-index-header">
         <:primary>
           <.pax_title>
@@ -59,7 +78,7 @@ defmodule Pax.Interface.Components do
 
   def pax_show(assigns) do
     ~H"""
-    <div class={["pax pax-detail pax-detail-show", @class]}>
+    <div class={["pax-detail pax-detail-show", @class]}>
       <.pax_header class="pax-detail-header pax-detail-show-header">
         <:primary>
           <div class="pax-title-breadcrumbs">
@@ -119,7 +138,7 @@ defmodule Pax.Interface.Components do
       :let={f}
       for={@pax.form}
       as={:detail}
-      class={["pax pax-detail pax-detail-edit", @class]}
+      class={["pax-detail pax-detail-edit", @class]}
       phx-change="pax_validate"
       phx-submit="pax_save"
     >

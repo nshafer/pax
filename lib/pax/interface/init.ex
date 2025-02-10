@@ -40,6 +40,7 @@ defmodule Pax.Interface.Init do
   end
 
   def init_config_spec(adapter, plugins) do
+    # TODO: get config_spec from module, so things like admin can add additional config
     config_spec = Pax.Interface.Config.config_spec()
     adapter_config_spec = Pax.Adapter.config_spec(adapter)
     plugins_config_spec = init_plugins_config_spec(plugins)
