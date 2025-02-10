@@ -10,13 +10,13 @@
 - [x] Upgrade to LiveView 1.0 - transition away from `phx-feedback-for`
 - [x] Redo Adapter `get_object` to use the scope. Should we formally define the scope with a struct or not?
 - [ ] Allow override or modification of EctoSchema queries before executing.
-- [ ] Permissions system, such as `can_view`, `can_edit`, `can_delete` or whatever.
+- [ ] Authorization system, such as `can_view`, `can_edit`, `can_delete` or whatever.
 - [ ] Tests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ## Interface
 - [ ] Create `pax_interface` macro in `Pax.Router` module that defines the routes for a `Pax.Interface`, with keys like
-      the `resources` macro in Phoenix, such as `only: [:index, :show]` and `except: [:edit, :delete]`.
-- [ ] Namespace config, so that adapter and plugin configs are explicit, such as:
+      the `resources` macro in Phoenix.
+- [x] Namespace config, so that adapter and plugin configs are explicit, such as:
       ```elixir
       [
         adapter: [
@@ -53,10 +53,12 @@
 - [ ] Collab / presence plugin
 - [ ] Action Items plugin
 - [ ] Handle unique violations better. (Duplicate: use duplicate slug or something)
+- [ ] Crash when id field(s) changed
 
 ## Fields
 - [x] Allow specifying just `:fieldname` and default to Field.String maybe? Or callback to adapter to figure it out?
 - [ ] Redo fields to just have one list of fields, with `only: :index` and `except: [:index, :edit]` options.
+- [ ] Check for duplicate field definitions, or fix ids? (duplicate id warnings in console if field is specified twice)
 - [ ] Redo fieldsets to just be `detail_layout` to specify how the fields are laid out. Defaults to just the list
       of fields. Any missing fields are assumed to not be included. Should we allow `show_layout` and `edit_layout`
       specific layouts? So the pages can have different layouts?

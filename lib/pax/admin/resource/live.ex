@@ -45,17 +45,21 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def handle_params(_params, _uri, socket) do
-    if socket.assigns[:pax] do
-      config = socket.assigns.pax.config
-      resource = socket.assigns.pax_admin.resource
+    {:noreply,
+     socket
+     |> assign_page_title()}
+  end
 
-      socket =
-        socket
-        |> assign(page_title: Pax.Config.get(config, :plural_name, [socket], resource.label))
+  defp assign_page_title(socket) do
+    resource = socket.assigns.pax_admin.resource
+    resource_label = Pax.Util.String.truncate(resource.label, 50)
+    pax = socket.assigns[:pax]
 
-      {:noreply, socket}
+    if pax != nil and pax.object_name != nil do
+      object_name = Pax.Util.String.truncate(pax.object_name, 50)
+      assign(socket, page_title: "#{object_name} · #{resource_label}")
     else
-      {:noreply, socket}
+      assign(socket, page_title: resource_label)
     end
   end
 
