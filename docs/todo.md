@@ -2,7 +2,7 @@
 
 ## General
 - [x] Plugins
-- [ ] Make stacktraces better?
+- [ ] Make stacktraces better? https://github.com/elixir-ecto/ecto/blob/master/lib/ecto/query/builder.ex#L1447
 - [ ] Reimplement mobile views as @container queries
 - [x] Redo callback hell to instead just use one `pax_config` callback that sets a global config that is stored in the
       `@pax` context. This should have all config options, including any extra config for the adapters or plugins.

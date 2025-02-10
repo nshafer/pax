@@ -31,7 +31,7 @@ defmodule Pax.MixProject do
   defp elixirc_paths(_), do: ["lib"]
 
   def description() do
-    "A low-code admin interface built on a toolkit for building Live View CRUD interfaces."
+    "Toolkit for live CRUD applications and admins"
   end
 
   def package() do
@@ -51,14 +51,14 @@ defmodule Pax.MixProject do
       {:phoenix, "~> 1.7.0"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_ecto, "~> 4.5"},
-      {:phoenix_live_view, "~> 1.0.0-rc.7"},
+      {:phoenix_live_view, "~> 1.0.0"},
       {:ecto, "~> 3.10"},
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2", only: :dev},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
-      {:esbuild, "~> 0.7", only: :dev},
-      {:dart_sass, "~> 0.7.0", only: :dev},
-      {:phoenix_copy, "~> 0.1.3", only: :dev}
+      {:esbuild, "~> 0.9", only: :dev},
+      {:dart_sass, "~> 0.7", only: :dev},
+      {:phoenix_copy, "~> 0.1", only: :dev}
       # {:floki, ">= 0.30.0", only: :test},
       # {:ecto_sql, "~> 3.10", only: :test},
       # {:postgrex, ">= 0.0.0", only: :test},
