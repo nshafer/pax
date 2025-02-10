@@ -2,6 +2,7 @@ defmodule Pax.Interface.Components do
   use Phoenix.Component
   import Pax.Components
   import Pax.Field.Components
+  import Pax.Util.String
 
   attr :pax, Pax.Interface.Context, required: true
   attr :action, :atom, required: true
@@ -31,7 +32,7 @@ defmodule Pax.Interface.Components do
       <.pax_header class="pax-index-header">
         <:primary>
           <.pax_title>
-            {@pax.plural_name}
+            {truncate(@pax.plural_name, 50)}
           </.pax_title>
 
           {plugin_component(:index_header_primary, assigns)}
@@ -39,7 +40,7 @@ defmodule Pax.Interface.Components do
 
         <:secondary>
           {plugin_component(:index_header_secondary, assigns)}
-          <.pax_button :if={@pax.new_path} navigate={@pax.new_path}>New {@pax.singular_name}</.pax_button>
+          <.pax_button :if={@pax.new_path} navigate={@pax.new_path}>New {truncate(@pax.singular_name, 25)}</.pax_button>
         </:secondary>
 
         <:tertiary>
@@ -83,13 +84,13 @@ defmodule Pax.Interface.Components do
         <:primary>
           <div class="pax-title-breadcrumbs">
             <.pax_link :if={@pax.index_path} class="pax-detail-index-breadcrumb-link" navigate={@pax.index_path}>
-              {@pax.plural_name}
+              {truncate(@pax.plural_name, 50)}
             </.pax_link>
 
             <span class="pax-detail-index-breadcrumb-separator">/</span>
 
             <.pax_title class="pax-detail-title">
-              {@pax.object_name}
+              {truncate(@pax.object_name, 50)}
             </.pax_title>
           </div>
         </:primary>
@@ -146,17 +147,17 @@ defmodule Pax.Interface.Components do
         <:primary>
           <div class="pax-title-breadcrumbs">
             <.pax_link :if={@pax.index_path} class="pax-detail-index-breadcrumb-link" navigate={@pax.index_path}>
-              {@pax.plural_name}
+              {truncate(@pax.plural_name, 25)}
             </.pax_link>
 
             <span class="pax-detail-index-breadcrumb-separator">/</span>
 
             <.pax_title :if={@new}>
-              New {@pax.singular_name}
+              New {truncate(@pax.singular_name, 50)}
             </.pax_title>
 
             <.pax_title :if={not @new}>
-              {@pax.object_name}
+              {truncate(@pax.object_name, 50)}
             </.pax_title>
           </div>
         </:primary>
@@ -245,7 +246,7 @@ defmodule Pax.Interface.Components do
     <div class="pax-detail-fieldset">
       <div :if={@name != :default} class="pax-detail-fieldset-heading">
         <.pax_title level={2}>
-          {@name |> to_string() |> String.capitalize()}
+          {@name |> to_string() |> String.capitalize() |> truncate(50)}
         </.pax_title>
       </div>
       <div class="pax-detail-fieldset-body">

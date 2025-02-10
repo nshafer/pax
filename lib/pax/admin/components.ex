@@ -2,6 +2,7 @@ defmodule Pax.Admin.Components do
   use Phoenix.Component
   alias Phoenix.LiveView.JS
   import Pax.Components
+  import Pax.Util.String
 
   attr :pax_admin, Pax.Admin.Context, required: true
 
@@ -64,11 +65,13 @@ defmodule Pax.Admin.Components do
         <%= if assigns[:pax] && @pax_admin.resource do %>
           <div class="admin-breadcrumb-divider">❯</div>
           <%= if @pax_admin.resource.section do %>
-            <div class="admin-breadcrumb-text">{@pax_admin.resource.section.label}</div>
+            <div class="admin-breadcrumb-text">
+              {truncate(@pax_admin.resource.section.label, 25)}
+            </div>
             <div class="admin-breadcrumb-divider">❯</div>
           <% end %>
           <.pax_link class="admin-breadcrumb-link" navigate={@pax.index_path}>
-            {@pax_admin.resource.label}
+            {truncate(@pax_admin.resource.label, 25)}
           </.pax_link>
           <%= if @live_action == :new do %>
             <div class="admin-breadcrumb-divider">❯</div>
@@ -77,17 +80,21 @@ defmodule Pax.Admin.Components do
 
           <%= if @live_action == :show do %>
             <div class="admin-breadcrumb-divider">❯</div>
-            <div class="admin-breadcrumb-text">{@pax.object_name}</div>
+            <div class="admin-breadcrumb-text">
+              {truncate(@pax.object_name, 25)}
+            </div>
           <% end %>
 
           <%= if @live_action == :edit do %>
             <%= if @pax.show_path do %>
               <div class="admin-breadcrumb-divider">❯</div>
               <.pax_link class="admin-breadcrumb-link" navigate={@pax.show_path}>
-                {@pax.object_name}
+                {truncate(@pax.object_name, 25)}
               </.pax_link>
             <% else %>
-              <div class="admin-breadcrumb-text">{@pax.object_name}</div>
+              <div class="admin-breadcrumb-text">
+                {truncate(@pax.object_name, 25)}
+              </div>
             <% end %>
 
             <div class="admin-breadcrumb-divider">❯</div>
@@ -121,7 +128,7 @@ defmodule Pax.Admin.Components do
               navigate={Pax.Admin.Site.resource_index_path(@pax_admin.site_mod, resource.section, resource)}
               active={resource == @pax_admin.resource}
             >
-              {resource.label}
+              {truncate(resource.label, 35)}
             </.admin_menu_link>
           <% end %>
         <% end %>
@@ -141,7 +148,7 @@ defmodule Pax.Admin.Components do
     ~H"""
     <div id={"admin_menu_section_#{@section.name}"} class={["admin-menu-section", @active && "expanded"]}>
       <button class="admin-menu-section-button" phx-click={toggle_class("expanded", "#admin_menu_section_#{@section.name}")}>
-        {@section.label}
+        {truncate(@section.label, 35)}
       </button>
       <div class="admin-menu-section-indicator">
         <i class="fa-solid fa-chevron-right "></i>
@@ -154,7 +161,7 @@ defmodule Pax.Admin.Components do
               active={resource == @pax_admin.resource}
               indented={true}
             >
-              {resource.label}
+              {truncate(resource.label, 35)}
             </.admin_menu_link>
           <% end %>
         </div>
