@@ -240,23 +240,23 @@ defmodule Pax.Interface.Config do
 
   """
 
-  @config_spec %{
-    singular_name: [:string, {:function, 1, :string}],
-    plural_name: [:string, {:function, 1, :string}],
-    object_name: [:string, {:function, 2, [nil, :string]}],
-    index_path: [:string, {:function, 1, :string}],
-    new_path: [:string, {:function, 1, :string}],
-    show_path: {:function, 2, :string},
-    edit_path: {:function, 2, :string},
-    index_fields: [:list, {:function, 1, :list}],
-    fieldsets: [:list, {:function, 1, :list}],
-    lookup: {:function, 3, :map},
-    lookup_params: [:list, {:function, 1, :list}],
-    lookup_glob: [:string, {:function, 1, :string}],
-    id_fields: [:list, {:function, 1, :list}]
-  }
-
-  def config_spec(), do: @config_spec
+  def config_spec() do
+    %{
+      singular_name: [:string, {:function, 1, :string}],
+      plural_name: [:string, {:function, 1, :string}],
+      object_name: [:string, {:function, 2, [nil, :string]}],
+      index_path: [:string, {:function, 1, :string}],
+      new_path: [:string, {:function, 1, :string}],
+      show_path: {:function, 2, :string},
+      edit_path: {:function, 2, :string},
+      index_fields: [:list, {:function, 1, :list}],
+      fieldsets: [:list, {:function, 1, :list}],
+      lookup: {:function, 3, :map},
+      lookup_params: [:list, {:function, 1, :list}],
+      lookup_glob: [:string, {:function, 1, :string}],
+      id_fields: [:list, {:function, 1, :list}]
+    }
+  end
 
   def default_lookup_params(), do: ["id"]
 
