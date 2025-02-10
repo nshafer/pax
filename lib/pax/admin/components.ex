@@ -147,7 +147,10 @@ defmodule Pax.Admin.Components do
 
     ~H"""
     <div id={"admin_menu_section_#{@section.name}"} class={["admin-menu-section", @active && "expanded"]}>
-      <button class="admin-menu-section-button" phx-click={toggle_class("expanded", "#admin_menu_section_#{@section.name}")}>
+      <button
+        class="admin-menu-section-button"
+        phx-click={JS.toggle_class("expanded", to: "#admin_menu_section_#{@section.name}")}
+      >
         {truncate(@section.label, 35)}
       </button>
       <div class="admin-menu-section-indicator">
@@ -204,14 +207,5 @@ defmodule Pax.Admin.Components do
     |> elem(0)
     |> Enum.map(fn %{resources: resources} = entry -> %{entry | resources: Enum.reverse(resources)} end)
     |> Enum.reverse()
-  end
-
-  # Toggle a class on an element by removing it from any that have it, then adding it to any that don't.
-  # This is needed until LiveView finally adds a toggle_class function.
-  # https://github.com/phoenixframework/phoenix_live_view/pull/1721
-  defp toggle_class(js \\ %JS{}, class, id) do
-    js
-    |> JS.remove_class(class, to: "#{id}.#{class}")
-    |> JS.add_class(class, to: "#{id}:not(.#{class})")
   end
 end
