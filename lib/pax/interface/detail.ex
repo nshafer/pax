@@ -41,11 +41,12 @@ defmodule Pax.Interface.Detail do
 
   def on_event("pax_save", %{"detail" => params}, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_save, #{inspect(params)})")
-    %{adapter: adapter, fieldsets: fieldsets} = socket.assigns.pax
+    live_action = socket.assigns.live_action
+    %{config: config, adapter: adapter, fieldsets: fieldsets, object: object} = socket.assigns.pax
 
-    changeset = changeset(adapter, fieldsets, socket.assigns.pax.object, params)
+    changeset = changeset(adapter, fieldsets, object, params)
 
-    save_object(socket, socket.assigns.live_action, adapter, socket.assigns.pax.object, changeset)
+    save_object(socket, live_action, config, adapter, object, changeset)
   end
 
   # Catch-all for all other events that we don't care about
@@ -198,14 +199,14 @@ defmodule Pax.Interface.Detail do
     end
   end
 
-  defp save_object(socket, :new, adapter, object, changeset) do
+  defp save_object(socket, :new, config, adapter, object, changeset) do
     case Pax.Adapter.create_object(adapter, object, changeset) do
-      {:ok, _object} ->
+      {:ok, object} ->
         {
           :halt,
           socket
           |> put_flash(:info, "Created successfully.")
-          |> maybe_redir_after_save()
+          |> maybe_redir_after_save(config, object)
         }
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -213,14 +214,14 @@ defmodule Pax.Interface.Detail do
     end
   end
 
-  defp save_object(socket, :edit, adapter, object, changeset) do
+  defp save_object(socket, :edit, config, adapter, object, changeset) do
     case Pax.Adapter.update_object(adapter, object, changeset) do
-      {:ok, _object} ->
+      {:ok, object} ->
         {
           :halt,
           socket
           |> put_flash(:info, "Updated successfully.")
-          |> maybe_redir_after_save()
+          |> maybe_redir_after_save(config, object)
         }
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -228,7 +229,12 @@ defmodule Pax.Interface.Detail do
     end
   end
 
-  defp maybe_redir_after_save(socket) do
+  defp maybe_redir_after_save(socket, config, object) do
+    socket =
+      socket
+      |> assign_pax(:show_path, init_show_path(config, object, socket))
+      |> assign_pax(:edit_path, init_edit_path(config, object, socket))
+
     cond do
       socket.assigns.pax.show_path != nil -> push_patch(socket, to: socket.assigns.pax.show_path)
       socket.assigns.pax.index_path != nil -> push_navigate(socket, to: socket.assigns.pax.index_path)
