@@ -165,9 +165,11 @@ defmodule Pax.Interface do
   end
 
   defp module_handle_params(_params, _uri, socket) do
+    %{module: module} = socket.assigns.pax
+
     # If the user has defined a handle_params callback, then we need to return {:cont, socket} so that Phoenix.LiveView
     # will call it, otherwise we tell Phoenix.LiveView to halt.
-    if function_exported?(socket.assigns.pax.module, :handle_params, 3) do
+    if function_exported?(module, :handle_params, 3) do
       {:cont, socket}
     else
       {:halt, socket}

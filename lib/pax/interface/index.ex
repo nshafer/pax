@@ -6,9 +6,9 @@ defmodule Pax.Interface.Index do
 
   def on_params(_params, _uri, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_params(#{inspect(params)}, #{inspect(uri)}")
-    %{config: config, adapter: adapter, scope: scope} = socket.assigns.pax
+    %{adapter: adapter, scope: scope} = socket.assigns.pax
 
-    fields = init_fields(config, adapter, socket)
+    fields = init_fields(socket)
     object_count = Pax.Adapter.count_objects(adapter, scope)
     objects = Pax.Adapter.list_objects(adapter, scope)
 
@@ -27,20 +27,10 @@ defmodule Pax.Interface.Index do
     {:cont, socket}
   end
 
-  defp init_fields(config, adapter, socket) do
-    config
-    |> get_fields(adapter, socket)
-    |> init_fields_with_link(config, adapter, socket)
-  end
+  defp init_fields(socket) do
+    %{config: config, adapter: adapter} = socket.assigns.pax
+    fields = get_fields(socket)
 
-  defp get_fields(config, adapter, socket) do
-    case Config.fetch(config, :index_fields, [socket]) do
-      {:ok, fields} -> fields
-      :error -> Pax.Adapter.default_index_fields(adapter)
-    end
-  end
-
-  defp init_fields_with_link(fields, config, adapter, socket) do
     # Iterate through the list of fieldspecs, initializing them with Pax.Field.init, then for any field
     # with `link: true` set it to the proper callback (`config.show_path` or `config.edit_path`). If there
     # are no fields with a link set, we'll make the first field a link if there is a config set, first
@@ -57,7 +47,7 @@ defmodule Pax.Interface.Index do
           field =
             adapter
             |> Pax.Field.init(fieldspec)
-            |> resolve_field_link(config, socket, has_show_path, has_edit_path)
+            |> resolve_field_link(has_show_path, has_edit_path, socket)
 
           {[field | fields], Map.has_key?(field.opts, :link) || has_link}
       end
@@ -67,11 +57,22 @@ defmodule Pax.Interface.Index do
     else
       fields
       |> Enum.reverse()
-      |> maybe_set_first_field_linked(config, socket, has_show_path, has_edit_path)
+      |> maybe_set_first_field_linked(has_show_path, has_edit_path, socket)
     end
   end
 
-  defp resolve_field_link(field, config, socket, has_show_path, has_edit_path) do
+  defp get_fields(socket) do
+    %{config: config, adapter: adapter} = socket.assigns.pax
+
+    case Config.fetch(config, :index_fields, [socket]) do
+      {:ok, fields} -> fields
+      :error -> Pax.Adapter.default_index_fields(adapter)
+    end
+  end
+
+  defp resolve_field_link(field, has_show_path, has_edit_path, socket) do
+    %{config: config} = socket.assigns.pax
+
     case Map.get(field.opts, :link) do
       # Convert a `link: true` field into a function call to the proper callback, otherwise raise an error
       true ->
@@ -87,11 +88,12 @@ defmodule Pax.Interface.Index do
     end
   end
 
-  defp maybe_set_first_field_linked(fields, _config, _socket, false, false) do
+  defp maybe_set_first_field_linked(fields, false, false, _socket) do
     fields
   end
 
-  defp maybe_set_first_field_linked(fields, config, socket, has_show_path, has_edit_path) do
+  defp maybe_set_first_field_linked(fields, has_show_path, has_edit_path, socket) do
+    %{config: config} = socket.assigns.pax
     [first_field | rest] = fields
 
     first_field =

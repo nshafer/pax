@@ -51,7 +51,7 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   defp assign_page_title(socket) do
-    resource = socket.assigns.pax_admin.resource
+    %{resource: resource} = socket.assigns.pax_admin
     resource_label = Pax.Util.String.truncate(resource.label, 50)
     pax = socket.assigns[:pax]
 
@@ -117,30 +117,26 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def index_path(socket) do
-    site_mod = socket.assigns.pax_admin.site_mod
-    resource = socket.assigns.pax_admin.resource
+    %{site_mod: site_mod, resource: resource} = socket.assigns.pax_admin
 
     Pax.Admin.Site.resource_index_path(site_mod, resource.section, resource)
   end
 
   def new_path(socket) do
-    site_mod = socket.assigns.pax_admin.site_mod
-    resource = socket.assigns.pax_admin.resource
+    %{site_mod: site_mod, resource: resource} = socket.assigns.pax_admin
 
     Pax.Admin.Site.resource_new_path(site_mod, resource.section, resource)
   end
 
   def show_path(object, socket) do
-    site_mod = socket.assigns.pax_admin.site_mod
-    resource = socket.assigns.pax_admin.resource
+    %{site_mod: site_mod, resource: resource} = socket.assigns.pax_admin
     object_ids = object_ids(object, socket)
 
     Pax.Admin.Site.resource_show_path(site_mod, resource.section, resource, object_ids)
   end
 
   def edit_path(object, socket) do
-    site_mod = socket.assigns.pax_admin.site_mod
-    resource = socket.assigns.pax_admin.resource
+    %{site_mod: site_mod, resource: resource} = socket.assigns.pax_admin
     object_ids = object_ids(object, socket)
 
     Pax.Admin.Site.resource_edit_path(site_mod, resource.section, resource, object_ids)
@@ -149,8 +145,7 @@ defmodule Pax.Admin.Resource.Live do
   # Build a list of ids for this object based on the value of the `id_fields` config option. These will be appended to
   # the path by the Site module, separated by slashes, so they match the default `/*ids` glob in the default routes.
   defp object_ids(object, socket) do
-    adapter = socket.assigns.pax.adapter
-    config = socket.assigns.pax.config
+    %{config: config, adapter: adapter} = socket.assigns.pax
 
     id_fields =
       case Pax.Config.fetch(config, :id_fields, [socket]) do

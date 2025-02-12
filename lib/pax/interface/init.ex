@@ -91,9 +91,11 @@ defmodule Pax.Interface.Init do
     end
   end
 
-  def init_object_name(_config, _adapter, nil, _socket), do: "Object"
+  def init_object_name(nil, _socket), do: "Object"
 
-  def init_object_name(config, adapter, object, socket) do
+  def init_object_name(object, socket) do
+    %{config: config, adapter: adapter} = socket.assigns.pax
+
     case Config.fetch(config, :object_name, [object, socket]) do
       {:ok, nil} -> Pax.Adapter.object_name(adapter, object)
       {:ok, value} -> value

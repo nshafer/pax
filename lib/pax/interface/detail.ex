@@ -11,29 +11,28 @@ defmodule Pax.Interface.Detail do
   def on_params(params, uri, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_params(#{inspect(params)}, #{inspect(uri)}")
     # dbg(socket, structs: false)
-    %{config: config, adapter: adapter} = socket.assigns.pax
 
-    fieldsets = init_fieldsets(config, adapter, socket)
-    object = init_object(config, adapter, params, uri, socket)
-    object_name = init_object_name(config, adapter, object, socket)
+    fieldsets = init_fieldsets(socket)
+    object = init_object(params, uri, socket)
+    object_name = init_object_name(object, socket)
 
     socket =
       socket
       |> assign_pax(:fieldsets, fieldsets)
       |> assign_pax(:object, object)
       |> assign_pax(:object_name, object_name)
-      |> maybe_init_detail_paths(config, object)
-      |> maybe_assign_form(adapter, fieldsets)
+      |> maybe_init_detail_paths(object)
+      |> maybe_assign_form(fieldsets)
 
     {:cont, socket}
   end
 
   def on_event("pax_validate", %{"detail" => params}, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_validate, #{inspect(params)})")
-    %{adapter: adapter, fieldsets: fieldsets} = socket.assigns.pax
+    %{adapter: adapter, fieldsets: fieldsets, object: object} = socket.assigns.pax
 
     changeset =
-      changeset(adapter, fieldsets, socket.assigns.pax.object, params)
+      changeset(adapter, fieldsets, object, params)
       |> Map.put(:action, :validate)
 
     {:halt, assign_form(socket, changeset)}
@@ -43,9 +42,7 @@ defmodule Pax.Interface.Detail do
     # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_save, #{inspect(params)})")
     live_action = socket.assigns.live_action
     %{config: config, adapter: adapter, fieldsets: fieldsets, object: object} = socket.assigns.pax
-
     changeset = changeset(adapter, fieldsets, object, params)
-
     save_object(socket, live_action, config, adapter, object, changeset)
   end
 
@@ -55,7 +52,9 @@ defmodule Pax.Interface.Detail do
     {:cont, socket}
   end
 
-  defp maybe_init_detail_paths(socket, config, object) do
+  defp maybe_init_detail_paths(socket, object) do
+    %{config: config} = socket.assigns.pax
+
     if socket.assigns.live_action in [:show, :edit] do
       socket
       |> assign_pax(:show_path, init_show_path(config, object, socket))
@@ -67,10 +66,12 @@ defmodule Pax.Interface.Detail do
     end
   end
 
-  defp init_object(config, adapter, params, uri, socket) do
+  defp init_object(params, uri, socket) do
+    %{adapter: adapter} = socket.assigns.pax
+
     case socket.assigns.live_action do
       action when action in [:show, :edit] ->
-        lookup = init_lookup(config, adapter, params, uri, socket)
+        lookup = init_lookup(params, uri, socket)
         Pax.Adapter.get_object(adapter, lookup, socket)
 
       :new ->
@@ -81,19 +82,23 @@ defmodule Pax.Interface.Detail do
     end
   end
 
-  defp init_lookup(config, adapter, params, uri, socket) do
+  defp init_lookup(params, uri, socket) do
+    %{config: config} = socket.assigns.pax
+
     # Check if the user has defined a `:lookup` config option, which can only be a function, and call it.
     # Otherwise, construct a lookup map using config, the adapter, and some sensible defaults.
     case Config.fetch(config, :lookup, [params, uri, socket]) do
       {:ok, value} -> value
-      :error -> construct_lookup_map(config, adapter, params, socket)
+      :error -> construct_lookup_map(params, socket)
     end
   end
 
-  defp construct_lookup_map(config, adapter, params, socket) do
+  defp construct_lookup_map(params, socket) do
+    %{config: config, adapter: adapter} = socket.assigns.pax
+
     # Get the list of params, which could be individually specified as `lookup_params` or a list of strings from
     # `lookup_glob` depending on how they configured their router.
-    param_values = lookup_params(config, params, socket)
+    param_values = lookup_params(params, socket)
 
     # Get the list of id fields for the object, which should be a list of atoms. If none are defined in the config,
     # then use the adapter to figure out a default. If the adapter can't help then just use a default.
@@ -124,7 +129,9 @@ defmodule Pax.Interface.Detail do
     end)
   end
 
-  defp lookup_params(config, params, socket) do
+  defp lookup_params(params, socket) do
+    %{config: config} = socket.assigns.pax
+
     lookup_params = Config.get(config, :lookup_params, [socket])
     lookup_glob = Config.get(config, :lookup_glob, [socket])
 
@@ -159,9 +166,11 @@ defmodule Pax.Interface.Detail do
     end
   end
 
-  defp maybe_assign_form(socket, adapter, fieldsets) do
+  defp maybe_assign_form(socket, fieldsets) do
+    %{adapter: adapter, object: object} = socket.assigns.pax
+
     if socket.assigns.live_action in [:edit, :new] do
-      changeset = changeset(adapter, fieldsets, socket.assigns.pax.object)
+      changeset = changeset(adapter, fieldsets, object)
       assign_form(socket, changeset)
     else
       assign_form(socket, nil)
@@ -230,14 +239,21 @@ defmodule Pax.Interface.Detail do
   end
 
   defp maybe_redir_after_save(socket, config, object) do
+    %{index_path: index_path} = socket.assigns.pax
+
+    # Update paths with new object
+    show_path = init_show_path(config, object, socket)
+    edit_path = init_edit_path(config, object, socket)
+
     socket =
       socket
-      |> assign_pax(:show_path, init_show_path(config, object, socket))
-      |> assign_pax(:edit_path, init_edit_path(config, object, socket))
+      |> assign_pax(:show_path, show_path)
+      |> assign_pax(:edit_path, edit_path)
 
+    # Redirect to the proper path after saving, or just stay on the page if no path is defined (weird)
     cond do
-      socket.assigns.pax.show_path != nil -> push_patch(socket, to: socket.assigns.pax.show_path)
-      socket.assigns.pax.index_path != nil -> push_navigate(socket, to: socket.assigns.pax.index_path)
+      show_path != nil -> push_patch(socket, to: show_path)
+      index_path != nil -> push_navigate(socket, to: index_path)
       true -> socket
     end
   end
@@ -257,7 +273,9 @@ defmodule Pax.Interface.Detail do
   #   ] = fieldgroups2
   # ] = fieldsets
 
-  defp init_fieldsets(config, adapter, socket) do
+  defp init_fieldsets(socket) do
+    %{config: config, adapter: adapter} = socket.assigns.pax
+
     fieldsets =
       case Config.fetch(config, :fieldsets, [socket]) do
         {:ok, value} -> value
