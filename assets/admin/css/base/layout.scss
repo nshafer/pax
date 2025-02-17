@@ -66,4 +66,7 @@ body {
     overflow-y: auto;
     background-color: var(--bg-base-1);
     color: var(--text-base);
+
+    // Reduce font to 14px when em = 16px.
+    font-size: 0.875rem;
 }
