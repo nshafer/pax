@@ -57,7 +57,7 @@ defmodule Pax.Adapter do
 
   @callback id_fields(opts()) :: [atom()] | nil
 
-  @callback object_name(opts(), object()) :: String.t()
+  @callback object_name(opts(), object()) :: String.t() | nil
 
   @callback cast(opts(), object(), unsigned_params(), fields :: [Pax.Field.t()]) ::
               Ecto.Changeset.t()
@@ -104,12 +104,12 @@ defmodule Pax.Adapter do
     end
   end
 
-  @spec singular_name(t()) :: String.t()
+  @spec singular_name(t()) :: String.t() | nil
   def singular_name(%Pax.Adapter{} = adapter) do
     adapter.module.singular_name(adapter.opts)
   end
 
-  @spec plural_name(t()) :: String.t()
+  @spec plural_name(t()) :: String.t() | nil
   def plural_name(%Pax.Adapter{} = adapter) do
     adapter.module.plural_name(adapter.opts)
   end
@@ -139,7 +139,7 @@ defmodule Pax.Adapter do
     adapter.module.id_fields(adapter.opts)
   end
 
-  @spec object_name(t(), object()) :: String.t()
+  @spec object_name(t(), object()) :: String.t() | nil
   def object_name(%Pax.Adapter{} = adapter, object) do
     adapter.module.object_name(adapter.opts, object)
   end

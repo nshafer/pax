@@ -95,14 +95,28 @@ defmodule Pax.Interface.Init do
   def init_singular_name(config, adapter, socket) do
     case Config.fetch(config, :singular_name, [socket]) do
       {:ok, value} -> value
-      :error -> Pax.Adapter.singular_name(adapter)
+      :error -> init_adapter_singular_name(adapter)
+    end
+  end
+
+  defp init_adapter_singular_name(adapter) do
+    case Pax.Adapter.singular_name(adapter) do
+      nil -> "Object"
+      name -> name
     end
   end
 
   def init_plural_name(config, adapter, socket) do
     case Config.fetch(config, :plural_name, [socket]) do
       {:ok, value} -> value
-      :error -> Pax.Adapter.plural_name(adapter)
+      :error -> init_adapter_plural_name(adapter)
+    end
+  end
+
+  defp init_adapter_plural_name(adapter) do
+    case Pax.Adapter.plural_name(adapter) do
+      nil -> "Objects"
+      name -> name
     end
   end
 
@@ -112,9 +126,16 @@ defmodule Pax.Interface.Init do
     %{config: config, adapter: adapter} = socket.assigns.pax
 
     case Config.fetch(config, :object_name, [object, socket]) do
-      {:ok, nil} -> Pax.Adapter.object_name(adapter, object)
+      {:ok, nil} -> init_adapter_object_name(adapter, object)
       {:ok, value} -> value
-      :error -> Pax.Adapter.object_name(adapter, object)
+      :error -> init_adapter_object_name(adapter, object)
+    end
+  end
+
+  defp init_adapter_object_name(adapter, object) do
+    case Pax.Adapter.object_name(adapter, object) do
+      nil -> "Object"
+      name -> name
     end
   end
 
