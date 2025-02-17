@@ -55,11 +55,25 @@ defmodule Pax.Admin.Resource.Live do
     resource_label = Pax.Util.String.truncate(resource.label, 50)
     pax = socket.assigns[:pax]
 
-    if pax != nil and pax.object_name != nil do
-      object_name = Pax.Util.String.truncate(pax.object_name, 50)
-      assign(socket, page_title: "#{object_name} · #{resource_label}")
-    else
+    if pax == nil do
       assign(socket, page_title: resource_label)
+    else
+      case pax.action do
+        :show ->
+          assign(socket, page_title: "#{Pax.Util.String.truncate(pax.object_name, 50)} · #{resource_label}")
+
+        :edit ->
+          assign(socket, page_title: "Edit: #{Pax.Util.String.truncate(pax.object_name, 45)} · #{resource_label}")
+
+        :new ->
+          assign(socket, page_title: "New #{Pax.Util.String.truncate(pax.singular_name, 50)} · #{resource_label}")
+
+        :delete ->
+          assign(socket, page_title: "Delete: #{Pax.Util.String.truncate(pax.object_name, 45)} · #{resource_label}")
+
+        _ ->
+          assign(socket, page_title: resource_label)
+      end
     end
   end
 
