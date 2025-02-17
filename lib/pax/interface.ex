@@ -135,6 +135,7 @@ defmodule Pax.Interface do
       socket
       |> assign_pax(:url, url)
       |> assign_pax(:path, path)
+      |> assign_pax(:action, socket.assigns.live_action)
 
     {:cont, socket}
   end
@@ -155,11 +156,12 @@ defmodule Pax.Interface do
   end
 
   defp action_handle_params(params, uri, socket) do
-    case socket.assigns.live_action do
+    case socket.assigns.pax.action do
       :index -> Index.on_params(params, uri, socket)
-      :new -> Detail.on_params(params, uri, socket)
       :show -> Detail.on_params(params, uri, socket)
       :edit -> Detail.on_params(params, uri, socket)
+      :new -> Detail.on_params(params, uri, socket)
+      :delete -> raise "Delete action not implemented"
       _ -> {:cont, socket}
     end
   end
@@ -190,7 +192,7 @@ defmodule Pax.Interface do
   end
 
   def action_handle_event(event, params, socket) do
-    case socket.assigns.live_action do
+    case socket.assigns.pax.action do
       :index -> Index.on_event(event, params, socket)
       :new -> Detail.on_event(event, params, socket)
       :show -> Detail.on_event(event, params, socket)

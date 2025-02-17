@@ -9,6 +9,7 @@ defmodule Pax.Interface.Context do
   * `module` - The module that is using the Pax Interface
   * `adapter` - The adapter module to use for the interface
   * `plugins` - A list of plugins to use for the interface
+  * `action` - The current action being performed, one of `:index`, `:show`, `:edit`, `:new` or `:delete`
   * `objects` - A list of objects to display, for the `:index` action
   * `object` - The current object being displayed in `:show`, `:edit` or `:delete` actions
   * `object_count` - The number of objects in the `:objects` list
@@ -46,6 +47,7 @@ defmodule Pax.Interface.Context do
   defstruct module: nil,
             adapter: nil,
             plugins: [],
+            action: nil,
             objects: [],
             object: nil,
             object_count: 0,

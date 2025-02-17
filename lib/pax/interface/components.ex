@@ -5,7 +5,6 @@ defmodule Pax.Interface.Components do
   import Pax.Util.String
 
   attr :pax, Pax.Interface.Context, required: true
-  attr :action, :atom, required: true
   attr :class, :string, default: nil
   attr :index_class, :string, default: nil
   attr :show_class, :string, default: nil
@@ -15,10 +14,10 @@ defmodule Pax.Interface.Components do
   def pax_interface(assigns) do
     ~H"""
     <div class="pax-interface">
-      <.pax_index :if={@action == :index} pax={@pax} class={@index_class} />
-      <.pax_show :if={@action == :show} pax={@pax} class={@show_class} />
-      <.pax_new :if={@action == :new} pax={@pax} class={@new_class} />
-      <.pax_edit :if={@action == :edit} pax={@pax} class={@edit_class} />
+      <.pax_index :if={@pax.action == :index} pax={@pax} class={@index_class} />
+      <.pax_show :if={@pax.action == :show} pax={@pax} class={@show_class} />
+      <.pax_new :if={@pax.action == :new} pax={@pax} class={@new_class} />
+      <.pax_edit :if={@pax.action == :edit} pax={@pax} class={@edit_class} />
     </div>
     """
   end

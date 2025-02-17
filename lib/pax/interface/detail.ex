@@ -40,10 +40,9 @@ defmodule Pax.Interface.Detail do
 
   def on_event("pax_save", %{"detail" => params}, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_save, #{inspect(params)})")
-    live_action = socket.assigns.live_action
-    %{config: config, adapter: adapter, fieldsets: fieldsets, object: object} = socket.assigns.pax
+    %{config: config, adapter: adapter, action: action, fieldsets: fieldsets, object: object} = socket.assigns.pax
     changeset = changeset(adapter, fieldsets, object, params)
-    save_object(socket, live_action, config, adapter, object, changeset)
+    save_object(socket, action, config, adapter, object, changeset)
   end
 
   # Catch-all for all other events that we don't care about
@@ -53,9 +52,9 @@ defmodule Pax.Interface.Detail do
   end
 
   defp maybe_init_detail_paths(socket, object) do
-    %{config: config} = socket.assigns.pax
+    %{config: config, action: action} = socket.assigns.pax
 
-    if socket.assigns.live_action in [:show, :edit] do
+    if action in [:show, :edit] do
       socket
       |> assign_pax(:show_path, init_show_path(config, object, socket))
       |> assign_pax(:edit_path, init_edit_path(config, object, socket))
@@ -67,9 +66,9 @@ defmodule Pax.Interface.Detail do
   end
 
   defp init_object(params, uri, socket) do
-    %{adapter: adapter} = socket.assigns.pax
+    %{adapter: adapter, action: action} = socket.assigns.pax
 
-    case socket.assigns.live_action do
+    case action do
       action when action in [:show, :edit] ->
         lookup = init_lookup(params, uri, socket)
         Pax.Adapter.get_object(adapter, lookup, socket)
@@ -167,9 +166,9 @@ defmodule Pax.Interface.Detail do
   end
 
   defp maybe_assign_form(socket, fieldsets) do
-    %{adapter: adapter, object: object} = socket.assigns.pax
+    %{adapter: adapter, action: action, object: object} = socket.assigns.pax
 
-    if socket.assigns.live_action in [:edit, :new] do
+    if action in [:edit, :new] do
       changeset = changeset(adapter, fieldsets, object)
       assign_form(socket, changeset)
     else

@@ -16,7 +16,7 @@ defmodule Pax.Admin.Resource.Live do
   def render(assigns) do
     ~H"""
     <%= if assigns[:pax] do %>
-      <.pax_interface pax={@pax} action={@live_action} />
+      <.pax_interface pax={@pax} />
     <% else %>
       <div class="admin-loading">
         Loading...
