@@ -16,6 +16,7 @@
 
 /* Included Plugins */
 
+@use './plugins/pax-breadcrumbs.scss';
 @use './plugins/pax-pagination.scss';
 
 /* Variables for use in all Pax CSS. Easily override this in your own CSS on the .pax class */

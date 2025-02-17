@@ -11,7 +11,7 @@
     display: flex;
     flex-flow: row wrap;
     align-items: baseline;
-    gap: calc(var(--pax-spacing) * 1);
+    gap: calc(var(--pax-spacing) * 0.5);
 }
 
 .pax-header-primary {

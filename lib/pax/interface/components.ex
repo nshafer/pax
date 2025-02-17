@@ -30,10 +30,6 @@ defmodule Pax.Interface.Components do
     <div class={["pax-index", @class]}>
       <.pax_header class="pax-index-header">
         <:primary>
-          <.pax_title>
-            {truncate(@pax.plural_name, 50)}
-          </.pax_title>
-
           {plugin_component(:index_header_primary, assigns)}
         </:primary>
 
@@ -56,7 +52,7 @@ defmodule Pax.Interface.Components do
         </:cell>
       </.pax_index_table>
 
-      <.pax_footer>
+      <.pax_footer class="pax-index-footer">
         <:primary>
           {plugin_component(:index_footer_primary, assigns)}
         </:primary>
@@ -81,22 +77,17 @@ defmodule Pax.Interface.Components do
     <div class={["pax-detail pax-detail-show", @class]}>
       <.pax_header class="pax-detail-header pax-detail-show-header">
         <:primary>
-          <div class="pax-title-breadcrumbs">
-            <.pax_link :if={@pax.index_path} class="pax-detail-index-breadcrumb-link" navigate={@pax.index_path}>
-              {truncate(@pax.plural_name, 50)}
-            </.pax_link>
-
-            <span class="pax-detail-index-breadcrumb-separator">/</span>
-
-            <.pax_title class="pax-detail-title">
-              {truncate(@pax.object_name, 50)}
-            </.pax_title>
-          </div>
+          {plugin_component(:show_header_primary, assigns)}
         </:primary>
 
         <:secondary>
+          {plugin_component(:show_header_secondary, assigns)}
           <.pax_button :if={@pax.edit_path} class="pax-detail-edit-button" patch={@pax.edit_path}>Edit</.pax_button>
         </:secondary>
+
+        <:tertiary>
+          {plugin_component(:show_header_tertiary, assigns)}
+        </:tertiary>
       </.pax_header>
 
       <div class="pax-detail-body">
@@ -112,8 +103,18 @@ defmodule Pax.Interface.Components do
         <% end %>
       </div>
 
-      <.pax_footer>
-        <:primary></:primary>
+      <.pax_footer class="pax-detail-footer pax-detail-show-footer">
+        <:primary>
+          {plugin_component(:show_footer_primary, assigns)}
+        </:primary>
+
+        <:secondary>
+          {plugin_component(:show_footer_secondary, assigns)}
+        </:secondary>
+
+        <:tertiary>
+          {plugin_component(:show_footer_tertiary, assigns)}
+        </:tertiary>
       </.pax_footer>
     </div>
     """
@@ -121,16 +122,6 @@ defmodule Pax.Interface.Components do
 
   attr :pax, Pax.Interface.Context, required: true
   attr :class, :string, default: nil
-
-  def pax_new(assigns) do
-    assigns
-    |> assign(new: true)
-    |> pax_edit()
-  end
-
-  attr :pax, Pax.Interface.Context, required: true
-  attr :class, :string, default: nil
-  attr :new, :boolean, default: false
 
   def pax_edit(assigns) do
     ~H"""
@@ -144,24 +135,11 @@ defmodule Pax.Interface.Components do
     >
       <.pax_header class="pax-detail-header pax-detail-edit-header">
         <:primary>
-          <div class="pax-title-breadcrumbs">
-            <.pax_link :if={@pax.index_path} class="pax-detail-index-breadcrumb-link" navigate={@pax.index_path}>
-              {truncate(@pax.plural_name, 25)}
-            </.pax_link>
-
-            <span class="pax-detail-index-breadcrumb-separator">/</span>
-
-            <.pax_title :if={@new}>
-              New {truncate(@pax.singular_name, 50)}
-            </.pax_title>
-
-            <.pax_title :if={not @new}>
-              {truncate(@pax.object_name, 50)}
-            </.pax_title>
-          </div>
+          {plugin_component(:edit_header_primary, assigns)}
         </:primary>
 
         <:secondary>
+          {plugin_component(:edit_header_secondary, assigns)}
           <.pax_button :if={@pax.show_path} class="pax-detail-cancel-button" patch={@pax.show_path} secondary={true}>
             Cancel
           </.pax_button>
@@ -176,6 +154,9 @@ defmodule Pax.Interface.Components do
             Save
           </.pax_button>
         </:secondary>
+        <:tertiary>
+          {plugin_component(:edit_header_tertiary, assigns)}
+        </:tertiary>
       </.pax_header>
 
       <div class="pax-detail-body">
@@ -191,8 +172,87 @@ defmodule Pax.Interface.Components do
         <% end %>
       </div>
 
-      <.pax_footer>
-        <:primary></:primary>
+      <.pax_footer class="pax-detail-footer pax-detail-edit-footer">
+        <:primary>
+          {plugin_component(:edit_footer_primary, assigns)}
+        </:primary>
+
+        <:secondary>
+          {plugin_component(:edit_footer_secondary, assigns)}
+        </:secondary>
+
+        <:tertiary>
+          {plugin_component(:edit_footer_tertiary, assigns)}
+        </:tertiary>
+      </.pax_footer>
+    </.form>
+    """
+  end
+
+  attr :pax, Pax.Interface.Context, required: true
+  attr :class, :string, default: nil
+
+  def pax_new(assigns) do
+    ~H"""
+    <.form
+      :let={f}
+      for={@pax.form}
+      as={:detail}
+      class={["pax-detail pax-detail-new", @class]}
+      phx-change="pax_validate"
+      phx-submit="pax_save"
+    >
+      <.pax_header class="pax-detail-header pax-detail-new-header">
+        <:primary>
+          {plugin_component(:new_header_primary, assigns)}
+        </:primary>
+
+        <:secondary>
+          {plugin_component(:new_header_secondary, assigns)}
+          <.pax_button :if={@pax.show_path} class="pax-detail-cancel-button" patch={@pax.show_path} secondary={true}>
+            Cancel
+          </.pax_button>
+
+          <.pax_button
+            class="pax-detail-save-button"
+            type="submit"
+            phx-disable-with="Saving..."
+            name="detail[save]"
+            value="save"
+          >
+            Save
+          </.pax_button>
+        </:secondary>
+        <:tertiary>
+          {plugin_component(:new_header_tertiary, assigns)}
+        </:tertiary>
+      </.pax_header>
+
+      <div class="pax-detail-body">
+        <%= for fieldset <- @pax.fieldsets do %>
+          <.pax_fieldset :let={fieldgroup} fieldset={fieldset}>
+            <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
+              <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
+                <.pax_field_label field={field} form={f} />
+                <.pax_field_input field={field} form={f} object={@pax.object} />
+              </div>
+            </.pax_fieldgroup>
+          </.pax_fieldset>
+        <% end %>
+      </div>
+
+      <.pax_footer class="pax-detail-footer pax-detail-new-footer">
+        <:primary>
+          {plugin_component(:new_footer_primary, assigns)}
+        </:primary>
+
+        <:secondary>
+          {plugin_component(:new_footer_secondary, assigns)}
+        </:secondary>
+
+        <:tertiary>
+          {plugin_component(:new_footer_tertiary, assigns)}
+        </:tertiary>
       </.pax_footer>
     </.form>
     """
