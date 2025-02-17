@@ -5,16 +5,27 @@ defmodule Pax.Components do
   Render components from plugins.
 
   You can define your own plugin component areas in your interface, then create plugins that implement those areas.
+
+      <div>
+      {plugin_component(:my_plugin_area, assigns)}
+      </div>
+
+  Then in your plugin, you can define a component that will be rendered in that area.
+
+      defmodule MyPaxInterfacePlugin do
+        use Phoenix.Component
+        use Pax.Interface.Plugin
+
+        def render_component(_opts, :my_plugin_area, assigns) do
+          ~H\"""
+          <div>{@pax.plural_name</div>
+          \"""
+        end
+      end
+
   """
   def plugin_component(component, %{pax: pax} = assigns) do
-    # dbg(assigns[:page])
-
-    outputs =
-      pax.plugins
-      |> Enum.map(fn plugin -> maybe_call_plugin_component(plugin, component, assigns) end)
-      |> Enum.filter(fn output -> output != nil end)
-
-    assigns = assign(assigns, :outputs, outputs)
+    assigns = assign(assigns, :outputs, render_plugin_components(pax.plugins, component, assigns))
 
     ~H"""
     <%= for output <- @outputs do %>
@@ -23,16 +34,16 @@ defmodule Pax.Components do
     """
   end
 
-  defp maybe_call_plugin_component(plugin, component, assigns) do
-    # Since plugin component areas can be defined by the user, we can't assume all plugins define the callbacks.
-    if function_exported?(plugin.module, component, 1) do
-      assigns = assign(assigns, :opts, plugin.opts)
-      apply(plugin.module, component, [assigns])
-    else
-      nil
+  defp render_plugin_components(plugins, component, assigns) do
+    for plugin <- plugins do
+      apply(plugin.module, :render_component, [plugin.opts, component, assigns])
     end
   end
 
+  @doc """
+  Renders a title element with the given level. The level can be 1, 2 or 3. The default is 1.
+  """
+  @doc type: :component
   attr :level, :integer, values: [1, 2, 3], default: 1
   attr :class, :any, default: nil
   slot :inner_block, required: true
@@ -48,13 +59,11 @@ defmodule Pax.Components do
   @doc """
   Renders a link using Phoenix.Component.link. All attributes from Phoenix.Component.link are passed through.
   """
-
+  @doc type: :component
   attr :class, :any, default: nil
-
   attr :rest, :global, include: ~w(
     navigate patch href replace method csrf_token
     download hreflang referrerpolicy rel target type)
-
   slot :inner_block, required: true
 
   def pax_link(assigns) do
@@ -68,13 +77,11 @@ defmodule Pax.Components do
   @doc """
   Renders a badge.
   """
-
+  @doc type: :component
   attr :class, :any, default: nil
-
   attr :rest, :global, include: ~w(
     navigate patch href replace method csrf_token
     download hreflang referrerpolicy rel target type)
-
   slot :inner_block, required: true
 
   def pax_badge(assigns) do
@@ -103,12 +110,10 @@ defmodule Pax.Components do
   attr :tertiary, :boolean, default: false
   attr :large, :boolean, default: false
   attr :icon, :boolean, default: false
-
   attr :rest, :global, include: ~w(
     disabled form name value
     navigate patch href replace method csrf_token
     download hreflang referrerpolicy rel target type)
-
   slot :inner_block, required: true
 
   def pax_button(assigns) do
@@ -151,7 +156,7 @@ defmodule Pax.Components do
   @doc """
   Renders a simple select with no label.
   """
-
+  @doc type: :component
   attr :id, :any, default: nil
   attr :name, :string
   attr :value, :any, required: true
@@ -160,7 +165,6 @@ defmodule Pax.Components do
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
   attr :has_errors, :boolean, default: false
-
   attr :rest, :global, include: ~w(disabled form)
 
   def pax_select(assigns) do
@@ -175,7 +179,7 @@ defmodule Pax.Components do
   @doc """
   Renders a simple text input with no label.
   """
-
+  @doc type: :component
   attr :id, :any, default: nil
   attr :name, :string
   attr :value, :any, required: true
@@ -210,9 +214,8 @@ defmodule Pax.Components do
   2. secondary: Aligned to the right side for desktops, useful for links, buttons, etc.
   3. tertiary: Aligned in the middle for desktops, useful for search bars, etc.
   """
-
+  @doc type: :component
   attr :class, :any, default: nil
-
   slot :primary
   slot :secondary
   slot :tertiary
@@ -243,7 +246,8 @@ defmodule Pax.Components do
   3. tertiary: Aligned in the middle for desktops.
 
   """
-
+  @doc type: :component
+  attr :class, :any, default: nil
   slot :primary
   slot :secondary
   slot :tertiary

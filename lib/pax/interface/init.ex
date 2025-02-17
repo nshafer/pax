@@ -53,15 +53,30 @@ defmodule Pax.Interface.Init do
   def init_plugins_config_spec(plugins) do
     for plugin <- plugins, reduce: %{} do
       plugins_config_spec ->
-        plugin_config_spec = Pax.Plugin.config_spec(plugin)
-
-        if Map.has_key?(plugins_config_spec, plugin.config_key) do
-          raise ArgumentError,
-                "plugin #{inspect(plugin)} defined duplicate config spec for #{inspect(plugin.config_key)}, " <>
-                  "already defined as #{inspect(Map.get(plugins_config_spec, plugin.config_key))}"
+        case plugin.config_key do
+          nil -> plugins_config_spec
+          key -> init_plugin_config_spec(plugins_config_spec, key, plugin)
         end
+    end
+  end
 
-        Map.put(plugins_config_spec, plugin.config_key, plugin_config_spec)
+  defp init_plugin_config_spec(plugins_config_spec, key, plugin) do
+    case Map.fetch(plugins_config_spec, key) do
+      {:ok, _existing} ->
+        raise ArgumentError, "plugin #{inspect(plugin.module)} defined duplicate config key #{inspect(key)}"
+
+      :error ->
+        # No duplicate, so add the plugin's config spec
+        case Pax.Plugin.config_spec(plugin) do
+          nil ->
+            plugins_config_spec
+
+          plugin_config_spec when is_map(plugin_config_spec) ->
+            Map.put(plugins_config_spec, plugin.config_key, plugin_config_spec)
+
+          _ ->
+            raise ArgumentError, "invalid config spec returned from #{inspect(plugin.module)}.config_spec/0"
+        end
     end
   end
 

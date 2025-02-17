@@ -103,7 +103,7 @@ defmodule Pax.Admin.Resource.Live do
     resource_mod = socket.assigns.pax_admin.resource.mod
 
     case resource_mod.plugins(socket) do
-      plugins when is_list(plugins) or is_nil(plugins) -> plugins
+      plugins when is_list(plugins) -> plugins
       _ -> raise ArgumentError, "Invalid plugins returned from #{inspect(resource_mod)}.plugins/1"
     end
   end

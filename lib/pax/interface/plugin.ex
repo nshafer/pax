@@ -40,34 +40,6 @@ defmodule Pax.Interface.Plugin do
 
   # TODO: add on_info() callback
 
-  @doc "The primary section of the header"
-  @doc group: "Components"
-  @callback index_header_primary(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
-
-  @doc "The secondary section of the header"
-  @doc group: "Components"
-  @callback index_header_secondary(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
-
-  @doc "The tertiary section of the header"
-  @doc group: "Components"
-  @callback index_header_tertiary(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
-
-  @optional_callbacks index_header_primary: 1, index_header_secondary: 1, index_header_tertiary: 1
-
-  @doc "The primary section of the footer"
-  @doc group: "Components"
-  @callback index_footer_primary(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
-
-  @doc "The secondary section of the footer"
-  @doc group: "Components"
-  @callback index_footer_secondary(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
-
-  @doc "The tertiary section of the footer"
-  @doc group: "Components"
-  @callback index_footer_tertiary(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
-
-  @optional_callbacks index_footer_primary: 1, index_footer_secondary: 1, index_footer_tertiary: 1
-
   defmacro __using__(_opts) do
     quote do
       @behaviour Pax.Plugin
@@ -75,8 +47,12 @@ defmodule Pax.Interface.Plugin do
       import Pax.Plugin
 
       def type(), do: :interface
+      def init(_callback_module, _opts), do: %{}
+      def config_key(), do: nil
       def config_spec(), do: %{}
-      defoverridable config_spec: 0
+      def merge_config(_opts, _config, _socket), do: %{}
+      def render_component(_opts, _section, _assigns), do: nil
+      defoverridable init: 2, config_key: 0, config_spec: 0, merge_config: 3, render_component: 3
     end
   end
 end

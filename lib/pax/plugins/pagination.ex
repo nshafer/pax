@@ -6,13 +6,17 @@ defmodule Pax.Plugins.Pagination do
   import Pax.Util.Params
 
   @default_objects_per_page 10
+  @default_count_placement :index_footer_primary
+  @default_pager_placement :index_footer_secondary
 
   # Plugin callbacks
 
   @impl true
   def init(_callback_module, opts) do
     %{
-      objects_per_page: Keyword.get(opts, :objects_per_page, @default_objects_per_page)
+      objects_per_page: Keyword.get(opts, :objects_per_page, @default_objects_per_page),
+      count_placement: Keyword.get(opts, :count_placement, @default_count_placement),
+      pager_placement: Keyword.get(opts, :pager_placement, @default_pager_placement)
     }
   end
 
@@ -22,14 +26,18 @@ defmodule Pax.Plugins.Pagination do
   @impl true
   def config_spec() do
     %{
-      objects_per_page: [:integer, {:function, 1, :integer}]
+      objects_per_page: [:integer, {:function, 1, :integer}],
+      count_placement: [:atom, {:function, 1, :atom}],
+      pager_placement: [:atom, {:function, 1, :atom}]
     }
   end
 
   @impl true
   def merge_config(opts, config, socket) do
     %{
-      objects_per_page: Pax.Config.get(config, :objects_per_page, [socket], opts.objects_per_page)
+      objects_per_page: Pax.Config.get(config, :objects_per_page, [socket], opts.objects_per_page),
+      count_placement: Pax.Config.get(config, :count_placement, [socket], opts.count_placement),
+      pager_placement: Pax.Config.get(config, :pager_placement, [socket], opts.pager_placement)
     }
   end
 
@@ -117,20 +125,15 @@ defmodule Pax.Plugins.Pagination do
 
   # Components
 
-  attr :pax, Pax.Interface.Context, required: true
-  attr :opts, :map, required: true
-
-  def index_footer_primary(assigns) do
+  @impl true
+  def render_component(%{count_placement: count_placement}, count_placement, assigns) do
     ~H"""
     <div><b>Page:</b> {@pax.private.pagination.page} / {@pax.private.pagination.num_pages}</div>
     <div><b>Total:</b> {@pax.object_count}</div>
     """
   end
 
-  attr :pax, Pax.Interface.Context, required: true
-  attr :opts, :map, required: true
-
-  def index_footer_secondary(assigns) do
+  def render_component(%{pager_placement: pager_placement}, pager_placement, assigns) do
     ~H"""
     <nav class="pax-pagination" aria-label="Page Navigation">
       <%!-- Link to first page (<<) --%>
@@ -192,6 +195,8 @@ defmodule Pax.Plugins.Pagination do
     </nav>
     """
   end
+
+  def render_component(_opts, _component, _assigns), do: nil
 
   defp options_for_page_select(num_pages) do
     for p <- 1..num_pages do
