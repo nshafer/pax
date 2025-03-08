@@ -30,16 +30,16 @@ defmodule Pax.Interface.Components do
     <div class={["pax-index", @class]}>
       <.pax_header class="pax-index-header">
         <:primary>
-          {plugin_component(:index_header_primary, assigns)}
+          {pax_plugin_component(:index_header_primary, assigns)}
         </:primary>
 
         <:secondary>
-          {plugin_component(:index_header_secondary, assigns)}
+          {pax_plugin_component(:index_header_secondary, assigns)}
           <.pax_button :if={@pax.new_path} navigate={@pax.new_path}>New {truncate(@pax.singular_name, 25)}</.pax_button>
         </:secondary>
 
         <:tertiary>
-          {plugin_component(:index_header_tertiary, assigns)}
+          {pax_plugin_component(:index_header_tertiary, assigns)}
         </:tertiary>
       </.pax_header>
 
@@ -54,15 +54,15 @@ defmodule Pax.Interface.Components do
 
       <.pax_footer class="pax-index-footer">
         <:primary>
-          {plugin_component(:index_footer_primary, assigns)}
+          {pax_plugin_component(:index_footer_primary, assigns)}
         </:primary>
 
         <:secondary>
-          {plugin_component(:index_footer_secondary, assigns)}
+          {pax_plugin_component(:index_footer_secondary, assigns)}
         </:secondary>
 
         <:tertiary>
-          {plugin_component(:index_footer_tertiary, assigns)}
+          {pax_plugin_component(:index_footer_tertiary, assigns)}
         </:tertiary>
       </.pax_footer>
     </div>
@@ -77,16 +77,16 @@ defmodule Pax.Interface.Components do
     <div class={["pax-detail pax-detail-show", @class]}>
       <.pax_header class="pax-detail-header pax-detail-show-header">
         <:primary>
-          {plugin_component(:show_header_primary, assigns)}
+          {pax_plugin_component(:show_header_primary, assigns)}
         </:primary>
 
         <:secondary>
-          {plugin_component(:show_header_secondary, assigns)}
+          {pax_plugin_component(:show_header_secondary, assigns)}
           <.pax_button :if={@pax.edit_path} class="pax-detail-edit-button" patch={@pax.edit_path}>Edit</.pax_button>
         </:secondary>
 
         <:tertiary>
-          {plugin_component(:show_header_tertiary, assigns)}
+          {pax_plugin_component(:show_header_tertiary, assigns)}
         </:tertiary>
       </.pax_header>
 
@@ -105,15 +105,15 @@ defmodule Pax.Interface.Components do
 
       <.pax_footer class="pax-detail-footer pax-detail-show-footer">
         <:primary>
-          {plugin_component(:show_footer_primary, assigns)}
+          {pax_plugin_component(:show_footer_primary, assigns)}
         </:primary>
 
         <:secondary>
-          {plugin_component(:show_footer_secondary, assigns)}
+          {pax_plugin_component(:show_footer_secondary, assigns)}
         </:secondary>
 
         <:tertiary>
-          {plugin_component(:show_footer_tertiary, assigns)}
+          {pax_plugin_component(:show_footer_tertiary, assigns)}
         </:tertiary>
       </.pax_footer>
     </div>
@@ -135,11 +135,11 @@ defmodule Pax.Interface.Components do
     >
       <.pax_header class="pax-detail-header pax-detail-edit-header">
         <:primary>
-          {plugin_component(:edit_header_primary, assigns)}
+          {pax_plugin_component(:edit_header_primary, assigns)}
         </:primary>
 
         <:secondary>
-          {plugin_component(:edit_header_secondary, assigns)}
+          {pax_plugin_component(:edit_header_secondary, assigns)}
           <.pax_button :if={@pax.show_path} class="pax-detail-cancel-button" patch={@pax.show_path} secondary={true}>
             Cancel
           </.pax_button>
@@ -155,7 +155,7 @@ defmodule Pax.Interface.Components do
           </.pax_button>
         </:secondary>
         <:tertiary>
-          {plugin_component(:edit_header_tertiary, assigns)}
+          {pax_plugin_component(:edit_header_tertiary, assigns)}
         </:tertiary>
       </.pax_header>
 
@@ -174,15 +174,15 @@ defmodule Pax.Interface.Components do
 
       <.pax_footer class="pax-detail-footer pax-detail-edit-footer">
         <:primary>
-          {plugin_component(:edit_footer_primary, assigns)}
+          {pax_plugin_component(:edit_footer_primary, assigns)}
         </:primary>
 
         <:secondary>
-          {plugin_component(:edit_footer_secondary, assigns)}
+          {pax_plugin_component(:edit_footer_secondary, assigns)}
         </:secondary>
 
         <:tertiary>
-          {plugin_component(:edit_footer_tertiary, assigns)}
+          {pax_plugin_component(:edit_footer_tertiary, assigns)}
         </:tertiary>
       </.pax_footer>
     </.form>
@@ -204,11 +204,11 @@ defmodule Pax.Interface.Components do
     >
       <.pax_header class="pax-detail-header pax-detail-new-header">
         <:primary>
-          {plugin_component(:new_header_primary, assigns)}
+          {pax_plugin_component(:new_header_primary, assigns)}
         </:primary>
 
         <:secondary>
-          {plugin_component(:new_header_secondary, assigns)}
+          {pax_plugin_component(:new_header_secondary, assigns)}
           <.pax_button :if={@pax.show_path} class="pax-detail-cancel-button" patch={@pax.show_path} secondary={true}>
             Cancel
           </.pax_button>
@@ -224,7 +224,7 @@ defmodule Pax.Interface.Components do
           </.pax_button>
         </:secondary>
         <:tertiary>
-          {plugin_component(:new_header_tertiary, assigns)}
+          {pax_plugin_component(:new_header_tertiary, assigns)}
         </:tertiary>
       </.pax_header>
 
@@ -243,15 +243,15 @@ defmodule Pax.Interface.Components do
 
       <.pax_footer class="pax-detail-footer pax-detail-new-footer">
         <:primary>
-          {plugin_component(:new_footer_primary, assigns)}
+          {pax_plugin_component(:new_footer_primary, assigns)}
         </:primary>
 
         <:secondary>
-          {plugin_component(:new_footer_secondary, assigns)}
+          {pax_plugin_component(:new_footer_secondary, assigns)}
         </:secondary>
 
         <:tertiary>
-          {plugin_component(:new_footer_tertiary, assigns)}
+          {pax_plugin_component(:new_footer_tertiary, assigns)}
         </:tertiary>
       </.pax_footer>
     </.form>

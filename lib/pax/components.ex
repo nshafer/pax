@@ -7,7 +7,7 @@ defmodule Pax.Components do
   You can define your own plugin component areas in your interface, then create plugins that implement those areas.
 
       <div>
-      {plugin_component(:my_plugin_area, assigns)}
+      {pax_plugin_component(:my_plugin_area, assigns)}
       </div>
 
   Then in your plugin, you can define a component that will be rendered in that area.
@@ -24,21 +24,117 @@ defmodule Pax.Components do
       end
 
   """
-  def plugin_component(component, %{pax: pax} = assigns) do
-    assigns = assign(assigns, :outputs, render_plugin_components(pax.plugins, component, assigns))
 
-    ~H"""
-    <%= for output <- @outputs do %>
-      {output}
-    <% end %>
-    """
-  end
+  # -----------------------------------------------
+  # Optimized %Rendered{} version
+  # -----------------------------------------------
+  # This version is an optimization of the "Dynamic heex template concatenation version" below. It avoids the cost of
+  # building, compiling and evaluating a template at run-time, everywhere there is a plugin component. The resulting
+  # code is more efficient, and works with change tracking, but builds a `%Phoenix.LiveView.Rendered{}` manually
+  # so it could break in the future if there are changes in LiveView. If that happens, comment this out and uncomment
+  # the "Dynamic heex template concatenation version" below.
+  #
+  # Note: `track_changes` is ignored since this just outputs a list of other `%Phoenix.LiveView.Rendered{}` elements
+  # and so the Renderer will just pass the `track_changes?` boolean to each of them. We also don't care if changes are
+  # being tracked or not, since we always the same list of dynamics, and the fingerprint is based on the
+  # `@pax.plugins` list, so it will always be the same as long as the plugins don't change.
+  #
+  # Note: `root` is set to false, which was how it was set in the "Dynamic heex template concatenation version" below.
 
-  defp render_plugin_components(plugins, component, assigns) do
-    for plugin <- plugins do
-      apply(plugin.module, :render_component, [plugin.opts, component, assigns])
+  def pax_plugin_component(component, assigns) do
+    %{plugins: plugins} = assigns.pax
+
+    dynamic = fn _track_changes? ->
+      for plugin <- plugins do
+        plugin.module
+        |> apply(:render_component, [plugin.opts, component, assigns])
+        |> Phoenix.LiveView.Engine.live_to_iodata()
+      end
     end
+
+    %Phoenix.LiveView.Rendered{
+      static: List.duplicate("", length(plugins) + 1),
+      dynamic: dynamic,
+      fingerprint: fingerprint(component, plugins),
+      root: false
+    }
   end
+
+  defp fingerprint(component, plugins) do
+    <<fingerprint::8*16>> =
+      [component | plugins]
+      |> :erlang.term_to_binary()
+      |> :erlang.md5()
+
+    fingerprint
+  end
+
+  # -----------------------------------------------
+  # Dynamic heex template concatenation version
+  # -----------------------------------------------
+  # This version builds up a template at run-time consisting of function calls to each of the configured plugin's
+  # `render_component/3` function, each in turn as if they had been hard coded in the template such as:application
+  #
+  #     {MyPlugin.render_component(opts, component, assigns)}
+  #     {MyPlugin2.render_component(opts, component, assigns)}
+  #
+  # The huge advantage here is that it works with change tracking, since `assigns` is untouched. Therefore each
+  # plugin component will only re-render if the assigns change, and not if the plugin list changes.
+  #
+  # This also works with "deep" change tracking, so it detects if the plugin component only accessed certain keys
+  # of the `@pax` assign, for example.
+
+  # This only uses the publicly available LV API, so it should be safe to use in production, but it is slow. It is
+  # left here so that if changes in LV, and the optimized version stops working, then this can be quickly uncommented.
+
+  # def pax_plugin_component(component, assigns) do
+  #   assigns = assign(assigns, :component, component)
+
+  #   expr =
+  #     assigns.pax.plugins
+  #     |> Enum.map(fn plugin ->
+  #       "{#{plugin.module}.render_component(#{inspect(plugin.opts)}, #{inspect(component)}, assigns)}"
+  #     end)
+  #     |> IO.iodata_to_binary()
+
+  #   options = [
+  #     engine: Phoenix.LiveView.TagEngine,
+  #     file: __ENV__.file,
+  #     line: __ENV__.line,
+  #     caller: __ENV__,
+  #     indentation: 0,
+  #     source: expr,
+  #     tag_handler: Phoenix.LiveView.HTMLEngine
+  #   ]
+
+  #   template = EEx.compile_string(expr, options)
+  #   # Pax.Debug.write_ast(template, header: "pax_plugin_component")
+  #   {result, _} = Code.eval_quoted(template, [assigns: assigns], options)
+  #   result
+  # end
+
+  # -----------------------------------------------
+  # Heex comprehension version
+  # -----------------------------------------------
+  # Due to how comprehensions work, this breaks change tracking and will cause every plugin component to rerender
+  # due to the `@component` assign changing every time we invoke the plugin's `render_component/3` function.
+  #
+  # Note: this can't be fixed by not assigning `@component` in the comprehension, because if we just use the variable
+  # as is, then LV detects it as a tainted variable and throws an error, and disabled change tracking.
+  #
+  # This is left here to remind myself that I already tried this, figured out why it broke change tracking, and to
+  # not try it again.
+
+  # def pax_plugin_component(component, assigns) do
+  #   assigns = assign(assigns, :component, component)
+
+  #   ~H"""
+  #   <%= for plugin <- @pax.plugins do %>
+  #     {apply(plugin.module, :render_component, [plugin.opts, @component, assigns])}
+  #   <% end %>
+  #   """
+  #   #|> dbg_m()
+  # end
 
   @doc """
   Renders a title element with the given level. The level can be 1, 2 or 3. The default is 1.
