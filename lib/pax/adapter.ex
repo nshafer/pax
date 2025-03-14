@@ -57,6 +57,8 @@ defmodule Pax.Adapter do
 
   @callback id_fields(opts()) :: [atom()] | nil
 
+  @callback object_ids(opts(), object()) :: [String.Chars.t()] | nil
+
   @callback object_name(opts(), object()) :: String.t() | nil
 
   @callback cast(opts(), object(), unsigned_params(), fields :: [Pax.Field.t()]) ::
@@ -104,11 +106,28 @@ defmodule Pax.Adapter do
     end
   end
 
+  # TODO: Make this always return a list, return [:id] if adapter returns nil. Remove `init_adapter_id_fields`
+  @spec id_fields(t()) :: [atom()] | nil
+  def id_fields(%Pax.Adapter{} = adapter) do
+    adapter.module.id_fields(adapter.opts)
+  end
+
+  @spec object_ids(t(), object()) :: [String.Chars.t()]
+  def object_ids(%Pax.Adapter{} = adapter, object) do
+    case adapter.module.object_ids(adapter.opts, object) do
+      nil -> default_object_ids(adapter, object)
+      ids when is_list(ids) -> ids
+      _ -> raise ArgumentError, "object_ids must return a list or nil"
+    end
+  end
+
+  # TODO: Make this always return a string, return "Object" if adapter returns nil. Remove `init_adapter_singular_name`
   @spec singular_name(t()) :: String.t() | nil
   def singular_name(%Pax.Adapter{} = adapter) do
     adapter.module.singular_name(adapter.opts)
   end
 
+  # TODO: Make this always return a string, return "Objects" if adapter returns nil. Remove `init_adapter_plural_name`
   @spec plural_name(t()) :: String.t() | nil
   def plural_name(%Pax.Adapter{} = adapter) do
     adapter.module.plural_name(adapter.opts)
@@ -134,11 +153,7 @@ defmodule Pax.Adapter do
     adapter.module.get_object(adapter.opts, lookup, socket)
   end
 
-  @spec id_fields(t()) :: [atom()] | nil
-  def id_fields(%Pax.Adapter{} = adapter) do
-    adapter.module.id_fields(adapter.opts)
-  end
-
+  # TODO: Make this always return a string, return nil if adapter returns nil. Remove `init_adapter_object_name`
   @spec object_name(t(), object()) :: String.t() | nil
   def object_name(%Pax.Adapter{} = adapter, object) do
     adapter.module.object_name(adapter.opts, object)
@@ -157,5 +172,12 @@ defmodule Pax.Adapter do
   @spec update_object(t(), object(), Ecto.Changeset.t()) :: {:ok, any()} | {:error, Ecto.Changeset.t()}
   def update_object(%Pax.Adapter{} = adapter, object, changeset) do
     adapter.module.update_object(adapter.opts, object, changeset)
+  end
+
+  defp default_object_ids(adapter, object) do
+    case id_fields(adapter) do
+      nil -> []
+      id_fields -> Enum.map(id_fields, fn field -> Map.fetch!(object, field) end)
+    end
   end
 end

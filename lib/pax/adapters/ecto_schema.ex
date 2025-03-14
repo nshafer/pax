@@ -172,6 +172,9 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
+  def object_ids(_opts, _object), do: nil
+
+  @impl Pax.Adapter
   def object_name(%{schema: schema}, object) do
     name = Pax.Util.Introspection.name_from_struct(schema)
 

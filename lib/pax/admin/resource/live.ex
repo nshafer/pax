@@ -16,7 +16,7 @@ defmodule Pax.Admin.Resource.Live do
   def render(assigns) do
     ~H"""
     <%= if assigns[:pax] do %>
-      <.pax_interface pax={@pax} />
+      {pax_interface(assigns)}
     <% else %>
       <div class="admin-loading">
         Loading...
@@ -159,13 +159,7 @@ defmodule Pax.Admin.Resource.Live do
   # Build a list of ids for this object based on the value of the `id_fields` config option. These will be appended to
   # the path by the Site module, separated by slashes, so they match the default `/*ids` glob in the default routes.
   defp object_ids(object, socket) do
-    %{config: config, adapter: adapter} = socket.assigns.pax
-
-    id_fields =
-      case Pax.Config.fetch(config, :id_fields, [socket]) do
-        {:ok, id_fields} -> id_fields
-        :error -> Pax.Adapter.id_fields(adapter)
-      end
+    %{id_fields: id_fields} = socket.assigns.pax
 
     for id_field <- id_fields do
       Map.get(object, id_field)

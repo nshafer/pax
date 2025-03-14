@@ -75,20 +75,20 @@ defmodule Pax.Plugins.Pagination do
   end
 
   @impl true
-  def on_event("pagination-page-change", _opts, params, socket) do
+  def on_event(_opts, "pagination-page-change", params, socket) do
     params
     |> get_page(nil)
     |> update_page_event(socket)
   end
 
   @impl true
-  def on_event("pagination-page-submit", _opts, params, socket) do
+  def on_event(_opts, "pagination-page-submit", params, socket) do
     params
     |> get_page(nil)
     |> update_page_event(socket)
   end
 
-  def on_event(_event, _opts, _params, socket), do: {:cont, socket}
+  def on_event(_opts, _event, _params, socket), do: {:cont, socket}
 
   def update_page_event(page, socket) do
     if page != nil and page > 0 and page <= socket.assigns.pax.private.pagination.num_pages do

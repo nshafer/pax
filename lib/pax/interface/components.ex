@@ -13,13 +13,20 @@ defmodule Pax.Interface.Components do
 
   def pax_interface(assigns) do
     ~H"""
-    <div class="pax-interface">
-      <.pax_index :if={@pax.action == :index} pax={@pax} class={@index_class} />
-      <.pax_show :if={@pax.action == :show} pax={@pax} class={@show_class} />
-      <.pax_new :if={@pax.action == :new} pax={@pax} class={@new_class} />
-      <.pax_edit :if={@pax.action == :edit} pax={@pax} class={@edit_class} />
+    <div :if={assigns[:pax]} class="pax-interface">
+      {pax_interface_action(assigns)}
     </div>
     """
+  end
+
+  def pax_interface_action(assigns) do
+    case assigns.pax.action do
+      :index -> assigns |> Map.put(:class, assigns.index_class) |> pax_index()
+      :show -> assigns |> Map.put(:class, assigns.show_class) |> pax_show()
+      :new -> assigns |> Map.put(:class, assigns.new_class) |> pax_new()
+      :edit -> assigns |> Map.put(:class, assigns.edit_class) |> pax_edit()
+      _ -> nil
+    end
   end
 
   attr :pax, Pax.Interface.Context, required: true
@@ -278,9 +285,9 @@ defmodule Pax.Interface.Components do
             <% end %>
           </tr>
         </thead>
-        <tbody>
-          <%= for object <- @objects do %>
-            <tr class="pax-index-table-row">
+        <tbody id="pax-objects" phx-update="stream">
+          <%= for {dom_id, object} <- @objects do %>
+            <tr id={dom_id} class="pax-index-table-row">
               <%= for field <- @fields do %>
                 <td class="pax-index-table-datacell">
                   {render_slot(@cell, {field, object})}

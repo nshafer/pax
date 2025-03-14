@@ -46,9 +46,27 @@ defmodule Pax.Interface.Detail do
   end
 
   # Catch-all for all other events that we don't care about
-  def on_event(event, params, socket) do
-    Logger.info("IGNORED: #{inspect(__MODULE__)}.on_event(#{inspect(event)}, #{inspect(params)})")
+  def on_event(_event, _params, socket) do
+    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.on_event(#{inspect(event)}, #{inspect(params)})")
     {:cont, socket}
+  end
+
+  # Catch-all for all other info messages that we don't care about
+  def on_info(_msg, socket) do
+    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.on_info(#{inspect(msg)})")
+    {:cont, socket}
+  end
+
+  # Catch-all for all other async results that we don't care about
+  def on_async(_name, _return, socket) do
+    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.on_async(#{inspect(name)})")
+    {:cont, socket}
+  end
+
+  # Do things after rendering the live view, but this will not trigger a rerender.
+  def after_render(socket) do
+    # Logger.debug("#{inspect(__MODULE__)}.after_render()")
+    socket
   end
 
   defp maybe_init_detail_paths(socket, object) do

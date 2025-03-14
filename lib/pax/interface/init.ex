@@ -92,6 +92,20 @@ defmodule Pax.Interface.Init do
     end
   end
 
+  def init_id_fields(config, adapter, socket) do
+    case Pax.Config.fetch(config, :id_fields, [socket]) do
+      {:ok, id_fields} -> id_fields
+      :error -> init_adapter_id_fields(adapter)
+    end
+  end
+
+  defp init_adapter_id_fields(adapter) do
+    case Pax.Adapter.id_fields(adapter) do
+      nil -> Pax.Interface.Config.default_id_fields()
+      fields -> fields
+    end
+  end
+
   def init_singular_name(config, adapter, socket) do
     case Config.fetch(config, :singular_name, [socket]) do
       {:ok, value} -> value

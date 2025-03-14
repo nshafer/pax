@@ -60,6 +60,7 @@ defmodule Pax.Interface.Context do
             new_path: nil,
             show_path: nil,
             edit_path: nil,
+            id_fields: [],
             fields: [],
             fieldsets: [],
             scope: %{},

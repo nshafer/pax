@@ -28,17 +28,44 @@ defmodule Pax.Interface.Plugin do
               {:cont, socket()} | {:halt, socket()}
 
   @doc """
-  on_event occurs during the normal LV handle_event/3 callback, after the main interface action, and before the user
+  on_event/4 occurs during the normal LV handle_event/3 callback, after the main interface action, and before the user
   module gets a chance. If it returns `{:halt, socket}` then the user module will never have its handle_event/3 called.
   If the plugin implements on_event/4 at all, then it must return `{:cont, socket}` for any events it has no interest
   in handling, otherwise an UndefinedFunctionError will be raised.
   """
-  @callback on_event(event :: binary, opts :: map(), params :: unsigned_params(), socket :: socket()) ::
+  @callback on_event(opts :: map(), event :: binary, params :: unsigned_params(), socket :: socket()) ::
               {:cont, socket()} | {:halt, socket()} | {:halt, reply :: map(), socket()}
 
-  @optional_callbacks on_preload: 4, on_loaded: 4, on_event: 4
+  @doc """
+  on_info/3 occurs during the normal LV handle_info/2 callback, after the main interface action, and before the user
+  module gets a chance. If it returns `{:halt, socket}` then the user module will never have its handle_info/2 called.
+  If the plugin implements on_info/3 at all, then it must return `{:cont, socket}` for any events it has no interest
+  in handling, otherwise an UndefinedFunctionError will be raised.
+  """
+  @callback on_info(opts :: map(), msg :: term(), socket :: socket()) ::
+              {:cont, socket()} | {:halt, socket()}
 
-  # TODO: add on_info() callback
+  @doc """
+  on_async/4 occurs during the normal LV handle_async/2 callback, after the main interface action, and before the user
+  module gets a chance. If it returns `{:halt, socket}` then the user module will never have its handle_async/2 called.
+  If the plugin implements on_async/4 at all, then it must return `{:cont, socket}` for any events it has no interest
+  in handling, otherwise an UndefinedFunctionError will be raised.
+  """
+  @callback on_async(
+              opts :: map(),
+              name :: term(),
+              async_fun_result :: {:ok, term()} | {:exit, term()},
+              socket :: socket()
+            ) ::
+              {:cont, socket()} | {:halt, socket()}
+
+  @doc """
+  after_render/2 occurs after the main interface action, and before the user module gets a chance. It must always
+  return a socket.
+  """
+  @callback after_render(opts :: map(), socket :: socket()) :: socket()
+
+  @optional_callbacks on_preload: 4, on_loaded: 4, on_event: 4, on_info: 3, on_async: 4, after_render: 2
 
   defmacro __using__(_opts) do
     quote do
