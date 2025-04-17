@@ -219,17 +219,17 @@ defmodule Pax.Admin.Site do
   #
   # def resources(_params, _session, _socket) do
   #   [
-  #     label: %{label: "Record Labels", resource: PaxDemoWeb.MainAdmin.LabelResource},       <- C
-  #     artist: %{resource: PaxDemoWeb.MainAdmin.ArtistResource, some_opt: "asdf"},    <- C
+  #     label: %{label: "Record Labels", resource: MyappWeb.MainAdmin.LabelResource},       <- C
+  #     artist: %{resource: MyappWeb.MainAdmin.ArtistResource, some_opt: "asdf"},    <- C
   #     library: [                                                                     <- A
-  #       label: %{resource: PaxDemoWeb.MainAdmin.LabelResource},                      <- C
-  #       artist: %{resource: PaxDemoWeb.MainAdmin.ArtistResource},                    <- C
-  #       album: %{resource: PaxDemoWeb.MainAdmin.AlbumResource}                       <- C
+  #       label: %{resource: MyappWeb.MainAdmin.LabelResource},                      <- C
+  #       artist: %{resource: MyappWeb.MainAdmin.ArtistResource},                    <- C
+  #       album: %{resource: MyappWeb.MainAdmin.AlbumResource}                       <- C
   #     ],
   #     library2: %{                                                                   <- B
   #       label: "Music Library Two",
   #       resources: [
-  #         album: %{resource: PaxDemoWeb.MainAdmin.AlbumResource}                     <- C
+  #         album: %{resource: MyappWeb.MainAdmin.AlbumResource}                     <- C
   #       ]
   #     }
   #   ]

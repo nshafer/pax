@@ -43,7 +43,7 @@ defmodule Pax.Admin.Router do
 
   ## Examples
 
-        scope "/", PaxDemoWeb do
+        scope "/", MyappWeb do
           pipe_through [:browser]
 
           pax_admin "/admin", MainAdmin.Site,

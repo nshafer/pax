@@ -198,8 +198,8 @@ defmodule Pax.Interface.Config do
   ```elixir
   def pax_config(_socket) do
     [
-      repo: PaxDemo.Repo,
-      schema: PaxDemo.Library.Book,
+      repo: Myapp.Repo,
+      schema: Myapp.Library.Book,
       singular_name: "Book",
       plural_name: "Books",
       object_name: fn object, _socket -> object.title end,
