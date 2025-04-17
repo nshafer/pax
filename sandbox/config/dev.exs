@@ -52,6 +52,12 @@ config :sandbox, SandboxWeb.Endpoint,
 # configured to run both http and https servers on
 # different ports.
 
+# Configure Phoenix.CodeReloader to reload pax as well as this application on every request, instead of just this app
+config :sandbox, SandboxWeb.Endpoint, reloadable_apps: [:sandbox, :pax]
+
+# Configure Phoenix.LiveReloader to Watch this app and the pax app during development and trigger reloads
+config :phoenix_live_reload, :dirs, ["../", "./"]
+
 # Watch static and templates for browser reloading.
 config :sandbox, SandboxWeb.Endpoint,
   live_reload: [
@@ -59,9 +65,13 @@ config :sandbox, SandboxWeb.Endpoint,
     patterns: [
       ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/sandbox_web/(controllers|live|components)/.*(ex|heex)$"
+      ~r"lib/sandbox_web/(controllers|live|components)/.*(ex|heex)$",
+      ~r"lib/pax/.*(interface|live|components).*(ex|heex)$"
     ]
   ]
+
+# Configure Pax
+config :pax, validate_config_spec: true
 
 # Enable dev routes for dashboard and mailbox
 config :sandbox, dev_routes: true
@@ -79,6 +89,6 @@ config :phoenix, :plug_init_mode, :runtime
 config :phoenix_live_view,
   # Include HEEx debug annotations as HTML comments in rendered markup.
   # Changing this configuration will require mix clean and a full recompile.
-  debug_heex_annotations: true,
+  # debug_heex_annotations: true,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true

@@ -7,9 +7,15 @@
     <.live_title default="Sandbox" suffix=" · Phoenix Framework">
       {assigns[:page_title]}
     </.live_title>
+
+    <link phx-track-static rel="stylesheet" href="/pax/pax.css" />
+    <script defer phx-track-static type="text/javascript" src="/pax/pax.js">
+    </script>
+
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
+
     <script>
       (() => {
         const setTheme = (theme) => {
