@@ -22,6 +22,7 @@ locals_without_parens = [
   import_deps: [:ecto, :phoenix],
   plugins: [Phoenix.LiveView.HTMLFormatter],
   inputs: ["*.{heex,ex,exs}", "{config,lib,test}/**/*.{heex,ex,exs}"],
+  subdirectories: ["sandbox"],
   line_length: 120,
   locals_without_parens: locals_without_parens,
   export: [
