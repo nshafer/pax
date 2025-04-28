@@ -202,6 +202,7 @@ defmodule Pax.Components do
   @doc type: :component
   attr :type, :string, default: nil
   attr :class, :any, default: nil
+  attr :primary, :boolean, default: false
   attr :secondary, :boolean, default: false
   attr :tertiary, :boolean, default: false
   attr :large, :boolean, default: false
@@ -220,6 +221,7 @@ defmodule Pax.Components do
           "pax-button",
           @large && "pax-button-large",
           @icon && "pax-button-icon",
+          @primary && "pax-button-primary",
           @secondary && "pax-button-secondary",
           @tertiary && "pax-button-tertiary",
           @class
@@ -237,6 +239,7 @@ defmodule Pax.Components do
           "pax-button",
           @large && "pax-button-large",
           @icon && "pax-button-icon",
+          @primary && "pax-button-primary",
           @secondary && "pax-button-secondary",
           @tertiary && "pax-button-tertiary",
           @class

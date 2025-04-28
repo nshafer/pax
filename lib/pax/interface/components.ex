@@ -42,7 +42,9 @@ defmodule Pax.Interface.Components do
 
         <:secondary>
           {pax_plugin_component(:index_header_secondary, assigns)}
-          <.pax_button :if={@pax.new_path} navigate={@pax.new_path}>New {truncate(@pax.singular_name, 25)}</.pax_button>
+          <.pax_button :if={@pax.new_path} navigate={@pax.new_path} primary={true}>
+            New {truncate(@pax.singular_name, 25)}
+          </.pax_button>
         </:secondary>
 
         <:tertiary>
@@ -89,7 +91,9 @@ defmodule Pax.Interface.Components do
 
         <:secondary>
           {pax_plugin_component(:show_header_secondary, assigns)}
-          <.pax_button :if={@pax.edit_path} class="pax-detail-edit-button" patch={@pax.edit_path}>Edit</.pax_button>
+          <.pax_button :if={@pax.edit_path} class="pax-detail-edit-button" patch={@pax.edit_path} primary={true}>
+            Edit
+          </.pax_button>
         </:secondary>
 
         <:tertiary>
@@ -157,6 +161,7 @@ defmodule Pax.Interface.Components do
             phx-disable-with="Saving..."
             name="detail[save]"
             value="save"
+            primary={true}
           >
             Save
           </.pax_button>
@@ -226,6 +231,7 @@ defmodule Pax.Interface.Components do
             phx-disable-with="Saving..."
             name="detail[save]"
             value="save"
+            primary={true}
           >
             Save
           </.pax_button>

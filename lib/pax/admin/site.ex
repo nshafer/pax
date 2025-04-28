@@ -311,6 +311,16 @@ defmodule Pax.Admin.Site do
     Enum.find(resources, &match?(%Resource{section: %{path: ^section_path}, path: ^resource_path}, &1))
   end
 
+  # TODO: if the user's router.ex does not `use Pax.Admin.Router` then we should raise an error here
+  #       Right now there is just a warning during complication:application
+  #
+  #   warning: SandboxWeb.Router.__pax__/1 is undefined or private
+  #   │
+  # 1 │ defmodule SandboxWeb.Admin.Site do
+  #   │ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #   │
+  #   └─ lib/sandbox_web/admin/site.ex:1: SandboxWeb.Admin.Site.__pax__/1
+
   defmacro __before_compile__(env) do
     quote do
       def __pax__(:router), do: @pax_router

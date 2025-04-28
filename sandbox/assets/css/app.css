@@ -32,7 +32,7 @@
   --color-base-content: oklch(97.807% 0.029 256.847);
   --color-primary: oklch(58% 0.233 277.117);
   --color-primary-content: oklch(96% 0.018 272.314);
-  --color-secondary: oklch(58% 0.233 277.117);
+  --color-secondary: oklch(50% 0.02 277.117);
   --color-secondary-content: oklch(96% 0.018 272.314);
   --color-accent: oklch(60% 0.25 292.717);
   --color-accent-content: oklch(96% 0.016 293.756);
@@ -100,3 +100,118 @@
 [data-phx-session] { display: contents }
 
 /* This file is for your main application CSS */
+
+/* App Styles
+All styles for the main public application using Pax.Interface to build CRUD interfaces.
+
+This is not how the admin pages are styled, that's done by Pax.Admin's "admin.css" file included in its own
+root.html.heex.
+
+This uses DaisyUI for basic styling by applying DaisyUI classes to the existing .pax-* classes that are
+from the default Pax components. This is the easiest way to customize the style of your Pax CRUD interface.
+
+If you're not using Tailwind, another options is to just define all of the CSS yourself, such as
+
+    .pax-index-table {
+        border-collapse: collapse;
+        border-spacing: 0;
+        width: 100%;
+        border: 1px solid #ddd;
+    }
+
+Another option is to provide your own custom components instead of the Pax Components, which would allow you
+to change the structure of the HTML as well as add the tailwind utility classes directly. This is a lot of work,
+but it is the most flexible option.
+*/
+
+/* Pax.Components */
+
+.pax-link {
+  @apply link;
+}
+
+.pax-link.disabled {
+  @apply link-neutral;
+}
+
+.pax-button {
+  @apply btn;
+}
+
+.pax-button-primary {
+  @apply btn-primary;
+}
+
+.pax-button-secondary {
+  @apply btn-secondary;
+}
+
+.pax-button-tertiary {
+  @apply btn-ghost;
+}
+
+.pax-select {
+  @apply select;
+}
+
+.pax-input {
+  @apply input;
+}
+
+/* Plugins */
+.pax-pagination-page-select {
+  @apply w-16;
+}
+
+.pax-pagination-page-select.has-errors {
+  @apply input-error;
+}
+
+.pax-pagination-page-input {
+  @apply w-16;
+}
+
+.pax-pagination-page-input.has-errors {
+  @apply input-error;
+}
+
+/* Pax.Interface.Components */
+
+.pax-index-table {
+  @apply table;
+}
+
+.pax-index-table-row {
+  @apply hover:bg-base-200;
+}
+
+.pax-detail-header {
+  @apply pb-2 border-b items-end;
+}
+
+/* Pax.Field.Components */
+
+.pax-field-label {
+  @apply label;
+}
+
+.pax-field-control-input {
+  @apply input w-full;
+}
+
+.pax-field-control-input.has-errors {
+  @apply input-error;
+}
+
+.pax-field-control-checkbox {
+  @apply checkbox;
+}
+
+.pax-field-errors {
+  @apply mt-2
+}
+
+.pax-field-error {
+  @apply text-error;
+}
+

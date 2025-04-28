@@ -14,6 +14,8 @@
 - [ ] Allow override or modification of EctoSchema queries before executing.
 - [ ] Authorization system, such as `can_view`, `can_edit`, `can_delete` or whatever.
 - [ ] Tests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+- [ ] Convert all MF callbacks to MFA with docs that certain args are prepended to the list. See
+      [:check_origin](https://hexdocs.pm/phoenix/Phoenix.Endpoint.html#socket/3-common-configuration).
 
 ## Interface
 - [ ] Create `pax_interface` macro in `Pax.Router` module that defines the routes for a `Pax.Interface`, with keys like

@@ -60,7 +60,7 @@ defmodule Pax.MixProject do
       {:dart_sass, "~> 0.7", only: :dev},
       {:phoenix_copy, "~> 0.1", only: :dev},
       # {:floki, ">= 0.30.0", only: :test},
-      {:ecto_sql, "~> 3.10", only: :test}
+      {:ecto_sql, "~> 3.10", only: [:dev, :test]}
       # {:postgrex, ">= 0.0.0", only: :test},
     ]
   end

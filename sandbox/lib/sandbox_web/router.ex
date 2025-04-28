@@ -1,5 +1,6 @@
 defmodule SandboxWeb.Router do
   use SandboxWeb, :router
+  use Pax.Admin.Router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -18,6 +19,26 @@ defmodule SandboxWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+
+    live "/labels", LabelLive, :index
+    live "/labels/new", LabelLive, :new
+    live "/labels/:id", LabelLive, :show
+    live "/labels/:id/edit", LabelLive, :edit
+    live "/labels/:id/delete", LabelLive, :delete
+
+    live "/artists", ArtistLive, :index
+    live "/artists/new", ArtistLive, :new
+    live "/artists/:slug", ArtistLive, :show
+    live "/artists/:slug/edit", ArtistLive, :edit
+    live "/artists/:slug/delete", ArtistLive, :delete
+
+    live "/albums", AlbumLive, :index
+    live "/albums/new", AlbumLive, :new
+    live "/albums/:uuid", AlbumLive, :show
+    live "/albums/:uuid/edit", AlbumLive, :edit
+    live "/albums/:uuid/delete", AlbumLive, :delete
+
+    pax_admin "/admin", Admin.Site, as: :admin
   end
 
   # Other scopes may use custom stacks.
