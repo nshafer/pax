@@ -42,7 +42,7 @@ defmodule Pax.Interface.Components do
 
         <:secondary>
           {pax_plugin_component(:index_header_secondary, assigns)}
-          <.pax_button :if={@pax.new_path} navigate={@pax.new_path} primary={true}>
+          <.pax_button :if={@pax.new_path} navigate={@pax.new_path} level={:primary}>
             New {truncate(@pax.singular_name, 25)}
           </.pax_button>
         </:secondary>
@@ -91,7 +91,7 @@ defmodule Pax.Interface.Components do
 
         <:secondary>
           {pax_plugin_component(:show_header_secondary, assigns)}
-          <.pax_button :if={@pax.edit_path} class="pax-detail-edit-button" patch={@pax.edit_path} primary={true}>
+          <.pax_button :if={@pax.edit_path} class="pax-detail-edit-button" patch={@pax.edit_path} level={:primary}>
             Edit
           </.pax_button>
         </:secondary>
@@ -151,7 +151,7 @@ defmodule Pax.Interface.Components do
 
         <:secondary>
           {pax_plugin_component(:edit_header_secondary, assigns)}
-          <.pax_button :if={@pax.show_path} class="pax-detail-cancel-button" patch={@pax.show_path} secondary={true}>
+          <.pax_button :if={@pax.show_path} class="pax-detail-cancel-button" patch={@pax.show_path} level={:secondary}>
             Cancel
           </.pax_button>
 
@@ -161,7 +161,7 @@ defmodule Pax.Interface.Components do
             phx-disable-with="Saving..."
             name="detail[save]"
             value="save"
-            primary={true}
+            level={:primary}
           >
             Save
           </.pax_button>
@@ -221,7 +221,7 @@ defmodule Pax.Interface.Components do
 
         <:secondary>
           {pax_plugin_component(:new_header_secondary, assigns)}
-          <.pax_button :if={@pax.show_path} class="pax-detail-cancel-button" patch={@pax.show_path} secondary={true}>
+          <.pax_button :if={@pax.index_path} class="pax-detail-cancel-button" patch={@pax.index_path} level={:secondary}>
             Cancel
           </.pax_button>
 
@@ -231,7 +231,7 @@ defmodule Pax.Interface.Components do
             phx-disable-with="Saving..."
             name="detail[save]"
             value="save"
-            primary={true}
+            level={:primary}
           >
             Save
           </.pax_button>
