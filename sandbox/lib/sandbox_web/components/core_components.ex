@@ -64,15 +64,15 @@ defmodule SandboxWeb.CoreComponents do
         @kind == :info && "alert-info",
         @kind == :error && "alert-error"
       ]}>
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="size-5 shrink-0" />
+        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
         <div>
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
         </div>
         <div class="flex-1" />
         <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
-          <.icon name="hero-x-mark-solid" class="size-5 opacity-40 group-hover:opacity-70" />
+          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
         </button>
       </div>
     </div>
@@ -183,7 +183,7 @@ defmodule SandboxWeb.CoreComponents do
     <fieldset class="fieldset mb-2">
       <label>
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
-        <span class="fieldset-label">
+        <span class="label">
           <input
             type="checkbox"
             id={@id}
@@ -204,7 +204,7 @@ defmodule SandboxWeb.CoreComponents do
     ~H"""
     <fieldset class="fieldset mb-2">
       <label>
-        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
+        <span :if={@label} class="label mb-1">{@label}</span>
         <select
           id={@id}
           name={@name}
@@ -225,7 +225,7 @@ defmodule SandboxWeb.CoreComponents do
     ~H"""
     <fieldset class="fieldset mb-2">
       <label>
-        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
+        <span :if={@label} class="label mb-1">{@label}</span>
         <textarea
           id={@id}
           name={@name}
@@ -246,7 +246,7 @@ defmodule SandboxWeb.CoreComponents do
     ~H"""
     <fieldset class="fieldset mb-2">
       <label>
-        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
+        <span :if={@label} class="label mb-1">{@label}</span>
         <input
           type={@type}
           name={@name}
@@ -404,7 +404,7 @@ defmodule SandboxWeb.CoreComponents do
 
   ## Examples
 
-      <.icon name="hero-x-mark-solid" />
+      <.icon name="hero-x-mark" />
       <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
   """
   attr :name, :string, required: true
