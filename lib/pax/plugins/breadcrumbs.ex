@@ -72,12 +72,12 @@ defmodule Pax.Plugins.Breadcrumbs do
     assigns = assign(assigns, index_title: truncate(assigns.pax.plural_name, opts.truncate_length))
 
     ~H"""
-    <div class="pax-breadcrumbs">
-      <.pax_link :if={@pax.index_path} class="pax-breadcrumbs-link" navigate={@pax.index_path}>
+    <div :if={@pax.index_path && @index_title} class="pax-breadcrumbs">
+      <.pax_link class="pax-breadcrumbs-link" navigate={@pax.index_path}>
         {@index_title}
       </.pax_link>
 
-      <span class="pax-breadcrumbs-separator">/</span>
+      <span :if={@pax.object_name} class="pax-breadcrumbs-separator">/</span>
     </div>
     """
   end

@@ -33,8 +33,8 @@
             ]
         ]
       ]
-- [ ] Stream objects
-- [ ] Fix breadcrumbs when no `index_path` or nil `object_name` given.
+- [x] Stream objects
+- [x] Fix breadcrumbs when no `index_path` or nil `object_name` given.
 - [ ] Returnable `%URL{}` structs from `*_path` config options?
 
 ### Index
