@@ -1,6 +1,6 @@
 defmodule Pax.Plugins.Title do
-  use Phoenix.Component
   use Pax.Interface.Plugin
+  use Phoenix.Component
   import Pax.Components
   import Pax.Util.String
 

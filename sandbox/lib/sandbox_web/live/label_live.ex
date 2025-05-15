@@ -18,7 +18,8 @@ defmodule SandboxWeb.LabelLive do
     [
       Pax.Plugins.Breadcrumbs,
       Pax.Plugins.Title,
-      Pax.Plugins.Pagination
+      Pax.Plugins.Pagination,
+      Pax.Plugins.IndexTable
     ]
   end
 

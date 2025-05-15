@@ -5,7 +5,7 @@ defmodule Pax.Interface.Plugin do
   > #### `use Pax.Interface.Plugin` {: .info}
   >
   > When you `use Pax.Interface.Plugin`, your module will be declared as a behaviour for both `Pax.Plugin` as well
-  > as `Pax.Interface.Plugin`. It will also import some convenience functions from `Pax.Plugin`.
+  > as `Pax.Interface.Plugin`.
   """
 
   @typedoc "A Phoenix.LiveView socket"
@@ -71,7 +71,6 @@ defmodule Pax.Interface.Plugin do
     quote do
       @behaviour Pax.Plugin
       @behaviour Pax.Interface.Plugin
-      import Pax.Plugin
 
       def type(), do: :interface
       def init(_callback_module, _opts), do: %{}

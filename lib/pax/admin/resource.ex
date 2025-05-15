@@ -37,7 +37,8 @@ defmodule Pax.Admin.Resource do
       def plugins(_socket) do
         [
           Pax.Plugins.Title,
-          {Pax.Plugins.Pagination, objects_per_page: 100}
+          {Pax.Plugins.Pagination, objects_per_page: 100},
+          Pax.Plugins.IndexTable
         ]
       end
 

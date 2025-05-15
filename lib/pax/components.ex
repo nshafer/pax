@@ -13,12 +13,12 @@ defmodule Pax.Components do
   Then in your plugin, you can define a component that will be rendered in that area.
 
       defmodule MyPaxInterfacePlugin do
-        use Phoenix.Component
         use Pax.Interface.Plugin
+        use Phoenix.Component
 
         def render_component(_opts, :my_plugin_area, assigns) do
           ~H\"""
-          <div>{@pax.plural_name</div>
+          <div>{@pax.plural_name}</div>
           \"""
         end
       end
@@ -26,7 +26,7 @@ defmodule Pax.Components do
   """
 
   # -----------------------------------------------
-  # Optimized %Rendered{} version
+  # Optimized %Phoenix.LiveView.Rendered{} version
   # -----------------------------------------------
   # This version is an optimization of the "Dynamic heex template concatenation version" below. It avoids the cost of
   # building, compiling and evaluating a template at run-time, everywhere there is a plugin component. The resulting

@@ -1,6 +1,6 @@
 defmodule Pax.Plugins.Pagination do
-  use Phoenix.Component
   use Pax.Interface.Plugin
+  use Phoenix.Component
   import Pax.Components
   import Pax.Interface.Context
   import Pax.Util.Params
