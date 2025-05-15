@@ -248,7 +248,7 @@ defmodule Pax.Interface do
   # This is the main entry point for the `:handle_info` hook.
 
   defp handle_info(msg, socket) do
-    IO.puts("#{inspect(__MODULE__)}.handle_info(#{inspect(msg)})")
+    # IO.puts("#{inspect(__MODULE__)}.handle_info(#{inspect(msg)})")
 
     with(
       # Action modules don't handle info messages for now, skip it
@@ -291,7 +291,7 @@ defmodule Pax.Interface do
   # This is the main entry point for the `:handle_async` hook.
 
   defp handle_async(name, async_fun_result, socket) do
-    IO.puts("#{inspect(__MODULE__)}.handle_async(#{inspect(name)}, #{inspect(async_fun_result)})")
+    # IO.puts("#{inspect(__MODULE__)}.handle_async(#{inspect(name)}, #{inspect(async_fun_result)})")
 
     with(
       # {:cont, socket} <- action_handle_async(name, async_fun_result, socket),
@@ -333,7 +333,7 @@ defmodule Pax.Interface do
   # This is the main entry point for the `:after_render` hook.
 
   defp after_render(socket) do
-    IO.puts("#{inspect(__MODULE__)}.after_render()")
+    # IO.puts("#{inspect(__MODULE__)}.after_render()")
 
     socket
     |> action_after_render()

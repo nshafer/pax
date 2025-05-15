@@ -63,29 +63,33 @@ defmodule Pax.Interface.Index do
   end
 
   # Stream objects using the public `stream*` functions in Phoenix.LiveView. This puts the objects in
-  # This is left commented out as a fallback to streaming in case something changes in LiveView
   # `@streams.objects`
+  #
+  # This is left commented out as a fallback to streaming in case something changes in LiveView
+  #
   # defp stream_objects_directly(socket) do
   #   %{id_fields: id_fields} = socket.assigns.pax
-
+  #
   #   opts = [
   #     reset: true,
   #     dom_id: fn object -> object_dom_id(object, id_fields) end
   #   ]
-
+  #
   #   Phoenix.LiveView.stream(socket, :pax_objects, init_objects(socket), opts)
   # end
 
   # Assign the objects to the socket.
+  #
   # This is left commented out as a fallback to streaming in case something changes in LiveView
+  #
   # defp assign_objects(socket) do
   #   %{id_fields: id_fields} = socket.assigns.pax
-
+  #
   #   objects_with_dom_ids =
   #     for object <- init_objects(socket) do
   #       {object_dom_id(object, id_fields), object}
   #     end
-
+  #
   #   assign_pax(socket, :objects, objects_with_dom_ids)
   # end
 
@@ -109,16 +113,9 @@ defmodule Pax.Interface.Index do
 
   # Do things after rendering the live view, but this will not trigger a rerender.
   def after_render(socket) do
-    Logger.debug("#{inspect(__MODULE__)}.after_render()")
-
     case socket.assigns.pax.objects do
-      %LiveStream{} = stream ->
-        Logger.debug("Resetting objects stream")
-        assign_pax(socket, :objects, Phoenix.LiveView.LiveStream.prune(stream))
-
-      _ ->
-        Logger.debug("No stream to reset")
-        socket
+      %LiveStream{} = stream -> assign_pax(socket, :objects, LiveStream.prune(stream))
+      _ -> socket
     end
   end
 
