@@ -1,7 +1,6 @@
 defmodule Pax.Interface.Components do
   use Phoenix.Component
   import Pax.Components
-  import Pax.Field.Components
   import Pax.Util.String
 
   attr :pax, Pax.Interface.Context, required: true
@@ -97,16 +96,7 @@ defmodule Pax.Interface.Components do
       </.pax_header>
 
       <div class="pax-detail-body">
-        <%= for fieldset <- @pax.fieldsets do %>
-          <.pax_fieldset :let={fieldgroup} fieldset={fieldset}>
-            <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
-              <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
-                <.pax_field_label field={field} />
-                <.pax_field_text field={field} object={@pax.object} />
-              </div>
-            </.pax_fieldgroup>
-          </.pax_fieldset>
-        <% end %>
+        {pax_plugin_component(:show_body, assigns)}
       </div>
 
       <.pax_footer class="pax-detail-footer pax-detail-show-footer">
@@ -131,14 +121,7 @@ defmodule Pax.Interface.Components do
 
   def pax_edit(assigns) do
     ~H"""
-    <.form
-      :let={f}
-      for={@pax.form}
-      as={:detail}
-      class={["pax-detail pax-detail-edit", @class]}
-      phx-change="pax_validate"
-      phx-submit="pax_save"
-    >
+    <.form for={@pax.form} class={["pax-detail pax-detail-edit", @class]} phx-change="pax_validate" phx-submit="pax_save">
       <.pax_header class="pax-detail-header pax-detail-edit-header">
         <:primary>
           {pax_plugin_component(:edit_header_primary, assigns)}
@@ -167,16 +150,7 @@ defmodule Pax.Interface.Components do
       </.pax_header>
 
       <div class="pax-detail-body">
-        <%= for fieldset <- @pax.fieldsets do %>
-          <.pax_fieldset :let={fieldgroup} fieldset={fieldset}>
-            <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
-              <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
-                <.pax_field_label field={field} form={f} />
-                <.pax_field_input field={field} form={f} object={@pax.object} />
-              </div>
-            </.pax_fieldgroup>
-          </.pax_fieldset>
-        <% end %>
+        {pax_plugin_component(:edit_body, assigns)}
       </div>
 
       <.pax_footer class="pax-detail-footer pax-detail-edit-footer">
@@ -201,14 +175,7 @@ defmodule Pax.Interface.Components do
 
   def pax_new(assigns) do
     ~H"""
-    <.form
-      :let={f}
-      for={@pax.form}
-      as={:detail}
-      class={["pax-detail pax-detail-new", @class]}
-      phx-change="pax_validate"
-      phx-submit="pax_save"
-    >
+    <.form for={@pax.form} class={["pax-detail pax-detail-new", @class]} phx-change="pax_validate" phx-submit="pax_save">
       <.pax_header class="pax-detail-header pax-detail-new-header">
         <:primary>
           {pax_plugin_component(:new_header_primary, assigns)}
@@ -237,16 +204,7 @@ defmodule Pax.Interface.Components do
       </.pax_header>
 
       <div class="pax-detail-body">
-        <%= for fieldset <- @pax.fieldsets do %>
-          <.pax_fieldset :let={fieldgroup} fieldset={fieldset}>
-            <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
-              <div class={["pax-detail-field", "pax-detail-field-#{i}"]}>
-                <.pax_field_label field={field} form={f} />
-                <.pax_field_input field={field} form={f} object={@pax.object} />
-              </div>
-            </.pax_fieldgroup>
-          </.pax_fieldset>
-        <% end %>
+        {pax_plugin_component(:new_body, assigns)}
       </div>
 
       <.pax_footer class="pax-detail-footer pax-detail-new-footer">
@@ -263,46 +221,6 @@ defmodule Pax.Interface.Components do
         </:tertiary>
       </.pax_footer>
     </.form>
-    """
-  end
-
-  attr :fieldset, :any, required: true
-  slot :inner_block, required: true
-
-  def pax_fieldset(assigns) do
-    {name, fieldgroups} = assigns.fieldset
-    assigns = assigns |> Map.put(:name, name) |> Map.put(:fieldgroups, fieldgroups)
-
-    ~H"""
-    <div class="pax-detail-fieldset">
-      <div :if={@name != :default} class="pax-detail-fieldset-heading">
-        <.pax_title level={2}>
-          {@name |> to_string() |> String.capitalize() |> truncate(50)}
-        </.pax_title>
-      </div>
-      <div class="pax-detail-fieldset-body">
-        <%= for fieldgroup <- @fieldgroups do %>
-          {render_slot(@inner_block, fieldgroup)}
-        <% end %>
-      </div>
-    </div>
-    """
-  end
-
-  attr :fieldgroup, :any, required: true
-  attr :with_index, :boolean, default: false
-  slot :inner_block, required: true
-
-  def pax_fieldgroup(assigns) do
-    fields = if assigns.with_index, do: Enum.with_index(assigns.fieldgroup), else: assigns.fieldgroup
-    assigns = Map.put(assigns, :fieldgroup, fields)
-
-    ~H"""
-    <div class={["pax-detail-fieldgroup", "pax-fieldgroup-count-#{Enum.count(@fieldgroup)}"]}>
-      <%= for field <- @fieldgroup do %>
-        {render_slot(@inner_block, field)}
-      <% end %>
-    </div>
     """
   end
 end

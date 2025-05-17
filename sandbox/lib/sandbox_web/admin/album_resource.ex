@@ -9,7 +9,7 @@ defmodule SandboxWeb.Admin.AlbumResource do
     [
       id_fields: [:uuid],
       index_fields: [
-        :id,
+        # :id,
         # {:uuid, link: true},
         {:name, link: true},
         :artist_id,

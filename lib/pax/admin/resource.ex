@@ -38,7 +38,8 @@ defmodule Pax.Admin.Resource do
         [
           Pax.Plugins.Title,
           {Pax.Plugins.Pagination, objects_per_page: 100},
-          Pax.Plugins.IndexTable
+          Pax.Plugins.IndexTable,
+          Pax.Plugins.DetailFieldsets
         ]
       end
 

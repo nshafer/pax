@@ -19,7 +19,8 @@ defmodule SandboxWeb.ArtistLive do
       Pax.Plugins.Breadcrumbs,
       Pax.Plugins.Title,
       Pax.Plugins.Pagination,
-      Pax.Plugins.IndexTable
+      Pax.Plugins.IndexTable,
+      Pax.Plugins.DetailFieldsets
     ]
   end
 

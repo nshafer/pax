@@ -1,4 +1,10 @@
 defmodule Pax.Plugins.IndexTable do
+  @moduledoc """
+  Renders a table for the index view of a Pax.Interface.
+
+  There are no options currently.
+  """
+
   use Pax.Interface.Plugin
   use Phoenix.Component
   import Pax.Field.Components

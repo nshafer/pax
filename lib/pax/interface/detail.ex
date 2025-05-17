@@ -1,6 +1,6 @@
 defmodule Pax.Interface.Detail do
   @moduledoc false
-  import Phoenix.Component, only: [to_form: 1]
+  import Phoenix.Component, only: [to_form: 2]
   import Phoenix.LiveView
   import Pax.Interface.Init
   import Pax.Interface.Context
@@ -199,7 +199,7 @@ defmodule Pax.Interface.Detail do
   end
 
   defp assign_form(socket, changeset) do
-    assign_pax(socket, :form, to_form(changeset))
+    assign_pax(socket, :form, to_form(changeset, as: :detail))
   end
 
   defp changeset(adapter, fieldsets, object, params \\ %{}) do

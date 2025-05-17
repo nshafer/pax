@@ -2,6 +2,12 @@ defmodule Pax.Field.Components do
   use Phoenix.Component
   import Pax.Components
 
+  @doc """
+  Renders a label for the given Pax.Field. If the Pax.Field has a `:label` option set, it will be used as the label text,
+  otherwise the field name will be used. The `:for` option can be used to set the `for` attribute of the label, otherwise
+  the `:form` will be used if set, and finally the field name will be used.
+  """
+
   attr :field, :any, required: true
   attr :form, :any, default: nil
   attr :label, :string, default: nil
@@ -16,6 +22,14 @@ defmodule Pax.Field.Components do
     """
   end
 
+  @doc """
+  Renders a link or text for the given Pax.Field. A link is rendered if the field has a valid `:link` option set.
+
+  If the field has a link set, then this turns into `<.pax_field_link class={@link_class} link={link}>...</.pax_field_link>`.
+
+  If the field does not have a link set, then this turns into `<.pax_field_text class={@text_class}>...</.pax_field_text>`.
+  """
+
   attr :field, :any, required: true
   attr :object, :map, required: true
   attr :link_class, :string, default: nil
@@ -28,6 +42,12 @@ defmodule Pax.Field.Components do
     end
   end
 
+  @doc """
+  Renders the `:value` of the given Pax.Field as plain text. The field's value will be resolved depending on what it
+  is set to, calling any functions or using any other field names as required. Otherwise it will find the value in the
+  `object` map by the field name. A `nil` value will be rendered as a unicode bullet character (`•`, U+2022).
+  """
+
   attr :field, :any, required: true
   attr :object, :map, required: true
   attr :class, :any, default: nil
@@ -39,6 +59,12 @@ defmodule Pax.Field.Components do
     </div>
     """
   end
+
+  @doc """
+  Renders a link for the given Pax.Field, similar to `pax_field_text/1`, but wrapped in a `<.pax_link>` component. The
+  link will use the `navigate` attribute, which results in patches to the same LiveView, navigates to different
+  LiveViews in the same `live_session`, and finally a normal, full page navigation to other URLs.
+  """
 
   attr :field, :any, required: true
   attr :object, :map, required: true
@@ -53,8 +79,46 @@ defmodule Pax.Field.Components do
     """
   end
 
+  @doc """
+  Renders a field input or text for the given Pax.Field. If the field is immutable, or if no form is set, then a
+  `<.pax_field_text class={@text_class} ...>` is rendered. Otherwise, a `<.pax_field_input class={@input_class} ...>`
+  is rendered.
+  """
+
   attr :field, :any, required: true
   attr :form, :any, default: nil
+  attr :object, :any, required: true
+  attr :input_class, :any, default: nil
+  attr :text_class, :any, default: nil
+  attr :errors_class, :any, default: nil
+  attr :error_class, :any, default: nil
+
+  def pax_field_input_or_text(assigns) do
+    ~H"""
+    <%= if @form == nil or Pax.Field.immutable?(@field) do %>
+      <.pax_field_text class={@text_class} field={@field} object={@object} />
+    <% else %>
+      <.pax_field_input
+        class={@input_class}
+        field={@field}
+        object={@object}
+        form={@form}
+        errors_class={@errors_class}
+        error_class={@error_class}
+      />
+    <% end %>
+    """
+  end
+
+  @doc """
+  Renders an input control for the given field and form, as well as any errors for the field. The input control is
+  determined by the field type, as the type's `input/3` is called, which will render the appropriate input control for
+  the field type. The errors are rendered using the `pax_field_errors/1` function, which will render any errors for the
+  field.
+  """
+
+  attr :field, :any, required: true
+  attr :form, :any, required: true
   attr :object, :any, required: true
   attr :class, :any, default: nil
   attr :text_class, :any, default: nil
@@ -63,24 +127,25 @@ defmodule Pax.Field.Components do
 
   def pax_field_input(assigns) do
     ~H"""
-    <%= if @form == nil or Pax.Field.immutable?(@field) do %>
-      <.pax_field_text class={@text_class} field={@field} object={@object} />
-    <% else %>
-      <div class={["pax-field-input", @class]}>
-        {Pax.Field.input(@field, @form)}
-        <.pax_field_errors field={@field} form={@form} class={@errors_class} error_class={@error_class} />
-      </div>
-    <% end %>
+    <div class={["pax-field-input", @class]}>
+      {Pax.Field.input(@field, @form)}
+      <.pax_field_errors field={@field} form={@form} class={@errors_class} error_class={@error_class} />
+    </div>
     """
   end
 
+  @doc """
+  Renders a list of errors for the given Pax.Field. The errors are rendered using the `<.pax_field_error>` component.
+  """
+
+  attr :errors, :list
   attr :field, :any, required: true
   attr :form, :any, default: nil
   attr :class, :any, default: nil
   attr :error_class, :string, default: nil
 
   def pax_field_errors(assigns) do
-    assigns = assign(assigns, :errors, Pax.Field.errors(assigns.field, assigns.form))
+    assigns = assign_new(assigns, :errors, fn -> Pax.Field.errors(assigns.field, assigns.form) end)
 
     ~H"""
     <div :if={@errors != []} class={["pax-field-errors", @class]}>
@@ -90,6 +155,10 @@ defmodule Pax.Field.Components do
     </div>
     """
   end
+
+  @doc """
+  Renders a single field error.
+  """
 
   slot :inner_block, required: true
   attr :class, :any, default: nil
