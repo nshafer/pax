@@ -97,7 +97,9 @@
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
 /* Make LiveView wrapper divs transparent for layout */
-[data-phx-session] { display: contents }
+[data-phx-session] {
+  display: contents
+}
 
 /* This file is for your main application CSS */
 
@@ -158,42 +160,13 @@ but it is the most flexible option.
   @apply input;
 }
 
-/* Plugins */
-.pax-pagination-page-select {
-  @apply w-16;
-}
-
-.pax-pagination-page-select.has-errors {
-  @apply input-error;
-}
-
-.pax-pagination-page-input {
-  @apply w-16;
-}
-
-.pax-pagination-page-input.has-errors {
-  @apply input-error;
-}
-
 /* Pax.Interface.Components */
-
-.pax-index-table {
-  @apply table;
-}
-
-.pax-index-table-row {
-  @apply hover:bg-base-200;
-}
 
 .pax-detail-header {
   @apply pb-2 border-b items-end;
 }
 
 /* Pax.Field.Components */
-
-.pax-field-label {
-  @apply label;
-}
 
 .pax-field-control-input {
   @apply input w-full;
@@ -215,3 +188,36 @@ but it is the most flexible option.
   @apply text-error;
 }
 
+/* Plugins */
+
+.pax-index-table {
+  @apply table;
+}
+
+.pax-index-table-row {
+  @apply hover:bg-base-200;
+}
+
+.pax-detail-fieldsets-field-label {
+  @apply label;
+}
+
+.pax-detail-list-field-label {
+  @apply label whitespace-normal;
+}
+
+.pax-pagination-page-select {
+  @apply w-16;
+}
+
+.pax-pagination-page-select.has-errors {
+  @apply input-error;
+}
+
+.pax-pagination-page-input {
+  @apply w-16;
+}
+
+.pax-pagination-page-input.has-errors {
+  @apply input-error;
+}

@@ -9,8 +9,6 @@
 @use './components/pax-button.scss';
 @use './components/pax-badge.scss';
 @use './components/pax-table-wrapper.scss';
-@use './components/pax-index.scss';
-@use './components/pax-detail.scss';
 @use './components/pax-field.scss';
 @use './components/pax-icon.scss';
 
@@ -18,6 +16,9 @@
 
 @use './plugins/pax-breadcrumbs.scss';
 @use './plugins/pax-pagination.scss';
+@use './plugins/pax-index-table.scss';
+@use './plugins/pax-detail-list.scss';
+@use './plugins/pax-detail-fieldsets.scss';
 
 /* Variables for use in all Pax CSS. Easily override this in your own CSS on the .pax class */
 .pax-interface {

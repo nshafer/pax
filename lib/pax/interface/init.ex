@@ -180,4 +180,104 @@ defmodule Pax.Interface.Init do
       :error -> nil
     end
   end
+
+  def init_fields(action, socket) do
+    %{config: config, adapter: adapter} = socket.assigns.pax
+    fields = get_fields(config, adapter, socket)
+
+    # Iterate through the list of fieldspecs, initializing them with Pax.Field.init, then for any field
+    # with `link: true` set it to the proper callback (`config.show_path` or `config.edit_path`). If there
+    # are no fields with a link set, we'll make the first field a link if there is a config set, first
+    # `config.show_path`, then `config.edit_path`.
+
+    {fields, has_link} =
+      for fieldspec <- fields, reduce: {[], false} do
+        {fields, has_link} ->
+          field =
+            adapter
+            |> Pax.Field.init(fieldspec)
+            |> resolve_field_link(config, socket)
+
+          {[field | fields], Map.has_key?(field.opts, :link) || has_link}
+      end
+
+    fields =
+      fields
+      |> Enum.reverse()
+      |> fields_for_action(action)
+
+    if has_link do
+      fields
+    else
+      maybe_set_first_field_linked(fields, config, socket)
+    end
+  end
+
+  defp get_fields(config, adapter, socket) do
+    case Config.fetch(config, :fields, [socket]) do
+      {:ok, fields} -> fields
+      :error -> Pax.Adapter.default_fields(adapter)
+    end
+  end
+
+  defp fields_for_action(fields, action) do
+    fields
+    |> Enum.filter(&filter_field_only(&1, action))
+    |> Enum.reject(&reject_field_except(&1, action))
+  end
+
+  defp filter_field_only(field, action) do
+    case Map.get(field.opts, :only) do
+      nil -> true
+      only when only == action -> true
+      only when is_list(only) -> Enum.member?(only, action)
+      _ -> false
+    end
+  end
+
+  defp reject_field_except(field, action) do
+    case Map.get(field.opts, :except) do
+      nil -> false
+      except when except == action -> true
+      except when is_list(except) -> Enum.member?(except, action)
+      _ -> false
+    end
+  end
+
+  defp resolve_field_link(field, config, socket) do
+    case Map.get(field.opts, :link) do
+      # Convert a `link: true` field into a function call to the proper callback, otherwise raise an error
+      true ->
+        cond do
+          config[:show_path] ->
+            Pax.Field.set_link(field, fn object -> Config.get(config, :show_path, [object, socket]) end)
+
+          config[:edit_path] ->
+            Pax.Field.set_link(field, fn object -> Config.get(config, :edit_path, [object, socket]) end)
+
+          true ->
+            raise "You must configure either :show_path or :edit_path to use link: true"
+        end
+
+      # Otherwise just return the field as is if there is an explicit link set (callback, url, etc) or not.
+      _link ->
+        field
+    end
+  end
+
+  defp maybe_set_first_field_linked([first_field | rest], config, socket) do
+    first_field =
+      cond do
+        config[:show_path] ->
+          Pax.Field.set_link(first_field, fn object -> Config.get(config, :show_path, [object, socket]) end)
+
+        config[:edit_path] ->
+          Pax.Field.set_link(first_field, fn object -> Config.get(config, :edit_path, [object, socket]) end)
+
+        true ->
+          first_field
+      end
+
+    [first_field | rest]
+  end
 end

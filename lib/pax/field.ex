@@ -15,7 +15,7 @@ defmodule Pax.Field do
           | {atom(), atom() | module()}
           | {atom(), atom() | module(), keyword()}
 
-  @global_opts [:label, :link, :value, :immutable, :required]
+  @global_opts [:label, :link, :value, :immutable, :required, :only, :except]
 
   @doc false
   @spec init(Pax.Adapter.t(), fieldspec()) :: t()

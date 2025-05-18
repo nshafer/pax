@@ -84,17 +84,12 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def default_index_fields(%{schema: schema}) do
+  def default_fields(%{schema: schema}) do
     for field_name <- schema.__schema__(:fields),
         schema_type = schema.__schema__(:type, field_name),
         {:ok, field_type} = schema_to_field_type(schema, schema_type) do
       {field_name, field_type}
     end
-  end
-
-  @impl Pax.Adapter
-  def default_detail_fieldsets(opts) do
-    [default: default_index_fields(opts)]
   end
 
   @doc """

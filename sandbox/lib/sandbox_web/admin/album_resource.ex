@@ -8,23 +8,14 @@ defmodule SandboxWeb.Admin.AlbumResource do
   def config(_socket) do
     [
       id_fields: [:uuid],
-      index_fields: [
-        # :id,
-        # {:uuid, link: true},
+      fields: [
         {:name, link: true},
         :artist_id,
         {:rating, round: 2},
-        {:length, :string, value: {__MODULE__, :length}}
-      ],
-      fieldsets: [
-        default: [
-          [{:id, immutable: true}, {:uuid, immutable: true}],
-          :name,
-          :rating,
-          :length_sec,
-          :artist_id,
-          {:length, :string, value: {__MODULE__, :length}}
-        ]
+        {:length, :string, value: {__MODULE__, :length}, only: [:index, :show]},
+        {:length_sec, label: "Length (seconds)", only: [:edit, :new]},
+        {:id, only: :show},
+        {:uuid, only: :show}
       ]
     ]
   end

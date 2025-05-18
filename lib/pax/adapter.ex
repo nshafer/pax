@@ -36,9 +36,7 @@ defmodule Pax.Adapter do
   @doc "A function that merges any additional configuration options into the adapter's opts map."
   @callback merge_config(opts(), config :: map(), socket()) :: map()
 
-  @callback default_index_fields(opts()) :: Pax.Index.fields()
-
-  @callback default_detail_fieldsets(opts()) :: Pax.Detail.fieldsets()
+  @callback default_fields(opts()) :: Pax.Index.fields()
 
   @callback field_type(opts(), field_name :: atom()) ::
               {:ok, atom() | module()} | {:error, term()}
@@ -88,14 +86,9 @@ defmodule Pax.Adapter do
     %Pax.Adapter{adapter | opts: opts}
   end
 
-  @spec default_index_fields(t()) :: Pax.Index.fields()
-  def default_index_fields(%Pax.Adapter{} = adapter) do
-    adapter.module.default_index_fields(adapter.opts)
-  end
-
-  @spec default_detail_fieldsets(t()) :: Pax.Detail.fieldsets()
-  def default_detail_fieldsets(%Pax.Adapter{} = adapter) do
-    adapter.module.default_detail_fieldsets(adapter.opts)
+  @spec default_fields(t()) :: Pax.Index.fields()
+  def default_fields(%Pax.Adapter{} = adapter) do
+    adapter.module.default_fields(adapter.opts)
   end
 
   @spec field_type!(t(), field_name :: atom()) :: atom()

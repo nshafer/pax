@@ -5,29 +5,39 @@ defmodule SandboxWeb.Admin.LabelResource do
     {Pax.Adapters.EctoSchema, repo: Sandbox.Repo, schema: Sandbox.Library.Label}
   end
 
+  def plugins(_socket) do
+    [
+      Pax.Plugins.Title,
+      {Pax.Plugins.Pagination, objects_per_page: 100},
+      Pax.Plugins.IndexTable,
+      Pax.Plugins.DetailFieldsets
+    ]
+  end
+
   def config(_socket) do
     [
-      index_fields: [
+      fields: [
         :id,
         {:name, link: true},
-        :rating,
+        :founded,
+        {:rating, :float, round: 2},
         :accepting_submissions,
-        :inserted_at,
-        :updated_at
+        {:inserted_at, immutable: true, except: :index},
+        {:updated_at, immutable: true, except: :index}
       ],
-      fieldsets: [
-        default: [
-          [
-            {:name, :string},
-            {:slug, :string}
-          ],
-          [{:rating, :float, label: "Rating (0-5)", round: 2}, :founded],
-          {:accepting_submissions, :boolean, true: "Yes", false: "No"}
-        ],
-        meta: [
-          {:id, :integer, label: "ID#", immutable: true},
-          {:inserted_at, :datetime, immutable: true},
-          {:updated_at, :datetime, immutable: true}
+      plugins: [
+        detail_fieldsets: [
+          fieldsets: [
+            default: [
+              [:name, :slug],
+              :rating,
+              :accepting_submissions
+            ],
+            meta: [
+              :id,
+              [:inserted_at, :updated_at]
+            ]
+          ]
         ]
       ]
     ]

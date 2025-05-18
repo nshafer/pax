@@ -8,9 +8,10 @@
 - [ ] Reimplement mobile views as @container queries
 - [x] Redo callback hell to instead just use one `pax_config` callback that sets a global config that is stored in the
       `@pax` context. This should have all config options, including any extra config for the adapters or plugins.
-- [ ] Reimplement main index table and detail view as individual plugins.
+- [x] Reimplement main index table and detail view as individual plugins.
 - [x] Upgrade to LiveView 1.0 - transition away from `phx-feedback-for`
 - [x] Redo Adapter `get_object` to use the scope. Should we formally define the scope with a struct or not?
+- [ ] Make adapter optional so all needed callbacks can be specified in the LV, falling back to adapter, then erroring.
 - [ ] Allow override or modification of EctoSchema queries before executing.
 - [ ] Authorization system, such as `can_view`, `can_edit`, `can_delete` or whatever.
 - [ ] Tests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -39,11 +40,10 @@
 
 ### Index
 - [x] Pagination plugin
-- [ ] Convert table to plugin
+- [x] Convert table to plugin
 - [ ] Sorting plugin
 - [ ] Filters plugin
 - [ ] Actions plugin
-- [ ] Maybe refactor fieldsets to use css grid?
 - [ ] Field alignment: left, center, right
 - [ ] Action Items plugin
 - [ ] More index types: table, grid, blocks, blog? (ActiveAdmin)
@@ -55,13 +55,14 @@
 - [ ] Inline plugin
 - [ ] Audit log plugin with revert?
 - [ ] Collab / presence plugin
+- [ ] Maybe refactor fieldsets to use css grid?
 - [ ] Action Items plugin
 - [ ] Handle unique violations better. (Duplicate: use duplicate slug or something)
 - [ ] Crash when id field(s) changed
 
 ## Fields
 - [x] Allow specifying just `:fieldname` and default to Field.String maybe? Or callback to adapter to figure it out?
-- [ ] Redo fields to just have one list of fields, with `only: :index` and `except: [:index, :edit]` options.
+- [x] Redo fields to just have one list of fields, with `only: :index` and `except: [:index, :edit]` options.
 - [ ] Check for duplicate field definitions, or fix ids? (duplicate id warnings in console if field is specified twice)
 - [ ] Redo fieldsets to just be `detail_layout` to specify how the fields are laid out. Defaults to just the list
       of fields. Any missing fields are assumed to not be included. Should we allow `show_layout` and `edit_layout`
@@ -74,7 +75,6 @@
     - [ ] `link :name, ~p"/somewhere/"` for random links
 - [x] `pax_admin "/admin", MyAppWeb.Admin` macro for route injection
 - [x] Admin interface with sidebar menu
-- [ ] Make dark-mode plus-only?
 - [ ] Flashes
 - [ ] Dashboard with widgets.
 - [ ] Section dashboards with default just list of resources contained within.
@@ -86,6 +86,8 @@
 - [ ] Sidebar menu icons for resources, default to squares with first letter. Section arrow instead of icon.
 
 ## Static
+- [ ] Create single entry point Plug for all Pax related paths. Mainly static for now.
+- [ ] Create system for plugin static files to be accessible without extra config by user.
 - [ ] Fix/figure out phx.digest. Do it or not? (Probably not...)
     - [ ] Figure out / write docs on importing pax.css directly.
     - [ ] Figure out / write docs on creating custom admin.css that imports pax_admin.css
@@ -94,6 +96,8 @@
 - [x] Maybe don't use tailwind for pax.css? Use ~~postcss~~ sass instead?
 
 ## Rename?
+- pax - peace, pax romana, PAX conference, etc. Very overloaded.
 - ~~kite~~ taken on hex
 - jib
 - pixy
+- pyx - A pyx or pix is a small round container used in the Catholic, Old Catholic, Lutheran and Anglican Churches to carry the Eucharist

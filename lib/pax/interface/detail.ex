@@ -12,36 +12,34 @@ defmodule Pax.Interface.Detail do
     # IO.puts("#{inspect(__MODULE__)}.on_params(#{inspect(params)}, #{inspect(uri)}")
     # dbg(socket, structs: false)
 
-    fieldsets = init_fieldsets(socket)
     object = init_object(params, uri, socket)
     object_name = init_object_name(object, socket)
 
     socket =
       socket
-      |> assign_pax(:fieldsets, fieldsets)
       |> assign_pax(:object, object)
       |> assign_pax(:object_name, object_name)
       |> maybe_init_detail_paths(object)
-      |> maybe_assign_form(fieldsets)
+      |> maybe_assign_form(object)
 
     {:cont, socket}
   end
 
   def on_event("pax_validate", %{"detail" => params}, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_validate, #{inspect(params)})")
-    %{adapter: adapter, fieldsets: fieldsets, object: object} = socket.assigns.pax
+    %{adapter: adapter, fields: fields, object: object} = socket.assigns.pax
 
     changeset =
-      changeset(adapter, fieldsets, object, params)
+      changeset(adapter, fields, object, params)
       |> Map.put(:action, :validate)
 
-    {:halt, assign_form(socket, changeset)}
+    {:halt, assign_pax_form(socket, changeset)}
   end
 
   def on_event("pax_save", %{"detail" => params}, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_save, #{inspect(params)})")
-    %{config: config, adapter: adapter, action: action, fieldsets: fieldsets, object: object} = socket.assigns.pax
-    changeset = changeset(adapter, fieldsets, object, params)
+    %{config: config, adapter: adapter, action: action, fields: fields, object: object} = socket.assigns.pax
+    changeset = changeset(adapter, fields, object, params)
     save_object(socket, action, config, adapter, object, changeset)
   end
 
@@ -183,27 +181,22 @@ defmodule Pax.Interface.Detail do
     end
   end
 
-  defp maybe_assign_form(socket, fieldsets) do
-    %{adapter: adapter, action: action, object: object} = socket.assigns.pax
+  defp maybe_assign_form(socket, object) do
+    %{adapter: adapter, action: action, fields: fields} = socket.assigns.pax
 
     if action in [:edit, :new] do
-      changeset = changeset(adapter, fieldsets, object)
-      assign_form(socket, changeset)
+      changeset = changeset(adapter, fields, object)
+      assign_pax_form(socket, changeset)
     else
-      assign_form(socket, nil)
+      assign_pax(socket, :form, nil)
     end
   end
 
-  defp assign_form(socket, nil) do
-    assign_pax(socket, :form, nil)
-  end
-
-  defp assign_form(socket, changeset) do
+  defp assign_pax_form(socket, changeset) do
     assign_pax(socket, :form, to_form(changeset, as: :detail))
   end
 
-  defp changeset(adapter, fieldsets, object, params \\ %{}) do
-    fields = fields_from_fieldsets(fieldsets)
+  defp changeset(adapter, fields, object, params \\ %{}) do
     mutable_fields = Enum.reject(fields, &Pax.Field.immutable?/1)
 
     Pax.Adapter.cast(adapter, object, params, mutable_fields)
@@ -219,12 +212,6 @@ defmodule Pax.Interface.Detail do
     Ecto.Changeset.validate_required(changeset, required_field_names)
   end
 
-  defp fields_from_fieldsets(fieldsets) do
-    for {_, fieldgroups} <- fieldsets, fields <- fieldgroups, field <- fields do
-      field
-    end
-  end
-
   defp save_object(socket, :new, config, adapter, object, changeset) do
     case Pax.Adapter.create_object(adapter, object, changeset) do
       {:ok, object} ->
@@ -236,7 +223,7 @@ defmodule Pax.Interface.Detail do
         }
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:halt, assign_form(socket, changeset)}
+        {:halt, assign_pax_form(socket, changeset)}
     end
   end
 
@@ -251,7 +238,7 @@ defmodule Pax.Interface.Detail do
         }
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:halt, assign_form(socket, changeset)}
+        {:halt, assign_pax_form(socket, changeset)}
     end
   end
 
@@ -273,57 +260,5 @@ defmodule Pax.Interface.Detail do
       index_path != nil -> push_navigate(socket, to: index_path)
       true -> socket
     end
-  end
-
-  # Fieldsets should be a Keyword list of fieldset name -> fieldgroups, where fieldgroups is a list of fields to
-  # display on one line, or just one field to display by itself.
-  #
-  # Example:
-  #
-  # [
-  #   default: [
-  #     [name] = fields1,
-  #     [email, phone] = fields2
-  #   ] = fieldgroups1,
-  #   metadata: [
-  #     [created_at, updated_at] = fields3
-  #   ] = fieldgroups2
-  # ] = fieldsets
-
-  defp init_fieldsets(socket) do
-    %{config: config, adapter: adapter} = socket.assigns.pax
-
-    fieldsets =
-      case Config.fetch(config, :fieldsets, [socket]) do
-        {:ok, value} -> value
-        :error -> Pax.Adapter.default_detail_fieldsets(adapter)
-      end
-
-    # Check if the user returned a keyword list of fieldset name -> fieldgroups, and if not, make it :default
-    if is_fieldsets?(fieldsets) do
-      Enum.map(fieldsets, &init_fieldset(adapter, &1))
-    else
-      [init_fieldset(adapter, {:default, fieldsets})]
-    end
-  end
-
-  defp is_fieldsets?(fieldsets) do
-    Enum.all?(fieldsets, fn
-      {name, value} when is_atom(name) and is_list(value) -> true
-      _ -> false
-    end)
-  end
-
-  defp init_fieldset(adapter, {name, fields}) when is_atom(name) and is_list(fields) do
-    {name, Enum.map(fields, &init_fieldgroup(adapter, &1))}
-  end
-
-  # A fieldgroup can be a list of fields to display on one line, or just one field to display by itself
-  defp init_fieldgroup(adapter, groups) when is_list(groups) do
-    Enum.map(groups, &Pax.Field.init(adapter, &1))
-  end
-
-  defp init_fieldgroup(adapter, field) do
-    [Pax.Field.init(adapter, field)]
   end
 end

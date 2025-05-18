@@ -23,7 +23,6 @@ defmodule Pax.Interface.Context do
   * `show_path` - The path to the show page
   * `edit_path` - The path to the edit page
   * `fields` - A list of fields to display in the index page
-  * `fieldsets` - A list of fieldsets to display in the show and edit pages
   * `scope` - A map of scope values to use for the adapter, see the [Scope](#scope) section
   * `private` - A map of private values for pax internals and plugins to use.
 
@@ -62,7 +61,6 @@ defmodule Pax.Interface.Context do
             edit_path: nil,
             id_fields: [],
             fields: [],
-            fieldsets: [],
             scope: %{},
             private: %{}
 

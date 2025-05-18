@@ -33,6 +33,8 @@
 
 /* Pax Plugin styles */
 @use 'plugins/pax-pagination.scss';
+@use 'plugins/pax-detail-list.scss';
+@use 'plugins/pax-detail-fieldsets.scss';
 
 /* Variables for just the admin pages */
 :root {

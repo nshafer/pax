@@ -106,26 +106,15 @@ defmodule Pax.Interface.Config do
   Valid values:
   * `function` - A function that takes the object and the socket and returns a string.
 
-  ### `index_fields`
+  ### `fields`
 
-  The fields to display in the index page. This should be a list of field specs.
+  The fields to display on the index and detail pages. This should be a list of field specs.
 
   Please see `Pax.Field` for more information.
 
   Valid values:
   * `list` - A list of field specs.
   * `function` - A function that takes the socket and returns a list of field specs.
-
-  ### `fieldsets`
-
-  The fieldsets to display in the detail page. This should be either a list of fieldset specs, or a keyword list of
-  sections with a list of fieldset specs.
-
-  Please see `Pax.Field` for more information.
-
-  Valid values:
-  * `list` - A list of fieldset specs.
-  * `function` - A function that takes the socket and returns a list of fieldset specs.
 
   ### `lookup`
 
@@ -209,30 +198,12 @@ defmodule Pax.Interface.Config do
       edit_path: fn object, _socket -> ~p"/books/\#{object.id}/\#{object.slug}/edit" end,
       lookup_params: ["id", "slug"],
       id_fields: [:id, :slug],
-      index_fields: [
+      fields: [
         {:title, link: true},
         :rank,
         :downloads,
         :reading_level,
         :publication_date
-      ],
-      fieldsets: [
-        default: [
-          [:title, :slug],
-          [:rank, :downloads],
-          [:reading_level, :words],
-          [:author_id, :language_id],
-          :visible
-        ],
-        metadata: [
-          :pg_id,
-          :publication_date,
-          [:inserted_at, :updated_at]
-        ],
-        statistics: [
-          [:rank, :downloads],
-          [:reading_level, :words]
-        ]
       ]
     ]
   end
@@ -249,8 +220,7 @@ defmodule Pax.Interface.Config do
       new_path: [:string, {:function, 1, :string}],
       show_path: {:function, 2, :string},
       edit_path: {:function, 2, :string},
-      index_fields: [:list, {:function, 1, :list}],
-      fieldsets: [:list, {:function, 1, :list}],
+      fields: [:list, {:function, 1, :list}],
       lookup: {:function, 3, :map},
       lookup_params: [:list, {:function, 1, :list}],
       lookup_glob: [:string, {:function, 1, :string}],

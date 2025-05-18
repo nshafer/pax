@@ -33,26 +33,33 @@ defmodule SandboxWeb.ArtistLive do
       show_path: fn object, _socket -> ~p"/artists/#{object.slug}" end,
       edit_path: fn object, _socket -> ~p"/artists/#{object.slug}/edit" end,
       object_name: fn object, _socket -> object.name end,
-      index_fields: [
-        :id,
+      fields: [
+        {:id, immutable: true},
+        {:slug, except: :index},
         {:name, link: true},
-        {:rating, :string, value: &format_rating/1},
-        :current_label_id
-        # :inserted_at,
-        # {:updated_at, :datetime, format: "%Y-%m-%d %H:%M:%S"}
+        {:rating_formatted, :string, label: "Rating", value: &format_rating/1, except: :edit},
+        {:rating, :float, round: 2, only: :edit},
+        {:started, :date, except: :index},
+        {:ended, :date, except: :index},
+        :current_label_id,
+        {:inserted_at, :datetime, immutable: true, except: :index},
+        {:updated_at, :datetime, immutable: true, except: :index}
       ],
-      fieldsets: [
-        default: [
-          [:name, :slug],
-          {:rating, :float, round: 2},
-          :started,
-          :ended
-        ],
-        metadata: [
-          [
-            {:id, immutable: true},
-            {:inserted_at, :datetime, immutable: true},
-            {:updated_at, :datetime, immutable: true}
+      plugins: [
+        detail_fieldsets: [
+          fieldsets: [
+            default: [
+              [:name, :slug],
+              :rating,
+              :rating_formatted,
+              :started,
+              :ended
+            ],
+            metadata: [
+              :id,
+              :inserted_at,
+              :updated_at
+            ]
           ]
         ]
       ]

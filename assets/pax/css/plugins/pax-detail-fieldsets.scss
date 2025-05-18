@@ -1,0 +1,32 @@
+/* CSS for Pax.Plugins.DetailFieldsets */
+
+.pax-detail-fieldsets-fieldset {
+    margin-bottom: var(--pax-spacing);
+}
+
+.pax-detail-fieldsets-fieldset-heading {
+    margin-bottom: var(--pax-spacing);
+}
+
+.pax-detail-fieldsets-fieldgroup {
+    display: flex;
+    flex-flow: column nowrap;
+}
+
+@media (min-width: 800px) {
+    .pax-detail-fieldsets-fieldgroup {
+        flex-flow: row wrap;
+        gap: 0 calc(var(--pax-spacing) * 2);
+    }
+}
+
+.pax-detail-fieldsets-field {
+    flex: 1 0 0%;
+    display: flex;
+    flex-flow: column nowrap;
+    margin-bottom: var(--pax-spacing);
+}
+
+.pax-detail-fieldsets-field-label {
+    margin-bottom: calc(var(--pax-spacing) * 0.2);
+}

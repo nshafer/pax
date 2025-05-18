@@ -1,4 +1,4 @@
-/* Admin override styles for Pax.Interface.Index components */
+/* Admin override styles for Pax.Interface.Detail components */
 
 .pax-detail {
     display: flex;
@@ -6,26 +6,7 @@
     height: 100%;
 }
 
-/* Hide the default breadcrumbs since the admin does its own navigation and breadcrumbs */
-.pax-detail-index-breadcrumb-link {
-    display: none;
-}
-
-.pax-detail-index-breadcrumb-separator {
-    display: none;
-}
-
 .pax-detail-body {
     flex: 1;
     overflow-y: auto;
-}
-
-.pax-detail-fieldset-heading {
-    padding: 0.5em 1em;
-    background-color: var(--bg-base-2);
-    border-bottom: 1px solid var(--border-base-2);
-}
-
-.pax-detail-fieldset-body {
-    padding: 0 1em;
 }

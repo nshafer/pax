@@ -1,0 +1,27 @@
+/* CSS for Pax.Plugins.DetailList components */
+
+.pax-detail-list-item {
+    display: flex;
+    flex-flow: column nowrap;
+    margin-bottom: calc(var(--pax-spacing) * 1);
+}
+
+.pax-detail-list-item-label {
+    margin-bottom: calc(var(--pax-spacing) * 0.2);
+}
+
+.pax-detail-list-item-body {
+    flex: 1;
+}
+
+@media (min-width: 800px) {
+    .pax-detail-list-item {
+        flex-flow: row nowrap;
+    }
+
+    .pax-detail-list-item-label {
+        margin-bottom: initial;
+        margin-right: calc(var(--pax-spacing) * 2);
+        width: 20%;
+    }
+}

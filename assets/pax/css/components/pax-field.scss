@@ -1,9 +1,5 @@
 /* CSS for Pax.Field components */
 
-.pax-field-label {
-    margin-bottom: calc(var(--pax-spacing) * 0.2);
-}
-
 .pax-field-control-input {
     /* Set the <input> to 100% width so that it isn't fixed in
        width (most browser defaults) and causes wrapping problems */

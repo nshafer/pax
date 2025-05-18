@@ -3,6 +3,8 @@ defmodule SandboxWeb.LabelLive do
   use Pax.Interface
 
   def render(assigns) do
+    # dbg(assigns[:pax])
+
     ~H"""
     <Layouts.app flash={@flash}>
       {Pax.Interface.Components.pax_interface(assigns)}
@@ -20,7 +22,7 @@ defmodule SandboxWeb.LabelLive do
       Pax.Plugins.Title,
       Pax.Plugins.Pagination,
       Pax.Plugins.IndexTable,
-      Pax.Plugins.DetailFieldsets
+      Pax.Plugins.DetailList
     ]
   end
 
@@ -31,31 +33,33 @@ defmodule SandboxWeb.LabelLive do
       show_path: fn object, _socket -> ~p"/labels/#{object}" end,
       edit_path: fn object, _socket -> ~p"/labels/#{object}/edit" end,
       object_name: fn object, _socket -> object.name end,
-      index_fields: [
-        :id,
-        {:name, link: true},
+      fields: [
+        {:id, immutable: true},
+        {:name, only: [:show, :edit, :new]},
+        {:name_link, :string, value: :name, link: true, only: :index},
+        {:slug, except: [:index]},
         :founded,
-        {:rating, :string, value: &format_rating/1},
-        :accepting_submissions
-      ],
-      fieldsets: [
-        default: [
-          [:name, :slug],
-          [
-            :founded,
-            {:rating, :float, title: "Rating (0-5)", round: 2, required: false}
-          ],
-          {:accepting_submissions, :boolean, true: "Yes", false: "No"}
-        ],
-        metadata: [
-          {:id, immutable: true},
-          {:inserted_at, :datetime, immutable: true},
-          {:updated_at, :datetime, immutable: true}
-        ]
+        {:rating, :float, title: "Rating (0-5)", round: 3, required: false, only: :edit},
+        {:rating_formatted, :string, value: &format_rating/1, except: [:edit]},
+        {:accepting_submissions, :boolean, true: "Yes", false: "No"},
+        {:inserted_at, :datetime, immutable: true, except: :index},
+        {:updated_at, :datetime, immutable: true, except: :index}
       ],
       plugins: [
         pagination: [
           # objects_per_page: 2
+        ],
+        detail_list: [
+          fields: [
+            :name,
+            :slug,
+            :founded,
+            :rating,
+            :rating_formatted,
+            :accepting_submissions,
+            :inserted_at,
+            :updated_at
+          ]
         ]
       ]
     ]

@@ -10,11 +10,6 @@ defmodule Pax.Interface do
   alias Pax.Interface.Index
   alias Pax.Interface.Detail
 
-  @type fieldsets ::
-          list(Pax.Field.fieldspec())
-          | list(list(Pax.Field.fieldspec()) | Pax.Field.fieldspec())
-          | keyword(list(Pax.Field.fieldspec()))
-
   # Common callbacks
   @callback pax_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
@@ -152,6 +147,7 @@ defmodule Pax.Interface do
       |> assign_pax(:url, url)
       |> assign_pax(:path, path)
       |> assign_pax(:action, socket.assigns.live_action)
+      |> assign_pax(:fields, init_fields(socket.assigns.live_action, socket))
 
     {:cont, socket}
   end
