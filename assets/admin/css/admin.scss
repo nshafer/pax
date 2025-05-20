@@ -23,7 +23,6 @@
 @use 'components/pax-title.scss';
 @use 'components/pax-button.scss';
 @use 'components/pax-badge.scss';
-@use 'components/pax-table.scss';
 @use 'components/pax-field.scss';
 @use 'components/pax-input.scss';
 @use 'components/pax-checkbox.scss';
@@ -32,6 +31,7 @@
 @use 'components/pax-detail.scss';
 
 /* Pax Plugin styles */
+@use 'plugins/pax-index-table.scss';
 @use 'plugins/pax-pagination.scss';
 @use 'plugins/pax-detail-list.scss';
 @use 'plugins/pax-detail-fieldsets.scss';

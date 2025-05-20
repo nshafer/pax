@@ -47,8 +47,10 @@ defmodule Pax.Plugins.DetailList do
   def render_component(%{placement: placement, field_list: field_list}, section, assigns) do
     if Enum.member?(placement, section) do
       fields = init_fields(field_list, assigns.pax.fields)
-      assigns = assign(assigns, :fields, fields)
-      detail_list(assigns)
+
+      assigns
+      |> assign(:fields, fields)
+      |> detail_list()
     else
       nil
     end
@@ -122,7 +124,7 @@ defmodule Pax.Plugins.DetailList do
 
     #{inspect(val)}
 
-    Field names must be atoms, and must be in the list of fields.
+    Field name must be an atom.
     """
   end
 end

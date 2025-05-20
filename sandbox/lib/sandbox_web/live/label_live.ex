@@ -3,8 +3,6 @@ defmodule SandboxWeb.LabelLive do
   use Pax.Interface
 
   def render(assigns) do
-    # dbg(assigns[:pax])
-
     ~H"""
     <Layouts.app flash={@flash}>
       {Pax.Interface.Components.pax_interface(assigns)}

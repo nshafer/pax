@@ -71,8 +71,10 @@ defmodule Pax.Plugins.DetailFieldsets do
   def render_component(%{placement: placement, fieldsets: fieldsets}, section, assigns) do
     if Enum.member?(placement, section) do
       fieldsets = init_fieldsets(fieldsets, assigns.pax.fields)
-      assigns = assign(assigns, :fieldsets, fieldsets)
-      detail_fieldsets(assigns)
+
+      assigns
+      |> assign(:fieldsets, fieldsets)
+      |> detail_fieldsets()
     else
       nil
     end
