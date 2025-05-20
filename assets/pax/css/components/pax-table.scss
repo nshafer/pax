@@ -8,3 +8,18 @@
     /* Default to an outline that matches webkit default for a11y */
     outline: auto;
 }
+
+.pax-table {
+    border-collapse: collapse;
+    table-layout: auto;
+    width: 100%;
+}
+
+.pax-table-header {
+    text-align: left;
+    vertical-align: bottom;
+}
+
+.pax-table-datacell {
+    vertical-align: top;
+}

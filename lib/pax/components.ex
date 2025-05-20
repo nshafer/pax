@@ -366,4 +366,59 @@ defmodule Pax.Components do
     </div>
     """
   end
+
+  @doc ~S"""
+  Renders a table with.
+
+  ## Examples
+
+      <.pax_table id="users" rows={@users}>
+        <:col :let={user} label="id">{user.id}</:col>
+        <:col :let={user} label="username">{user.username}</:col>
+      </.pax_table>
+  """
+  attr :id, :string, required: true
+  attr :rows, :list, required: true
+  attr :row_id, :any, default: nil, doc: "the function for generating the row id"
+  attr :row_item, :any, default: nil, doc: "the function for mapping each row to the item"
+
+  slot :col, required: true do
+    attr :label, :string
+  end
+
+  slot :action, doc: "the slot for showing user actions in the last table column"
+
+  def pax_table(assigns) do
+    assigns =
+      with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
+        assigns
+        |> assign(row_id: assigns.row_id || fn {id, _item} -> id end)
+        |> assign(row_item: assigns.row_item || fn {_id, item} -> item end)
+      end
+
+    ~H"""
+    <div class="pax-table-wrapper" role="region" aria-label="Index table" tabindex="0">
+      <table class="pax-table">
+        <thead class="pax-table-head">
+          <tr class="pax-table-head-row">
+            <th :for={col <- @col} class="pax-table-header">{col[:label]}</th>
+            <th :if={@action != []} class="pax-table-actions-header"></th>
+          </tr>
+        </thead>
+        <tbody id={@id} phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"} class="pax-table-body">
+          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="pax-table-row">
+            <td :for={col <- @col} class="pax-table-datacell">
+              {render_slot(col, @row_item.(row))}
+            </td>
+            <td :if={@action != []} class="pax-table-row-actions">
+              <span :for={action <- @action} class="pax-table-action">
+                {render_slot(action, @row_item.(row))}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    """
+  end
 end
