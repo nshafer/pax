@@ -45,6 +45,9 @@ defmodule SandboxWeb.ArtistLive do
         {:inserted_at, :datetime, immutable: true, except: :index},
         {:updated_at, :datetime, immutable: true, except: :index}
       ],
+      default_scope: [
+        order_by: :name
+      ],
       plugins: [
         detail_fieldsets: [
           fieldsets: [

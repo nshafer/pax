@@ -16,6 +16,9 @@ defmodule SandboxWeb.Admin.AlbumResource do
         {:length_sec, label: "Length (seconds)", only: [:edit, :new]},
         {:id, only: :show},
         {:uuid, only: :show}
+      ],
+      default_scope: [
+        order_by: :name
       ]
     ]
   end

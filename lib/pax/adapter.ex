@@ -20,6 +20,7 @@ defmodule Pax.Adapter do
 
   @type object :: %{atom() => any()}
   @type lookup :: %{atom() => any()}
+  @type scope :: %{atom() => any()}
 
   @typedoc "A Phoenix.LiveView socket"
   @type socket :: Phoenix.LiveView.Socket.t()
@@ -45,13 +46,13 @@ defmodule Pax.Adapter do
 
   @callback plural_name(opts()) :: String.t()
 
-  @callback count_objects(opts(), scope :: map()) :: integer()
+  @callback count_objects(opts(), scope()) :: integer()
 
-  @callback list_objects(opts(), scope :: map()) :: [object()]
+  @callback list_objects(opts(), scope()) :: [object()]
 
   @callback new_object(opts(), socket()) :: object()
 
-  @callback get_object(opts(), lookup(), socket()) :: object()
+  @callback get_object(opts(), lookup(), scope(), socket()) :: object()
 
   @callback id_fields(opts()) :: [atom()] | nil
 
@@ -126,12 +127,12 @@ defmodule Pax.Adapter do
     adapter.module.plural_name(adapter.opts)
   end
 
-  @spec count_objects(t(), map()) :: integer()
+  @spec count_objects(t(), scope()) :: integer()
   def count_objects(%Pax.Adapter{} = adapter, scope) do
     adapter.module.count_objects(adapter.opts, scope)
   end
 
-  @spec list_objects(t(), map()) :: [object()]
+  @spec list_objects(t(), scope()) :: [object()]
   def list_objects(%Pax.Adapter{} = adapter, scope) do
     adapter.module.list_objects(adapter.opts, scope)
   end
@@ -141,9 +142,9 @@ defmodule Pax.Adapter do
     adapter.module.new_object(adapter.opts, socket)
   end
 
-  @spec get_object(t(), lookup(), socket()) :: object()
-  def get_object(%Pax.Adapter{} = adapter, lookup, socket) do
-    adapter.module.get_object(adapter.opts, lookup, socket)
+  @spec get_object(t(), lookup(), scope(), socket()) :: object()
+  def get_object(%Pax.Adapter{} = adapter, lookup, scope, socket) do
+    adapter.module.get_object(adapter.opts, lookup, scope, socket)
   end
 
   # TODO: Make this always return a string, return nil if adapter returns nil. Remove `init_adapter_object_name`

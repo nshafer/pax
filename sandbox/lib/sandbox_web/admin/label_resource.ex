@@ -25,6 +25,9 @@ defmodule SandboxWeb.Admin.LabelResource do
         {:inserted_at, immutable: true, except: :index},
         {:updated_at, immutable: true, except: :index}
       ],
+      default_scope: [
+        order_by: :name
+      ],
       plugins: [
         detail_fieldsets: [
           fieldsets: [

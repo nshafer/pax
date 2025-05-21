@@ -82,12 +82,12 @@ defmodule Pax.Interface.Detail do
   end
 
   defp init_object(params, uri, socket) do
-    %{adapter: adapter, action: action} = socket.assigns.pax
+    %{adapter: adapter, action: action, scope: scope} = socket.assigns.pax
 
     case action do
       action when action in [:show, :edit] ->
         lookup = init_lookup(params, uri, socket)
-        Pax.Adapter.get_object(adapter, lookup, socket)
+        Pax.Adapter.get_object(adapter, lookup, scope, socket)
 
       :new ->
         Pax.Adapter.new_object(adapter, socket)

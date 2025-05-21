@@ -43,6 +43,9 @@ defmodule SandboxWeb.AlbumLive do
         {:label_id, except: :index},
         {:inserted_at, :datetime, immutable: true, except: :index},
         {:updated_at, :datetime, immutable: true, except: :index}
+      ],
+      default_scope: [
+        order_by: :name
       ]
     ]
   end

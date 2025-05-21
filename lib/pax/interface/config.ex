@@ -8,6 +8,7 @@ defmodule Pax.Interface.Config do
 
   The following configuration keys are supported:
 
+
   ### `singular_name`
 
   The singular name of the object. e.g. "User". Used in places such as the "New User" button.
@@ -17,6 +18,7 @@ defmodule Pax.Interface.Config do
   Valid values:
   * `string` - A string value.
   * `function` - A function that takes the socket and returns a string.
+
 
   ### `plural_name`
 
@@ -28,6 +30,7 @@ defmodule Pax.Interface.Config do
   * `string` - A string value.
   * `function` - A function that takes the socket and returns a string.
 
+
   ### `object_name`
 
   The name of a specific object. e.g. "User 123" or "John Doe".
@@ -38,6 +41,7 @@ defmodule Pax.Interface.Config do
   * `string` - A string value.
   * `function` - A function that takes the object and the socket and returns a string. If the function returns `nil`,
     then the object name will be introspected from the Adapter.
+
 
   ### `index_path`
 
@@ -53,6 +57,7 @@ defmodule Pax.Interface.Config do
   * `string` - A string path.
   * `function` - A function that takes the socket and returns a string.
 
+
   ### `new_path`
 
   The path to the new action, as defined in your router, so if you have a route like:
@@ -66,6 +71,7 @@ defmodule Pax.Interface.Config do
   Valid values:
   * `string` - A string path.
   * `function` - A function that takes the socket and returns a string.
+
 
   ### `show_path`
 
@@ -85,6 +91,7 @@ defmodule Pax.Interface.Config do
 
   Valid values:
   * `function` - A function that takes the object and the socket and returns a string.
+
 
   ### `edit_path`
 
@@ -106,6 +113,7 @@ defmodule Pax.Interface.Config do
   Valid values:
   * `function` - A function that takes the object and the socket and returns a string.
 
+
   ### `fields`
 
   The fields to display on the index and detail pages. This should be a list of field specs.
@@ -116,6 +124,7 @@ defmodule Pax.Interface.Config do
   * `list` - A list of field specs.
   * `function` - A function that takes the socket and returns a list of field specs.
 
+
   ### `lookup`
 
   A function that returns a map of lookup keys to values, which is passed directly to the Adapter's `get_object`
@@ -125,6 +134,7 @@ defmodule Pax.Interface.Config do
 
   Valid values:
   * `function` - A function that takes the object, the params, and the socket and returns a map.
+
 
   ### `lookup_params`
 
@@ -149,6 +159,7 @@ defmodule Pax.Interface.Config do
   * `list` - A list of param names as strings.
   * `function` - A function that takes the socket and returns a list of param names as strings.
 
+
   ### `lookup_glob`
 
   Instead of defining a set number of `lookup_params`, you can define a glob to use to get the object. This is useful
@@ -169,6 +180,7 @@ defmodule Pax.Interface.Config do
   * `string` - A string value.
   * `function` - A function that takes the socket and returns a string.
 
+
   ### `id_fields`
 
   The fields of an object that are used to uniquely identify it. This is used to build the lookup map for the detail
@@ -181,6 +193,20 @@ defmodule Pax.Interface.Config do
   Valid values:
   * `list` - A list of field names as atoms.
   * `function` - A function that takes the socket and returns a list of field names as atoms.
+
+
+  ### `default_scope`
+
+  The default scope to be given to the adapter when fetching objects.
+
+  to use for the adapter. This is a map of options that are passed directly to the adapter. This is
+  useful for setting default values for things like `limit`, `offset`, `order_by`, etc. This is passed directly to the
+  adapter, so the keys and values should match the keys and values expected by the adapter.
+
+  Valid values:
+  * `map` - A map of options to pass to the adapter.
+  * `function` - A function that takes the socket and returns a map of options.
+
 
   ## Example
 
@@ -224,7 +250,8 @@ defmodule Pax.Interface.Config do
       lookup: {:function, 3, :map},
       lookup_params: [:list, {:function, 1, :list}],
       lookup_glob: [:string, {:function, 1, :string}],
-      id_fields: [:list, {:function, 1, :list}]
+      id_fields: [:list, {:function, 1, :list}],
+      default_scope: [:map, :list, {:function, 1, [:map, :list]}]
     }
   end
 

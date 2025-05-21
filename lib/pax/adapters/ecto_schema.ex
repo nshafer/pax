@@ -127,12 +127,13 @@ defmodule Pax.Adapters.EctoSchema do
   @doc """
   Returns all objects of the schema.
 
-  TODO: sorting, filtering, etc.
+  TODO: filtering, etc.
   """
   @impl Pax.Adapter
   def list_objects(%{repo: repo, schema: schema}, scope) do
     schema
     |> build_query(scope)
+    |> sort(scope)
     |> paginate(scope)
     |> repo.all()
   end
@@ -141,8 +142,18 @@ defmodule Pax.Adapters.EctoSchema do
     from(o in schema)
   end
 
+  defp sort(query, %{order_by: order_by}) do
+    from q in query, order_by: ^order_by
+  end
+
+  defp sort(query, _scope), do: query
+
   defp paginate(query, %{limit: limit, offset: offset}) do
     from q in query, limit: ^limit, offset: ^offset
+  end
+
+  defp paginate(query, %{limit: limit}) do
+    from q in query, limit: ^limit
   end
 
   defp paginate(query, _scope), do: query
@@ -152,9 +163,13 @@ defmodule Pax.Adapters.EctoSchema do
     struct(schema)
   end
 
-  @doc "Gets the object based on the lookup map"
+  @doc """
+  Gets the object based on the lookup map
+
+  TODO: filter based on scope
+  """
   @impl Pax.Adapter
-  def get_object(%{repo: repo, schema: schema}, lookup, _socket) do
+  def get_object(%{repo: repo, schema: schema}, lookup, _scope, _socket) do
     filters = Map.to_list(lookup)
 
     from(schema, where: ^filters)
