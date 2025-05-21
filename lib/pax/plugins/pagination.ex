@@ -43,35 +43,43 @@ defmodule Pax.Plugins.Pagination do
 
   @impl true
   def on_preload(opts, params, _uri, socket) do
-    # IO.inspect(params, label: "Pagination.on_params")
-    page = get_page(params)
-    limit = opts.objects_per_page
-    offset = (page - 1) * limit
+    if socket.assigns.pax.action == :index do
+      # IO.inspect(params, label: "Pagination.on_params")
+      page = get_page(params)
+      limit = opts.objects_per_page
+      offset = (page - 1) * limit
 
-    socket =
-      socket
-      |> assign_pax_private(:pagination, limit: limit)
-      |> assign_pax_private(:pagination, page: page)
-      |> assign_pax_private(:pagination, page_input_has_errors: false)
-      |> assign_pax_scope(limit: limit, offset: offset)
+      socket =
+        socket
+        |> assign_pax_private(:pagination, limit: limit)
+        |> assign_pax_private(:pagination, page: page)
+        |> assign_pax_private(:pagination, page_input_has_errors: false)
+        |> assign_pax_scope(limit: limit, offset: offset)
 
-    {:cont, socket}
+      {:cont, socket}
+    else
+      {:cont, socket}
+    end
   end
 
   @impl true
   def on_loaded(_opts, _params, _uri, socket) do
-    num_pages = calculate_num_pages(socket)
-    page = socket.assigns.pax.private.pagination.page
-    has_prev = page > 1
-    has_next = page < num_pages
+    if socket.assigns.pax.action == :index do
+      num_pages = calculate_num_pages(socket)
+      page = socket.assigns.pax.private.pagination.page
+      has_prev = page > 1
+      has_next = page < num_pages
 
-    socket =
-      socket
-      |> assign_pax_private(:pagination, num_pages: num_pages)
-      |> assign_pax_private(:pagination, has_prev: has_prev)
-      |> assign_pax_private(:pagination, has_next: has_next)
+      socket =
+        socket
+        |> assign_pax_private(:pagination, num_pages: num_pages)
+        |> assign_pax_private(:pagination, has_prev: has_prev)
+        |> assign_pax_private(:pagination, has_next: has_next)
 
-    {:cont, socket}
+      {:cont, socket}
+    else
+      {:cont, socket}
+    end
   end
 
   @impl true
