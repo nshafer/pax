@@ -44,7 +44,7 @@ defmodule Pax.Plugins.DetailList do
   end
 
   @impl true
-  def render_component(%{placement: placement, field_list: field_list}, section, assigns) do
+  def render(%{placement: placement, field_list: field_list}, section, assigns) do
     if Enum.member?(placement, section) do
       fields = init_fields(field_list, assigns.pax.fields)
 
@@ -56,7 +56,7 @@ defmodule Pax.Plugins.DetailList do
     end
   end
 
-  def render_component(_opts, _section, _assigns), do: nil
+  def render(_opts, _section, _assigns), do: nil
 
   defp detail_list(assigns) do
     ~H"""

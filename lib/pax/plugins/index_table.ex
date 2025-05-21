@@ -2,7 +2,11 @@ defmodule Pax.Plugins.IndexTable do
   @moduledoc """
   Renders a table for the index view of a Pax.Interface.
 
-  There are no options currently.
+  ## Options:
+  - `:placement` - The section to render the index table to. Default: `:index_body`.
+  - `:fields` - A list of field names (as atoms) to include in the table and the order to include them.
+    If not provided, all fields will be displayed in their original order. If any field name in the list
+    is not available in the fields for that action, that field will be skipped. Field names must be atoms.
   """
 
   use Pax.Interface.Plugin
@@ -36,7 +40,7 @@ defmodule Pax.Plugins.IndexTable do
   end
 
   @impl true
-  def render_component(%{placement: placement, field_list: field_list}, placement, assigns) do
+  def render(%{placement: placement, field_list: field_list}, placement, assigns) do
     fields = init_fields(field_list, assigns.pax.fields)
 
     assigns
@@ -45,7 +49,7 @@ defmodule Pax.Plugins.IndexTable do
   end
 
   @impl true
-  def render_component(_opts, _section, _assigns), do: nil
+  def render(_opts, _section, _assigns), do: nil
 
   # If no fields are provided, we will just render all fields in the same order as in the main `:fields` list.
   defp init_fields(nil, fields) do

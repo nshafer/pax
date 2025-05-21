@@ -126,14 +126,14 @@ defmodule Pax.Plugins.Pagination do
   # Components
 
   @impl true
-  def render_component(%{count_placement: count_placement}, count_placement, assigns) do
+  def render(%{count_placement: count_placement}, count_placement, assigns) do
     ~H"""
     <div><b>Page:</b> {@pax.private.pagination.page} / {@pax.private.pagination.num_pages}</div>
     <div><b>Total:</b> {@pax.object_count}</div>
     """
   end
 
-  def render_component(%{pager_placement: pager_placement}, pager_placement, assigns) do
+  def render(%{pager_placement: pager_placement}, pager_placement, assigns) do
     ~H"""
     <nav class="pax-pagination" aria-label="Page Navigation">
       <%!-- Link to first page (<<) --%>
@@ -196,7 +196,7 @@ defmodule Pax.Plugins.Pagination do
     """
   end
 
-  def render_component(_opts, _component, _assigns), do: nil
+  def render(_opts, _component, _assigns), do: nil
 
   defp options_for_page_select(num_pages) do
     for p <- 1..num_pages do

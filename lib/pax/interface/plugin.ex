@@ -77,8 +77,8 @@ defmodule Pax.Interface.Plugin do
       def config_key(), do: nil
       def config_spec(), do: %{}
       def merge_config(_opts, _config, _socket), do: %{}
-      def render_component(_opts, _section, _assigns), do: nil
-      defoverridable init: 2, config_key: 0, config_spec: 0, merge_config: 3, render_component: 3
+      def render(_opts, _section, _assigns), do: nil
+      defoverridable init: 2, config_key: 0, config_spec: 0, merge_config: 3, render: 3
     end
   end
 end

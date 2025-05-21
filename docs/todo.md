@@ -64,9 +64,9 @@
 - [x] Allow specifying just `:fieldname` and default to Field.String maybe? Or callback to adapter to figure it out?
 - [x] Redo fields to just have one list of fields, with `only: :index` and `except: [:index, :edit]` options.
 - [ ] Check for duplicate field definitions, or fix ids? (duplicate id warnings in console if field is specified twice)
-- [ ] Redo fieldsets to just be `detail_layout` to specify how the fields are laid out. Defaults to just the list
+- [x] Redo fieldsets to just be `detail_layout` to specify how the fields are laid out. Defaults to just the list
       of fields. Any missing fields are assumed to not be included. Should we allow `show_layout` and `edit_layout`
-      specific layouts? So the pages can have different layouts?
+      specific layouts? So the pages can have different layouts? (no for now.)
 
 ## Admin
 - [x] `use Pax.Admin` macros to create base admin Index/Detail modules with all settings
@@ -100,4 +100,4 @@
 - ~~kite~~ taken on hex
 - jib
 - pixy
-- pyx - A pyx or pix is a small round container used in the Catholic, Old Catholic, Lutheran and Anglican Churches to carry the Eucharist
+- pyx - A pyx or pix is a small round container used in Catholic churches to carry the Eucharist

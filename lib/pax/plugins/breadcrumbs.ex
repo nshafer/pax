@@ -51,22 +51,22 @@ defmodule Pax.Plugins.Breadcrumbs do
   end
 
   @impl true
-  def render_component(%{index_placement: index_placement} = opts, index_placement, assigns),
+  def render(%{index_placement: index_placement} = opts, index_placement, assigns),
     do: breadcrumbs(opts, assigns)
 
-  def render_component(%{show_placement: show_placement} = opts, show_placement, assigns),
+  def render(%{show_placement: show_placement} = opts, show_placement, assigns),
     do: breadcrumbs(opts, assigns)
 
-  def render_component(%{edit_placement: edit_placement} = opts, edit_placement, assigns),
+  def render(%{edit_placement: edit_placement} = opts, edit_placement, assigns),
     do: breadcrumbs(opts, assigns)
 
-  def render_component(%{new_placement: new_placement} = opts, new_placement, assigns),
+  def render(%{new_placement: new_placement} = opts, new_placement, assigns),
     do: breadcrumbs(opts, assigns)
 
-  def render_component(%{delete_placement: delete_placement} = opts, delete_placement, assigns),
+  def render(%{delete_placement: delete_placement} = opts, delete_placement, assigns),
     do: breadcrumbs(opts, assigns)
 
-  def render_component(_opts, _component, _assigns), do: nil
+  def render(_opts, _section, _assigns), do: nil
 
   def breadcrumbs(opts, assigns) do
     assigns = assign(assigns, index_title: truncate(assigns.pax.plural_name, opts.truncate_length))
