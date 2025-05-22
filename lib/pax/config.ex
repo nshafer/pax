@@ -180,9 +180,10 @@ defmodule Pax.Config do
 
   ## Options
 
-  - `:validate_config_spec` - Validate the spec itself. This is useful to turn on when developing an adapter or plugin,
-    but should be turned off in production to avoid unnecessary checks. Defaults to `false` unless the application env
-    `:validate_config_spec` is set to `true` in the `:pax` application at compile time. E.g. in "config/dev.exs":
+  - `:validate_config_spec` - Validate the spec itself, raising a `Pax.Config.SpecError` in the case of errors.
+    This is useful to turn on when developing an adapter or plugin, but should be turned off in production to avoid
+    unnecessary checks. Defaults to `false` unless the application env `:validate_config_spec` is set to `true` in the
+    `:pax` application at compile time. E.g. in "config/dev.exs":
 
         config :pax, validate_config_spec: true
 
@@ -398,10 +399,60 @@ defmodule Pax.Config do
   for the given key.
   """
   @spec fetch(config :: map(), key_or_keys :: atom, args :: list()) :: {:ok, any()} | :error
-  def fetch(config, key_or_keys, args \\ []) when is_map(config) do
-    {:ok, fetch!(config, key_or_keys, args)}
-  rescue
-    KeyError -> :error
+  def fetch(config, key_or_keys, args \\ [])
+
+  def fetch(config, [key], args) when is_map(config) do
+    fetch(config, key, args)
+  end
+
+  def fetch(config, [key | rest], args) when is_map(config) do
+    case Map.fetch(config, key) do
+      {:ok, value} ->
+        fetch(value, rest, args)
+
+      :error ->
+        :error
+    end
+  end
+
+  def fetch(config, key, args) when is_map(config) do
+    case Map.fetch(config, key) do
+      {:ok, {:function, value}} ->
+        {:ok, value.()}
+
+      {:ok, {{:function, arity}, value}} when is_integer(arity) ->
+        if length(args) == arity do
+          {:ok, apply(value, args)}
+        else
+          raise Pax.Config.ArityError, "function for #{inspect(key)} requires #{arity} args, but got #{length(args)}"
+        end
+
+      {:ok, {{:function, return_type}, value}} when is_atom(return_type) or is_list(return_type) ->
+        {:ok,
+         value
+         |> apply(args)
+         |> check_value_type!(return_type, key, true)}
+
+      {:ok, {{:function, arity, return_type_or_types}, value}}
+      when is_integer(arity) and (is_atom(return_type_or_types) or is_list(return_type_or_types)) ->
+        if length(args) == arity do
+          {:ok,
+           value
+           |> apply(args)
+           |> check_value_type!(return_type_or_types, key, true)}
+        else
+          raise Pax.Config.ArityError, "function for #{inspect(key)} requires #{arity} args, but got #{length(args)}"
+        end
+
+      {:ok, {type, value}} ->
+        {:ok, check_value_type!(value, type, key)}
+
+      {:ok, _} ->
+        raise ArgumentError, "invalid config data for key '#{inspect(key)}', should be a 2-tuple of {type, value}"
+
+      :error ->
+        :error
+    end
   end
 
   @doc """
@@ -415,8 +466,8 @@ defmodule Pax.Config do
   In the case that a function is allowed in the spec, then the correct `args` must be passed to this function to resolve
   the value. If no functions are allowed by the spec, the args can be omitted.
 
-  A `KeyError` will be raised if the key is not found in the configuration, which means it was not in the data given to
-  `validate/3`.
+  A `KeyError` will be raised if the key is not found in the configuration, which means it was not in the
+  data given to `validate/3`.
 
   An `ArgumentError` will be raised if the config is not a map with the correct structure, as returned from
   `validate/3`.
@@ -428,48 +479,10 @@ defmodule Pax.Config do
   for the given key.
   """
   @spec fetch!(config :: map(), key_or_keys :: atom | nonempty_list(atom), args :: list()) :: any()
-  def fetch!(config, key_or_keys, args \\ [])
-
-  def fetch!(config, [key], args) when is_map(config) do
-    fetch!(config, key, args)
-  end
-
-  def fetch!(config, [key | rest], args) when is_map(config) do
-    fetch!(Map.fetch!(config, key), rest, args)
-  end
-
-  def fetch!(config, key, args) when is_atom(key) and is_map(config) do
-    case Map.fetch!(config, key) do
-      {:function, value} ->
-        value.()
-
-      {{:function, arity}, value} when is_integer(arity) ->
-        if length(args) == arity do
-          apply(value, args)
-        else
-          raise Pax.Config.ArityError, "function for #{inspect(key)} requires #{arity} args, but got #{length(args)}"
-        end
-
-      {{:function, return_type}, value} when is_atom(return_type) or is_list(return_type) ->
-        value
-        |> apply(args)
-        |> check_value_type!(return_type, key, true)
-
-      {{:function, arity, return_type_or_types}, value}
-      when is_integer(arity) and (is_atom(return_type_or_types) or is_list(return_type_or_types)) ->
-        if length(args) == arity do
-          value
-          |> apply(args)
-          |> check_value_type!(return_type_or_types, key, true)
-        else
-          raise Pax.Config.ArityError, "function for #{inspect(key)} requires #{arity} args, but got #{length(args)}"
-        end
-
-      {type, value} ->
-        check_value_type!(value, type, key)
-
-      _ ->
-        raise ArgumentError, "invalid config data for key '#{inspect(key)}', should be a map with :value and :type"
+  def fetch!(config, key, args \\ []) when is_atom(key) and is_map(config) do
+    case fetch(config, key, args) do
+      {:ok, value} -> value
+      :error -> raise KeyError, term: config, key: key
     end
   end
 

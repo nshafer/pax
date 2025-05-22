@@ -694,5 +694,21 @@ defmodule Pax.ConfigTest do
     test "raises when invalid config is given" do
       assert_raise ArgumentError, fn -> Config.fetch(%{foo: "bar"}, :foo) end
     end
+
+    test "does not swallow KeyError exceptions" do
+      assert {:ok, config} = Config.validate(%{foo: {:function, 0}}, %{foo: fn -> Map.fetch!(%{}, :foo) end})
+
+      assert_raise KeyError, fn ->
+        Config.fetch(config, :foo)
+      end
+
+      assert_raise KeyError, fn ->
+        Config.fetch!(config, :foo)
+      end
+
+      assert_raise KeyError, fn ->
+        Config.get(config, :foo)
+      end
+    end
   end
 end
