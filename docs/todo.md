@@ -58,7 +58,9 @@
 - [ ] Maybe refactor fieldsets to use css grid?
 - [ ] Action Items plugin
 - [ ] Handle unique violations better. (Duplicate: use duplicate slug or something)
-- [ ] Crash when id field(s) changed
+- [x] Crash when id field(s) changed
+- [ ] Crash with foreign_key_constraint violation when field that is a foreign_key on other table is changed. e.g.
+      change author_id.
 
 ## Fields
 - [x] Allow specifying just `:fieldname` and default to Field.String maybe? Or callback to adapter to figure it out?
