@@ -11,6 +11,7 @@
 .pax-detail-fieldsets-fieldgroup {
     display: flex;
     flex-flow: column nowrap;
+    margin-bottom: var(--pax-spacing);
 }
 
 @media (min-width: 800px) {
@@ -24,7 +25,6 @@
     flex: 1 0 0%;
     display: flex;
     flex-flow: column nowrap;
-    margin-bottom: var(--pax-spacing);
 }
 
 .pax-detail-fieldsets-field-label {
