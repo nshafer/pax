@@ -127,7 +127,7 @@ defmodule Pax.Adapters.EctoSchema do
   @doc """
   Returns all objects of the schema.
 
-  TODO: filtering, etc.
+  TODO: advanced filtering that allows different types of queries/operators
   """
   @impl Pax.Adapter
   def list_objects(%{repo: repo, schema: schema}, scope) do
@@ -135,6 +135,7 @@ defmodule Pax.Adapters.EctoSchema do
     |> build_query(scope)
     |> sort(scope)
     |> paginate(scope)
+    |> filter_where(scope)
     |> repo.all()
   end
 
@@ -158,6 +159,12 @@ defmodule Pax.Adapters.EctoSchema do
 
   defp paginate(query, _scope), do: query
 
+  defp filter_where(query, %{where: where}) do
+    from q in query, where: ^where
+  end
+
+  defp filter_where(query, _scope), do: query
+
   @impl Pax.Adapter
   def new_object(%{schema: schema}, _socket) do
     struct(schema)
@@ -166,14 +173,19 @@ defmodule Pax.Adapters.EctoSchema do
   @doc """
   Gets the object based on the lookup map
 
-  TODO: filter based on scope
+  TODO: advanced filtering
   """
   @impl Pax.Adapter
-  def get_object(%{repo: repo, schema: schema}, lookup, _scope, _socket) do
-    filters = Map.to_list(lookup)
-
-    from(schema, where: ^filters)
+  def get_object(%{repo: repo, schema: schema}, lookup, scope, _socket) do
+    schema
+    |> build_query(scope)
+    |> filter_where(scope)
+    |> filter_lookup(lookup)
     |> repo.one!()
+  end
+
+  defp filter_lookup(query, lookup) do
+    from(query, where: ^Map.to_list(lookup))
   end
 
   @impl Pax.Adapter
