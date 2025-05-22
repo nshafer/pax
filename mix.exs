@@ -4,7 +4,7 @@ defmodule Pax.MixProject do
   def project do
     [
       app: :pax,
-      version: "0.1.0",
+      version: "0.0.1-dev",
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -37,8 +37,8 @@ defmodule Pax.MixProject do
   def package() do
     [
       name: "pax",
-      files: ~w(lib/pax* priv .formatter.exs mix.exs README.md),
-      licenses: ["Apache-2.0"],
+      files: ~w(lib priv .formatter.exs mix.exs README* LICENSE*),
+      licenses: ["MIT"],
       links: %{
         "GitHub" => "https://github.com/nshafer/pax"
       }
@@ -48,10 +48,10 @@ defmodule Pax.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix, "~> 1.7.0"},
+      {:phoenix, "~> 1.7"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_ecto, "~> 4.5"},
-      {:phoenix_live_view, "~> 1.0.0"},
+      {:phoenix_live_view, "~> 1.0"},
       {:ecto, "~> 3.10"},
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2", only: :dev},
