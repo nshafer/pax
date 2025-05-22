@@ -1,3 +1,8 @@
 .pax-detail-list-item {
-    padding: 0 1em;
+    padding: 0.75em 1em;
+    margin: 0;
+}
+
+.pax-detail-list-item+.pax-detail-list-item {
+    border-top: 1px solid var(--border-base-2);
 }

@@ -7,3 +7,12 @@
 .pax-detail-fieldsets-fieldset-body {
     padding: 0 1em;
 }
+
+.pax-detail-fieldsets-fieldgroup {
+    margin: 0;
+    padding: 0.75em 0;
+}
+
+.pax-detail-fieldsets-fieldgroup+.pax-detail-fieldsets-fieldgroup {
+    border-top: 1px solid var(--border-base-2);
+}
