@@ -47,16 +47,16 @@ defmodule SandboxWeb.ArtistLive do
       ],
       default_scope: [
         order_by: :name
+        # where: [current_label_id: 1]
       ],
       plugins: [
         detail_fieldsets: [
           fieldsets: [
             default: [
               [:name, :slug],
-              :rating,
-              :rating_formatted,
-              :started,
-              :ended
+              [:rating, :rating_formatted],
+              [:started, :ended],
+              :current_label_id
             ],
             metadata: [
               :id,

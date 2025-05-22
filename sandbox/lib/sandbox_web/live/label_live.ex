@@ -6,8 +6,20 @@ defmodule SandboxWeb.LabelLive do
     ~H"""
     <Layouts.app flash={@flash}>
       {Pax.Interface.Components.pax_interface(assigns)}
+      <p class="mt-5">
+        Counter: {@counter}
+        <button class="btn" phx-click="increment">Increment</button>
+      </p>
     </Layouts.app>
     """
+  end
+
+  def mount(_params, _session, socket) do
+    {:ok, assign(socket, counter: 0)}
+  end
+
+  def handle_event("increment", _params, socket) do
+    {:noreply, update(socket, :counter, &(&1 + 1))}
   end
 
   def pax_adapter(_socket) do

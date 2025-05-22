@@ -144,16 +144,13 @@ defmodule Pax.Interface do
     # Extract just the path and query from the URL. Fragment should never be set here, but...
     path = %URI{path: url.path, query: url.query, fragment: url.fragment}
 
-    # Get the default scope from the config
-    default_scope = Pax.Config.get(config, :default_scope, [socket], %{})
-
     socket =
       socket
       |> assign_pax(:url, url)
       |> assign_pax(:path, path)
       |> assign_pax(:action, socket.assigns.live_action)
       |> assign_pax(:fields, init_fields(socket.assigns.live_action, socket))
-      |> assign_pax_scope(default_scope)
+      |> assign_pax_scope(Pax.Config.get(config, :default_scope, [socket], %{}))
 
     {:cont, socket}
   end
