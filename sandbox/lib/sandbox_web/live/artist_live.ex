@@ -20,7 +20,8 @@ defmodule SandboxWeb.ArtistLive do
       Pax.Plugins.Title,
       Pax.Plugins.Pagination,
       Pax.Plugins.IndexTable,
-      Pax.Plugins.DetailFieldsets
+      Pax.Plugins.DetailFieldsets,
+      Pax.Plugins.NewButton
     ]
   end
 

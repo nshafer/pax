@@ -1,7 +1,6 @@
 defmodule Pax.Interface.Components do
   use Phoenix.Component
   import Pax.Components
-  import Pax.Util.String
 
   attr :pax, Pax.Interface.Context, required: true
   attr :class, :string, default: nil
@@ -41,9 +40,6 @@ defmodule Pax.Interface.Components do
 
         <:secondary>
           {Pax.Plugin.render(:index_header_secondary, assigns)}
-          <.pax_button :if={@pax.new_path} navigate={@pax.new_path} level={:primary}>
-            New {truncate(@pax.singular_name, 25)}
-          </.pax_button>
         </:secondary>
 
         <:tertiary>
