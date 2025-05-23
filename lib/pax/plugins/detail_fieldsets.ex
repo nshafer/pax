@@ -54,7 +54,7 @@ defmodule Pax.Plugins.DetailFieldsets do
   @impl true
   def config_spec() do
     %{
-      placement: [:list, {:function, 1, :list}],
+      placement: [:atom, :list, {:function, 1, [:atom, :list]}],
       fieldsets: [:list, {:function, 1, :list}]
     }
   end
@@ -68,13 +68,12 @@ defmodule Pax.Plugins.DetailFieldsets do
   end
 
   @impl true
-  def render(%{placement: placement, fieldsets: fieldsets}, section, assigns) do
-    if Enum.member?(placement, section) do
-      fieldsets = init_fieldsets(fieldsets, assigns.pax.fields)
+  def render(%{placement: placement} = opts, placement, assigns),
+    do: detail_fieldsets(opts, assigns)
 
-      assigns
-      |> assign(:fieldsets, fieldsets)
-      |> detail_fieldsets()
+  def render(%{placement: placement} = opts, section, assigns) when is_list(placement) do
+    if Enum.member?(placement, section) do
+      detail_fieldsets(opts, assigns)
     else
       nil
     end
@@ -82,12 +81,14 @@ defmodule Pax.Plugins.DetailFieldsets do
 
   def render(_opts, _section, _assigns), do: nil
 
-  defp detail_fieldsets(assigns) do
+  defp detail_fieldsets(opts, assigns) do
+    assigns = assign(assigns, :fieldsets, init_fieldsets(opts.fieldsets, assigns.pax.fields))
+
     ~H"""
     <div class="pax-detail-fieldsets">
       <%= for fieldset <- @fieldsets do %>
-        <.pax_fieldset :let={fieldgroup} fieldset={fieldset}>
-          <.pax_fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
+        <.fieldset :let={fieldgroup} fieldset={fieldset}>
+          <.fieldgroup :let={{field, i}} fieldgroup={fieldgroup} with_index={true}>
             <div class={["pax-detail-fieldsets-field", "pax-detail-fieldsets-field-#{i}"]}>
               <.pax_field_label class="pax-detail-fieldsets-field-label" field={field} form={@pax.form} />
               <.pax_field_input_or_text
@@ -98,8 +99,8 @@ defmodule Pax.Plugins.DetailFieldsets do
                 object={@pax.object}
               />
             </div>
-          </.pax_fieldgroup>
-        </.pax_fieldset>
+          </.fieldgroup>
+        </.fieldset>
       <% end %>
     </div>
     """
@@ -108,7 +109,7 @@ defmodule Pax.Plugins.DetailFieldsets do
   attr :fieldset, :any, required: true
   slot :inner_block, required: true
 
-  defp pax_fieldset(assigns) do
+  defp fieldset(assigns) do
     {name, fieldgroups} = assigns.fieldset
     assigns = assigns |> Map.put(:name, name) |> Map.put(:fieldgroups, fieldgroups)
 
@@ -132,7 +133,7 @@ defmodule Pax.Plugins.DetailFieldsets do
   attr :with_index, :boolean, default: false
   slot :inner_block, required: true
 
-  defp pax_fieldgroup(assigns) do
+  defp fieldgroup(assigns) do
     fields = if assigns.with_index, do: Enum.with_index(assigns.fieldgroup), else: assigns.fieldgroup
     assigns = Map.put(assigns, :fieldgroup, fields)
 

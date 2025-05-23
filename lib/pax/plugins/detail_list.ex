@@ -30,7 +30,7 @@ defmodule Pax.Plugins.DetailList do
   @impl true
   def config_spec() do
     %{
-      placement: [:list, {:function, 1, :list}],
+      placement: [:atom, :list, {:function, 1, [:atom, :list]}],
       fields: [:list, {:function, 1, :list}]
     }
   end
@@ -44,13 +44,12 @@ defmodule Pax.Plugins.DetailList do
   end
 
   @impl true
-  def render(%{placement: placement, field_list: field_list}, section, assigns) do
-    if Enum.member?(placement, section) do
-      fields = init_fields(field_list, assigns.pax.fields)
+  def render(%{placement: placement} = opts, placement, assigns),
+    do: detail_list(opts, assigns)
 
-      assigns
-      |> assign(:fields, fields)
-      |> detail_list()
+  def render(%{placement: placement} = opts, section, assigns) do
+    if Enum.member?(placement, section) do
+      detail_list(opts, assigns)
     else
       nil
     end
@@ -58,7 +57,9 @@ defmodule Pax.Plugins.DetailList do
 
   def render(_opts, _section, _assigns), do: nil
 
-  defp detail_list(assigns) do
+  defp detail_list(opts, assigns) do
+    assigns = assign(assigns, :fields, init_fields(opts.field_list, assigns.pax.fields))
+
     ~H"""
     <%= for field <- @fields do %>
       <.detail_list_item>

@@ -26,7 +26,7 @@ defmodule Pax.Plugins.IndexTable do
   @impl true
   def config_spec() do
     %{
-      placement: [:atom, {:function, 1, :atom}],
+      placement: [:atom, :list, {:function, 1, [:atom, :list]}],
       fields: [:list, {:function, 1, :list}]
     }
   end
@@ -40,16 +40,50 @@ defmodule Pax.Plugins.IndexTable do
   end
 
   @impl true
-  def render(%{placement: placement, field_list: field_list}, placement, assigns) do
-    fields = init_fields(field_list, assigns.pax.fields)
+  def render(%{placement: placement} = opts, placement, assigns),
+    do: index_table(opts, assigns)
 
-    assigns
-    |> assign(:fields, fields)
-    |> index_table()
+  def render(%{placement: placement} = opts, section, assigns) when is_list(placement) do
+    if Enum.member?(placement, section) do
+      index_table(opts, assigns)
+    else
+      nil
+    end
   end
 
   @impl true
   def render(_opts, _section, _assigns), do: nil
+
+  def index_table(opts, assigns) do
+    assigns = assign(assigns, :fields, init_fields(opts.field_list, assigns.pax.fields))
+
+    ~H"""
+    <div class="pax-table-wrapper pax-index-table-wrapper" role="region" aria-label="Index table" tabindex="0">
+      <table class="pax-table pax-index-table">
+        <thead class="pax-table-head pax-index-table-head">
+          <tr class="pax-table-head-row pax-index-table-head-row">
+            <%= for field <- @fields do %>
+              <th class="pax-table-header pax-index-table-header">
+                <.pax_field_label field={field} />
+              </th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody id="pax-index-table-objects" class="pax-table-body pax-index-table-body" phx-update="stream">
+          <%= for {dom_id, object} <- @pax.objects do %>
+            <tr id={dom_id} class="pax-table-row pax-index-table-row">
+              <%= for field <- @fields do %>
+                <td class="pax-table-datacell pax-index-table-datacell">
+                  <.pax_field_link_or_text field={field} object={object} />
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    """
+  end
 
   # If no fields are provided, we will just render all fields in the same order as in the main `:fields` list.
   defp init_fields(nil, fields) do
@@ -81,35 +115,6 @@ defmodule Pax.Plugins.IndexTable do
     #{inspect(val)}
 
     Field name must be an atom.
-    """
-  end
-
-  def index_table(assigns) do
-    ~H"""
-    <div class="pax-table-wrapper pax-index-table-wrapper" role="region" aria-label="Index table" tabindex="0">
-      <table class="pax-table pax-index-table">
-        <thead class="pax-table-head pax-index-table-head">
-          <tr class="pax-table-head-row pax-index-table-head-row">
-            <%= for field <- @fields do %>
-              <th class="pax-table-header pax-index-table-header">
-                <.pax_field_label field={field} />
-              </th>
-            <% end %>
-          </tr>
-        </thead>
-        <tbody id="pax-index-table-objects" class="pax-table-body pax-index-table-body" phx-update="stream">
-          <%= for {dom_id, object} <- @pax.objects do %>
-            <tr id={dom_id} class="pax-table-row pax-index-table-row">
-              <%= for field <- @fields do %>
-                <td class="pax-table-datacell pax-index-table-datacell">
-                  <.pax_field_link_or_text field={field} object={object} />
-                </td>
-              <% end %>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
     """
   end
 end
