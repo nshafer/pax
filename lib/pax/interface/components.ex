@@ -74,9 +74,6 @@ defmodule Pax.Interface.Components do
 
         <:secondary>
           {Pax.Plugin.render(:show_header_secondary, assigns)}
-          <.pax_button :if={@pax.edit_path} class="pax-detail-edit-button" patch={@pax.edit_path} level={:primary}>
-            Edit
-          </.pax_button>
         </:secondary>
 
         <:tertiary>
@@ -118,20 +115,6 @@ defmodule Pax.Interface.Components do
 
         <:secondary>
           {Pax.Plugin.render(:edit_header_secondary, assigns)}
-          <.pax_button :if={@pax.show_path} class="pax-detail-cancel-button" patch={@pax.show_path} level={:secondary}>
-            Cancel
-          </.pax_button>
-
-          <.pax_button
-            class="pax-detail-save-button"
-            type="submit"
-            phx-disable-with="Saving..."
-            name="detail[save]"
-            value="save"
-            level={:primary}
-          >
-            Save
-          </.pax_button>
         </:secondary>
         <:tertiary>
           {Pax.Plugin.render(:edit_header_tertiary, assigns)}
@@ -172,20 +155,6 @@ defmodule Pax.Interface.Components do
 
         <:secondary>
           {Pax.Plugin.render(:new_header_secondary, assigns)}
-          <.pax_button :if={@pax.index_path} class="pax-detail-cancel-button" patch={@pax.index_path} level={:secondary}>
-            Cancel
-          </.pax_button>
-
-          <.pax_button
-            class="pax-detail-save-button"
-            type="submit"
-            phx-disable-with="Saving..."
-            name="detail[save]"
-            value="save"
-            level={:primary}
-          >
-            Save
-          </.pax_button>
         </:secondary>
         <:tertiary>
           {Pax.Plugin.render(:new_header_tertiary, assigns)}

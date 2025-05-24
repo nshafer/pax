@@ -21,7 +21,7 @@ defmodule SandboxWeb.AlbumLive do
       Pax.Plugins.Pagination,
       Pax.Plugins.IndexTable,
       Pax.Plugins.DetailFieldsets,
-      Pax.Plugins.NewButton
+      Pax.Plugins.ActionButtons
     ]
   end
 

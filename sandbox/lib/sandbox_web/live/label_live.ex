@@ -41,10 +41,10 @@ defmodule SandboxWeb.LabelLive do
     [
       Pax.Plugins.Breadcrumbs,
       Pax.Plugins.Title,
-      Pax.Plugins.Pagination,
       Pax.Plugins.IndexTable,
       Pax.Plugins.DetailList,
-      Pax.Plugins.NewButton
+      Pax.Plugins.Pagination,
+      Pax.Plugins.ActionButtons
     ]
   end
 
@@ -71,9 +71,6 @@ defmodule SandboxWeb.LabelLive do
         order_by: :name
       ],
       plugins: [
-        pagination: [
-          # objects_per_page: 2
-        ],
         detail_list: [
           fields: [
             :name,

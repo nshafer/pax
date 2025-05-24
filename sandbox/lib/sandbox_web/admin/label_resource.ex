@@ -11,7 +11,7 @@ defmodule SandboxWeb.Admin.LabelResource do
       {Pax.Plugins.Pagination, objects_per_page: 100},
       Pax.Plugins.IndexTable,
       Pax.Plugins.DetailFieldsets,
-      Pax.Plugins.NewButton
+      Pax.Plugins.ActionButtons
     ]
   end
 
