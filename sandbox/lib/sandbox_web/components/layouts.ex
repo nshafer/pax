@@ -42,9 +42,9 @@ defmodule SandboxWeb.Layouts do
               <details>
                 <summary>Library Pages</summary>
                 <ul class="bg-base-200 rounded-t-none p-2 z-10">
-                  <li><a href={~p"/labels"}>Labels</a></li>
-                  <li><a href={~p"/artists"}>Artists</a></li>
-                  <li><a href={~p"/albums"}>Albums</a></li>
+                  <li><.link navigate={~p"/labels"}>Labels</.link></li>
+                  <li><.link navigate={~p"/artists"}>Artists</.link></li>
+                  <li><.link navigate={~p"/albums"}>Albums</.link></li>
                 </ul>
               </details>
             </li>
@@ -53,7 +53,7 @@ defmodule SandboxWeb.Layouts do
         <.theme_toggle />
         <div class="flex-none">
           <ul class="menu menu-horizontal px-1">
-            <li><a href="/admin">Admin</a></li>
+            <li><.link href="/admin">Admin</.link></li>
           </ul>
         </div>
       </div>
