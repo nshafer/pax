@@ -5,10 +5,12 @@ defmodule SandboxWeb.LabelLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash}>
-      {Pax.Interface.Components.pax_interface(assigns)}
-      <p class="mt-5">
+      <Pax.Interface.Components.pax_interface :if={assigns[:pax]} pax={@pax} />
+
+      <p>
         Counter: {@counter}
         <button class="btn" phx-click="increment">Increment</button>
+        <button class="btn" phx-click="append_title">Append title</button>
       </p>
     </Layouts.app>
     """
@@ -21,6 +23,15 @@ defmodule SandboxWeb.LabelLive do
   def handle_event("increment", _params, socket) do
     {:noreply, update(socket, :counter, &(&1 + 1))}
   end
+
+  def handle_event("append_title", _params, socket) do
+    plural_name = socket.assigns.pax.plural_name
+    {:noreply, Pax.Interface.Context.assign_pax(socket, :plural_name, plural_name <> ".")}
+  end
+
+  # def pax_init(_params, _session, socket) do
+  #   {:halt, socket}
+  # end
 
   def pax_adapter(_socket) do
     {Pax.Adapters.EctoSchema, repo: Sandbox.Repo, schema: Sandbox.Library.Label}

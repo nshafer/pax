@@ -5,7 +5,7 @@ defmodule SandboxWeb.AlbumLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash}>
-      {Pax.Interface.Components.pax_interface(assigns)}
+      <Pax.Interface.Components.pax_interface :if={assigns[:pax]} pax={@pax} />
     </Layouts.app>
     """
   end

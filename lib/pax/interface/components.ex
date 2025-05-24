@@ -6,25 +6,18 @@ defmodule Pax.Interface.Components do
   attr :class, :string, default: nil
   attr :index_class, :string, default: nil
   attr :show_class, :string, default: nil
-  attr :new_class, :string, default: nil
   attr :edit_class, :string, default: nil
+  attr :new_class, :string, default: nil
 
   def pax_interface(assigns) do
     ~H"""
-    <div :if={assigns[:pax]} class="pax-interface">
-      {pax_interface_action(assigns)}
+    <div class="pax-interface">
+      <.pax_index :if={@pax.action == :index} pax={@pax} class={@index_class} />
+      <.pax_show :if={@pax.action == :show} pax={@pax} class={@show_class} />
+      <.pax_edit :if={@pax.action == :edit} pax={@pax} class={@edit_class} />
+      <.pax_new :if={@pax.action == :new} pax={@pax} class={@new_class} />
     </div>
     """
-  end
-
-  def pax_interface_action(assigns) do
-    case assigns.pax.action do
-      :index -> assigns |> Map.put(:class, assigns.index_class) |> pax_index()
-      :show -> assigns |> Map.put(:class, assigns.show_class) |> pax_show()
-      :new -> assigns |> Map.put(:class, assigns.new_class) |> pax_new()
-      :edit -> assigns |> Map.put(:class, assigns.edit_class) |> pax_edit()
-      _ -> nil
-    end
   end
 
   attr :pax, Pax.Interface.Context, required: true

@@ -1,6 +1,5 @@
 defmodule Pax.Admin.Resource.Live do
   use Phoenix.Component
-  import Pax.Interface.Components
   import Pax.Admin.Context
 
   def render(site_mod, assigns) do
@@ -16,7 +15,7 @@ defmodule Pax.Admin.Resource.Live do
   def render(assigns) do
     ~H"""
     <%= if assigns[:pax] do %>
-      {pax_interface(assigns)}
+      <Pax.Interface.Components.pax_interface pax={@pax} />
     <% else %>
       <div class="admin-loading">
         Loading...
