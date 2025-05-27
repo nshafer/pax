@@ -4,8 +4,8 @@ defmodule Pax.Interface.Index do
   require Logger
   alias Phoenix.LiveView.LiveStream
 
-  def on_params(_params, _uri, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.on_params(#{inspect(params)}, #{inspect(uri)}")
+  def handle_params(_params, _uri, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.handle_params(#{inspect(params)}, #{inspect(uri)}")
 
     socket =
       socket
@@ -92,20 +92,20 @@ defmodule Pax.Interface.Index do
   # end
 
   # Catch-all for all other events that we don't care about
-  def on_event(_event, _params, socket) do
-    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.on_event(#{inspect(event)}, #{inspect(params)})")
+  def handle_event(_event, _params, socket) do
+    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.handle_event(#{inspect(event)}, #{inspect(params)})")
     {:cont, socket}
   end
 
   # Catch-all for all other info messages that we don't care about
-  def on_info(_msg, socket) do
-    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.on_info(#{inspect(msg)})")
+  def handle_info(_msg, socket) do
+    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.handle_info(#{inspect(msg)})")
     {:cont, socket}
   end
 
   # Catch-all for all other async results that we don't care about
-  def on_async(_name, _return, socket) do
-    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.on_async(#{inspect(name)})")
+  def handle_async(_name, _return, socket) do
+    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.handle_async(#{inspect(name)})")
     {:cont, socket}
   end
 

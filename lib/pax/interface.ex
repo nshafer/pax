@@ -55,6 +55,10 @@ defmodule Pax.Interface do
       def pax_config(_socket), do: []
 
       defoverridable pax_init: 3, pax_adapter: 1, pax_plugins: 1, pax_config: 1
+
+      # This is a noop so that when we issue patch requests the user's LiveView doesn't crash if it's not defined.
+      def handle_params(_params, _uri, socket), do: {:noreply, socket}
+      defoverridable handle_params: 3
     end
   end
 
@@ -124,14 +128,11 @@ defmodule Pax.Interface do
 
     with(
       {:cont, socket} <- global_handle_params(params, uri, socket),
-      {:cont, socket} <- plugin_handle_params(params, uri, socket, :on_preload),
+      {:cont, socket} <- plugin_handle_params(params, uri, socket),
       {:cont, socket} <- action_handle_params(params, uri, socket),
-      {:cont, socket} <- plugin_handle_params(params, uri, socket, :on_loaded),
-      {:cont, socket} <- module_handle_params(params, uri, socket)
+      {:cont, socket} <- plugin_after_params(socket)
     ) do
       {:cont, socket}
-    else
-      {:halt, socket} -> {:halt, socket}
     end
   end
 
@@ -157,21 +158,21 @@ defmodule Pax.Interface do
 
   defp action_handle_params(params, uri, socket) do
     case socket.assigns.pax.action do
-      :index -> Index.on_params(params, uri, socket)
-      :show -> Detail.on_params(params, uri, socket)
-      :edit -> Detail.on_params(params, uri, socket)
-      :new -> Detail.on_params(params, uri, socket)
+      :index -> Index.handle_params(params, uri, socket)
+      :show -> Detail.handle_params(params, uri, socket)
+      :edit -> Detail.handle_params(params, uri, socket)
+      :new -> Detail.handle_params(params, uri, socket)
       :delete -> raise "Delete action not implemented"
       _ -> {:cont, socket}
     end
   end
 
-  defp plugin_handle_params(params, uri, socket, callback) do
+  defp plugin_handle_params(params, uri, socket) do
     %{plugins: plugins} = socket.assigns.pax
 
     Enum.reduce_while(plugins, {:cont, socket}, fn plugin, {:cont, socket} ->
-      if function_exported?(plugin.module, callback, 4) do
-        case apply(plugin.module, callback, [plugin.opts, params, uri, socket]) do
+      if function_exported?(plugin.module, :handle_params, 4) do
+        case apply(plugin.module, :handle_params, [plugin.opts, params, uri, socket]) do
           {:cont, socket} -> {:cont, {:cont, socket}}
           {:halt, socket} -> {:halt, {:halt, socket}}
         end
@@ -181,20 +182,19 @@ defmodule Pax.Interface do
     end)
   end
 
-  # This check is needed because if LiveView detects a `patch` navigation, then it will call handle_params, such as
-  # when we or plugins do a `push_patch`, or `<.link patch=...>`. If the user has not defined a handle_params callback,
-  # then we want to tell LiveView to halt, otherwise it will attempt to call the user module's handle_params callback,
-  # which may not exist, and will raise an error.
-  defp module_handle_params(_params, _uri, socket) do
-    %{module: module} = socket.assigns.pax
+  defp plugin_after_params(socket) do
+    %{plugins: plugins} = socket.assigns.pax
 
-    # If the user has defined a handle_params callback, then we need to return {:cont, socket} so that Phoenix.LiveView
-    # will call it, otherwise we tell Phoenix.LiveView to halt.
-    if function_exported?(module, :handle_params, 3) do
-      {:cont, socket}
-    else
-      {:halt, socket}
-    end
+    Enum.reduce_while(plugins, {:cont, socket}, fn plugin, {:cont, socket} ->
+      if function_exported?(plugin.module, :after_params, 2) do
+        case apply(plugin.module, :after_params, [plugin.opts, socket]) do
+          {:cont, socket} -> {:cont, {:cont, socket}}
+          {:halt, socket} -> {:halt, {:halt, socket}}
+        end
+      else
+        {:cont, {:cont, socket}}
+      end
+    end)
   end
 
   # handle_event
@@ -218,10 +218,10 @@ defmodule Pax.Interface do
   def action_handle_event(event, params, socket) do
     case socket.assigns.pax.action do
       # Index doesn't handle any events for now, skip it
-      # :index -> Index.on_event(event, params, socket)
-      :new -> Detail.on_event(event, params, socket)
-      :show -> Detail.on_event(event, params, socket)
-      :edit -> Detail.on_event(event, params, socket)
+      # :index -> Index.handle_event(event, params, socket)
+      :new -> Detail.handle_event(event, params, socket)
+      :show -> Detail.handle_event(event, params, socket)
+      :edit -> Detail.handle_event(event, params, socket)
       _ -> {:cont, socket}
     end
   end
@@ -230,8 +230,8 @@ defmodule Pax.Interface do
     %{plugins: plugins} = socket.assigns.pax
 
     Enum.reduce_while(plugins, {:cont, socket}, fn plugin, {:cont, socket} ->
-      if function_exported?(plugin.module, :on_event, 4) do
-        case plugin.module.on_event(plugin.opts, event, params, socket) do
+      if function_exported?(plugin.module, :handle_event, 4) do
+        case plugin.module.handle_event(plugin.opts, event, params, socket) do
           {:cont, socket} -> {:cont, {:cont, socket}}
           {:halt, socket} -> {:halt, {:halt, socket}}
           {:halt, reply, socket} -> {:halt, {:halt, reply, socket}}
@@ -262,10 +262,10 @@ defmodule Pax.Interface do
 
   def action_handle_info(msg, socket) do
     case socket.assigns.pax.action do
-      :index -> Index.on_info(msg, socket)
-      :new -> Detail.on_info(msg, socket)
-      :show -> Detail.on_info(msg, socket)
-      :edit -> Detail.on_info(msg, socket)
+      :index -> Index.handle_info(msg, socket)
+      :new -> Detail.handle_info(msg, socket)
+      :show -> Detail.handle_info(msg, socket)
+      :edit -> Detail.handle_info(msg, socket)
       _ -> {:cont, socket}
     end
   end
@@ -274,8 +274,8 @@ defmodule Pax.Interface do
     %{plugins: plugins} = socket.assigns.pax
 
     Enum.reduce_while(plugins, {:cont, socket}, fn plugin, {:cont, socket} ->
-      if function_exported?(plugin.module, :on_info, 3) do
-        case plugin.module.on_info(plugin.opts, msg, socket) do
+      if function_exported?(plugin.module, :handle_info, 3) do
+        case plugin.module.handle_info(plugin.opts, msg, socket) do
           {:cont, socket} -> {:cont, {:cont, socket}}
           {:halt, socket} -> {:halt, {:halt, socket}}
         end
@@ -304,10 +304,10 @@ defmodule Pax.Interface do
 
   def action_handle_async(name, async_fun_result, socket) do
     case socket.assigns.pax.action do
-      :index -> Index.on_async(name, async_fun_result, socket)
-      :new -> Detail.on_async(name, async_fun_result, socket)
-      :show -> Detail.on_async(name, async_fun_result, socket)
-      :edit -> Detail.on_async(name, async_fun_result, socket)
+      :index -> Index.handle_async(name, async_fun_result, socket)
+      :new -> Detail.handle_async(name, async_fun_result, socket)
+      :show -> Detail.handle_async(name, async_fun_result, socket)
+      :edit -> Detail.handle_async(name, async_fun_result, socket)
       _ -> {:cont, socket}
     end
   end
@@ -316,8 +316,8 @@ defmodule Pax.Interface do
     %{plugins: plugins} = socket.assigns.pax
 
     Enum.reduce_while(plugins, {:cont, socket}, fn plugin, {:cont, socket} ->
-      if function_exported?(plugin.module, :on_async, 4) do
-        case plugin.module.on_async(plugin.opts, name, async_fun_result, socket) do
+      if function_exported?(plugin.module, :handle_async, 4) do
+        case plugin.module.handle_async(plugin.opts, name, async_fun_result, socket) do
           {:cont, socket} -> {:cont, {:cont, socket}}
           {:halt, socket} -> {:halt, {:halt, socket}}
         end

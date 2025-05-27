@@ -8,8 +8,8 @@ defmodule Pax.Interface.Detail do
 
   alias Pax.Config
 
-  def on_params(params, uri, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.on_params(#{inspect(params)}, #{inspect(uri)}")
+  def handle_params(params, uri, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.handle_params(#{inspect(params)}, #{inspect(uri)}")
     # dbg(socket, structs: false)
 
     object = init_object(params, uri, socket)
@@ -25,8 +25,8 @@ defmodule Pax.Interface.Detail do
     {:cont, socket}
   end
 
-  def on_event("pax_validate", %{"detail" => params}, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_validate, #{inspect(params)})")
+  def handle_event("pax_validate", %{"detail" => params}, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.handle_event(:pax_validate, #{inspect(params)})")
     %{adapter: adapter, fields: fields, object: object} = socket.assigns.pax
 
     changeset =
@@ -36,28 +36,28 @@ defmodule Pax.Interface.Detail do
     {:halt, assign_pax_form(socket, changeset)}
   end
 
-  def on_event("pax_save", %{"detail" => params}, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.on_event(:pax_save, #{inspect(params)})")
+  def handle_event("pax_save", %{"detail" => params}, socket) do
+    # IO.puts("#{inspect(__MODULE__)}.handle_event(:pax_save, #{inspect(params)})")
     %{config: config, adapter: adapter, action: action, fields: fields, object: object} = socket.assigns.pax
     changeset = changeset(adapter, fields, object, params)
     save_object(socket, action, config, adapter, object, changeset)
   end
 
   # Catch-all for all other events that we don't care about
-  def on_event(_event, _params, socket) do
-    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.on_event(#{inspect(event)}, #{inspect(params)})")
+  def handle_event(_event, _params, socket) do
+    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.handle_event(#{inspect(event)}, #{inspect(params)})")
     {:cont, socket}
   end
 
   # Catch-all for all other info messages that we don't care about
-  def on_info(_msg, socket) do
-    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.on_info(#{inspect(msg)})")
+  def handle_info(_msg, socket) do
+    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.handle_info(#{inspect(msg)})")
     {:cont, socket}
   end
 
   # Catch-all for all other async results that we don't care about
-  def on_async(_name, _return, socket) do
-    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.on_async(#{inspect(name)})")
+  def handle_async(_name, _return, socket) do
+    # Logger.debug("IGNORED: #{inspect(__MODULE__)}.handle_async(#{inspect(name)})")
     {:cont, socket}
   end
 

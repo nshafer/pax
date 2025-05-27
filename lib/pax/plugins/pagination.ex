@@ -42,9 +42,9 @@ defmodule Pax.Plugins.Pagination do
   end
 
   @impl true
-  def on_preload(opts, params, _uri, socket) do
+  def handle_params(opts, params, _uri, socket) do
     if socket.assigns.pax.action == :index do
-      # IO.inspect(params, label: "Pagination.on_params")
+      # IO.inspect(params, label: "Pagination.handle_params")
       page = get_page(params)
       limit = opts.objects_per_page
       offset = (page - 1) * limit
@@ -63,7 +63,7 @@ defmodule Pax.Plugins.Pagination do
   end
 
   @impl true
-  def on_loaded(_opts, _params, _uri, socket) do
+  def after_params(_opts, socket) do
     if socket.assigns.pax.action == :index do
       num_pages = calculate_num_pages(socket)
       page = socket.assigns.pax.private.pagination.page
@@ -83,20 +83,20 @@ defmodule Pax.Plugins.Pagination do
   end
 
   @impl true
-  def on_event(_opts, "pagination-page-change", params, socket) do
+  def handle_event(_opts, "pagination-page-change", params, socket) do
     params
     |> get_page(nil)
     |> update_page_event(socket)
   end
 
   @impl true
-  def on_event(_opts, "pagination-page-submit", params, socket) do
+  def handle_event(_opts, "pagination-page-submit", params, socket) do
     params
     |> get_page(nil)
     |> update_page_event(socket)
   end
 
-  def on_event(_opts, _event, _params, socket), do: {:cont, socket}
+  def handle_event(_opts, _event, _params, socket), do: {:cont, socket}
 
   def update_page_event(page, socket) do
     if page != nil and page > 0 and page <= socket.assigns.pax.private.pagination.num_pages do
