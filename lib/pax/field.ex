@@ -15,7 +15,7 @@ defmodule Pax.Field do
           | {atom(), atom() | module()}
           | {atom(), atom() | module(), keyword()}
 
-  @global_opts [:label, :link, :value, :immutable, :required, :only, :except]
+  @global_opts [:label, :link, :value, :immutable, :required, :only, :except, :sort, :sort_asc, :sort_desc]
 
   @doc false
   @spec init(Pax.Adapter.t(), fieldspec()) :: t()
@@ -83,7 +83,8 @@ defmodule Pax.Field do
 
   defp do_init(_adapter, name, type, opts) do
     if Code.ensure_loaded?(type) and function_exported?(type, :init, 1) do
-      global = init_global_opts(opts)
+      validate_field_name!(name)
+      global = init_global_opts(opts, name, type)
       opts = type.init(opts)
 
       %Field{
@@ -96,13 +97,30 @@ defmodule Pax.Field do
     end
   end
 
-  defp init_global_opts(opts) do
-    Keyword.take(opts, @global_opts)
-    |> Map.new()
-    |> resolve_link_opt()
+  defp validate_field_name!(name) when is_atom(name) do
+    case to_string(name) do
+      "." <> _ -> raise ArgumentError, "Field name cannot start with a period: #{inspect(name)}"
+      "-" <> _ -> raise ArgumentError, "Field name cannot start with a hyphen: #{inspect(name)}"
+      "_" <> _ -> raise ArgumentError, "Field name cannot start with an underscore: #{inspect(name)}"
+      "~" <> _ -> raise ArgumentError, "Field name cannot start with a tilde: #{inspect(name)}"
+      _ -> :ok
+    end
   end
 
-  defp resolve_link_opt(opts) do
+  defp validate_field_name!(name) do
+    raise ArgumentError, "Field name must be an atom, got: #{inspect(name)}"
+  end
+
+  defp init_global_opts(opts, name, _type) do
+    Keyword.take(opts, @global_opts)
+    |> Map.new()
+    |> validate_link_opt(name)
+    |> resolve_sort_opt(name)
+    |> validate_sort_asc_opt(name)
+    |> validate_sort_desc_opt(name)
+  end
+
+  defp validate_link_opt(opts, name) do
     case Map.get(opts, :link) do
       true -> opts
       nil -> opts
@@ -110,7 +128,37 @@ defmodule Pax.Field do
       fun when is_function(fun) -> opts
       link when is_binary(link) -> opts
       %URI{} -> opts
-      _ -> raise "Invalid link option: #{inspect(opts[:link])}"
+      _ -> raise "Invalid link option for field #{name}: #{inspect(opts[:link])}"
+    end
+  end
+
+  defp resolve_sort_opt(opts, name) do
+    case Map.get(opts, :sort) do
+      nil -> opts
+      true -> Map.put(opts, :sort, name)
+      false -> Map.delete(opts, :sort)
+      field when is_atom(field) -> Map.put(opts, :sort, field)
+      _ -> raise ArgumentError, "Invalid sort option for field #{name}: #{inspect(opts[:sort])}"
+    end
+  end
+
+  defp validate_sort_asc_opt(opts, name) do
+    case Map.get(opts, :sort_asc) do
+      :asc -> opts
+      :asc_nulls_first -> opts
+      :asc_nulls_last -> opts
+      nil -> opts
+      _ -> raise ArgumentError, "Invalid sort_asc option for field #{name}: #{inspect(opts[:sort_asc])}"
+    end
+  end
+
+  defp validate_sort_desc_opt(opts, name) do
+    case Map.get(opts, :sort_desc) do
+      :desc -> opts
+      :desc_nulls_first -> opts
+      :desc_nulls_last -> opts
+      nil -> opts
+      _ -> raise ArgumentError, "Invalid sort_desc option for field #{name}: #{inspect(opts[:sort_desc])}"
     end
   end
 

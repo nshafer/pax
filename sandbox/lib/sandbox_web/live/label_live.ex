@@ -58,17 +58,29 @@ defmodule SandboxWeb.LabelLive do
       fields: [
         {:id, immutable: true},
         {:name, only: [:show, :edit, :new]},
-        {:name_link, :string, value: :name, link: true, only: :index},
+        {:name_link, :string, value: :name, sort: :name, link: true, only: :index},
         {:slug, except: [:index]},
-        :founded,
+        {:founded, sort: true},
         {:rating, :float, title: "Rating (0-5)", round: 3, required: false, only: :edit},
-        {:rating_formatted, :string, value: &format_rating/1, except: [:edit]},
-        {:accepting_submissions, :boolean, true: "Yes", false: "No"},
+        {:rating_formatted, :string,
+         value: &format_rating/1,
+         sort: :rating,
+         sort_asc: :asc_nulls_first,
+         sort_desc: :desc_nulls_last,
+         except: [:edit]},
+        {:accepting_submissions, :boolean, true: "Yes", false: "No", sort: true},
         {:inserted_at, :datetime, immutable: true, except: :index},
         {:updated_at, :datetime, immutable: true, except: :index}
       ],
       default_scope: [
         order_by: :name
+        # order_by: [asc: :name]
+        # order_by: [asc_nulls_first: :name]
+        # order_by: [asc: :name, desc: :name]
+        # order_by: [:founded, :name]
+        # order_by: [:founded, desc: :name]
+        # order_by: [desc: :founded, asc: :name]
+        # order_by: [asc_nulls_first: :rating]
       ],
       plugins: [
         detail_list: [

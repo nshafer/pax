@@ -3,3 +3,19 @@
 .pax-index-table {
     width: 100%;
 }
+
+.pax-index-table-header-content {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--pax-spacing) * .5);
+}
+
+.pax-index-table-header-sort {
+    display: flex;
+    align-items: center;
+    gap: .1em;
+}
+
+.pax-index-table-sort-num {
+    font-size: 0.8em;
+}

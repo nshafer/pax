@@ -12,12 +12,54 @@
 }
 
 .pax-index-table-header {
+    font-size: 0.8em;
+    text-transform: uppercase;
     white-space: nowrap;
 }
 
-.pax-index-table-header,
+.pax-index-table-header-content {
+    gap: 0;
+
+    &:has(.pax-index-table-header-link:hover),
+    &:has(.pax-index-table-header-link:focus-visible) {
+        background-color: var(--bg-base-4);
+    }
+
+}
+
+.pax-index-table-header-link,
+.pax-index-table-header-label,
+.pax-index-table-header-sort {
+    padding: 0.5em 0.5em;
+
+    .pax-index-table-header:first-child & {
+        padding-left: calc(1em * (1/0.875));
+
+        &+.pax-index-table-header-sort {
+            padding-left: 0.5em;
+        }
+    }
+
+    .pax-index-table-header:last-child & {
+        padding-right: calc(1em * (1/0.875));
+
+        &+.pax-index-table-header-sort {
+            padding-right: 0.5em;
+        }
+    }
+}
+
+.pax-index-table-header-link,
+.pax-index-table-header-label {
+    flex: 1;
+}
+
+.pax-index-table-header-sort {
+    flex-direction: row-reverse;
+}
+
 .pax-index-table-datacell {
-    padding: 0.2em 0.5em;
+    padding: 0.5em 0.5em;
 
     &:first-child {
         padding-left: calc(1em * (1/0.875));
@@ -28,11 +70,10 @@
     }
 }
 
-.pax-index-table-header .pax-field-label {
-    font-size: 0.8em;
-    text-transform: uppercase;
-}
-
 .pax-index-table-row {
     border-bottom: 1px solid var(--border-base-1);
+}
+
+.pax-index-table-header-sort {
+    color: var(--text-base-muted);
 }

@@ -18,8 +18,8 @@ defmodule SandboxWeb.Admin.LabelResource do
   def config(_socket) do
     [
       fields: [
-        :id,
-        {:name, link: true},
+        {:id, sort: true},
+        {:name, link: true, sort: true},
         :founded,
         {:rating, :float, round: 2},
         :accepting_submissions,
@@ -27,7 +27,7 @@ defmodule SandboxWeb.Admin.LabelResource do
         {:updated_at, immutable: true, except: :index}
       ],
       default_scope: [
-        order_by: :name
+        order_by: [:name, desc: :founded]
       ],
       plugins: [
         detail_fieldsets: [
