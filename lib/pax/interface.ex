@@ -139,19 +139,26 @@ defmodule Pax.Interface do
   defp global_handle_params(_params, uri, socket) do
     %{config: config} = socket.assigns.pax
 
+    # Action is derived from the router, and could be anything
+    action = socket.assigns.live_action
+
     # Parse the URI of the current request
     url = URI.parse(uri)
 
     # Extract just the path and query from the URL. Fragment should never be set here, but...
     path = %URI{path: url.path, query: url.query, fragment: url.fragment}
 
+    # Get the default scope from the config
+    default_scope = Pax.Config.get(config, :default_scope, [socket], %{}) |> Map.new()
+
     socket =
       socket
       |> assign_pax(:url, url)
       |> assign_pax(:path, path)
-      |> assign_pax(:action, socket.assigns.live_action)
-      |> assign_pax(:fields, init_fields(socket.assigns.live_action, socket))
-      |> assign_pax_scope(Pax.Config.get(config, :default_scope, [socket], %{}))
+      |> assign_pax(:action, action)
+      |> assign_pax(:fields, init_fields(action, socket))
+      |> assign_pax(:default_scope, default_scope)
+      |> assign_pax(:scope, default_scope)
 
     {:cont, socket}
   end

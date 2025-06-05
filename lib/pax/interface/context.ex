@@ -61,6 +61,7 @@ defmodule Pax.Interface.Context do
             edit_path: nil,
             id_fields: [],
             fields: [],
+            default_scope: %{},
             scope: %{},
             private: %{}
 
@@ -95,9 +96,31 @@ defmodule Pax.Interface.Context do
   end
 
   @doc """
-  Assigns a value a map in the `:private` map in the `:pax` context in the socket or assigns map.
+  Makes sure that the given `prefix` exists in the `:private` map in the `:pax` context in the socket or assigns map.
   """
+  def ensure_pax_private(socket_or_assigns, prefix)
 
+  def ensure_pax_private(%Phoenix.LiveView.Socket{} = socket, prefix) do
+    private =
+      socket.assigns
+      |> Map.get(:pax, %Context{})
+      |> Map.get(:private, %{})
+
+    assign_pax(socket, :private, Map.put_new(private, prefix, %{}))
+  end
+
+  def ensure_pax_private(%{} = assigns, prefix) do
+    private =
+      assigns
+      |> Map.get(:pax, %Context{})
+      |> Map.get(:private, %{})
+
+    assign_pax(assigns, :private, Map.put_new(private, prefix, %{}))
+  end
+
+  @doc """
+  Assigns the `value` to the `:private` map under the `prefix` in the `:pax` context in the assigns.
+  """
   def assign_pax_private(socket_or_assigns, prefix, key, value)
 
   def assign_pax_private(%Phoenix.LiveView.Socket{} = socket, prefix, key, value) do
