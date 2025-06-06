@@ -45,16 +45,25 @@ defmodule Pax.Plugins.IndexTable do
   @impl true
   def handle_params(_opts, params, _uri, socket) do
     # IO.puts("[Pax.Plugins.IndexTable] handle_params(#{inspect(params)})")
+    socket =
+      socket
+      |> assign_pax_private(:index_table, :default_sort_params, default_sort_params(socket))
+      |> maybe_assign_sort_scope(params)
+
+    {:cont, socket}
+  end
+
+  defp maybe_assign_sort_scope(socket, params) do
     # TODO: support multiple sorts in params
     with {:ok, order_by} <- get_sort(params, socket) do
-      {:cont, assign_pax_scope(socket, order_by: order_by)}
+      assign_pax_scope(socket, order_by: order_by)
     else
       :not_found ->
-        {:cont, socket}
+        socket
 
       {:error, reason} ->
         Logger.info("[Pax.Plugins.IndexTable] ignoring invalid sort parameter: #{inspect(reason)}")
-        {:cont, socket}
+        socket
     end
   end
 
@@ -349,35 +358,53 @@ defmodule Pax.Plugins.IndexTable do
   defp sort_link(%Pax.Field{opts: %{sort: sort_field}} = field, pax) do
     sort_asc = field.opts[:sort_asc] || :asc
     sort_desc = field.opts[:sort_desc] || :desc
-    %{url: url, default_scope: default_scope, private: %{index_table: %{sorts: sorts}}} = pax
+    %{url: url, private: %{index_table: %{default_sort_params: default_sort_params, sorts: sorts}}} = pax
     {_sort_num, sort_direction} = sorts[sort_field] || {nil, nil}
 
     if sort_direction == sort_asc do
       value = sort_param({sort_desc, sort_field})
-      default = default_sort_param(sort_asc, sort_desc, default_scope)
-      with_params(url, sort: [value: value, default: default])
+      with_params(url, sort: [value: value, default: default_sort_params])
     else
       value = sort_param({sort_asc, sort_field})
-      default = default_sort_param(sort_asc, sort_desc, default_scope)
-      with_params(url, sort: [value: value, default: default])
+      with_params(url, sort: [value: value, default: default_sort_params])
     end
   end
 
   defp sort_link(_field, _assigns), do: nil
 
-  defp default_sort_param(sort_asc, _sort_desc, %{order_by: field_name}) when is_atom(field_name),
-    do: sort_param({sort_asc, field_name})
+  defp default_sort_params(%{assigns: %{pax: %{fields: fields, default_scope: %{order_by: order_by}}}}) do
+    field_sorts =
+      for field <- fields, field.opts[:sort] != nil, into: %{} do
+        {field.opts[:sort], %{asc: field.opts[:sort_asc] || :asc, desc: field.opts[:sort_desc] || :desc}}
+      end
 
-  defp default_sort_param(sort_asc, _sort_desc, %{order_by: [field_name]}) when is_atom(field_name),
-    do: sort_param({sort_asc, field_name})
+    case order_by do
+      field_name when is_atom(field_name) ->
+        sort_param({field_sorts[field_name][:asc], field_name})
 
-  defp default_sort_param(sort_asc, _sort_desc, %{order_by: [{sort_asc, field_name}]}) when is_atom(field_name),
-    do: sort_param({sort_asc, field_name})
+      [field_name] when is_atom(field_name) ->
+        sort_param({field_sorts[field_name][:asc], field_name})
 
-  defp default_sort_param(_sort_asc, sort_desc, %{order_by: [{sort_desc, field_name} | _]}) when is_atom(field_name),
-    do: sort_param({sort_desc, field_name})
+      [{direction, field_name}] when is_atom(direction) and is_atom(field_name) ->
+        sort_param({direction, field_name})
 
-  defp default_sort_param(_sort_asc, _sort_desc, _default_scope), do: nil
+      order_by when is_list(order_by) ->
+        for order <- order_by do
+          case order do
+            field_name when is_atom(field_name) ->
+              sort_param({field_sorts[field_name][:asc], field_name})
+
+            {direction, field_name} when is_atom(direction) and is_atom(field_name) ->
+              sort_param({direction, field_name})
+
+            _ ->
+              nil
+          end
+        end
+    end
+  end
+
+  defp default_sort_params(_pax), do: nil
 
   defp sort_param({:asc, field_name}), do: "#{field_name}"
   defp sort_param({:asc_nulls_first, field_name}), do: "~#{field_name}"

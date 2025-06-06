@@ -77,10 +77,11 @@ defmodule SandboxWeb.LabelLive do
         # order_by: [asc: :name]
         # order_by: [asc_nulls_first: :name]
         # order_by: [asc: :name, desc: :name]
+        # order_by: [asc_nulls_first: :rating]
+        # order_by: :inserted_at
         # order_by: [:founded, :name]
         # order_by: [:founded, desc: :name]
         # order_by: [desc: :founded, asc: :name]
-        # order_by: [asc_nulls_first: :rating]
       ],
       plugins: [
         detail_list: [
