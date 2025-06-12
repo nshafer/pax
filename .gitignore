@@ -31,3 +31,12 @@ pax-*.tar
 # Ignore static files that are produced by build tools.
 /priv/static/*.css
 /priv/static/*.js
+
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/mcp.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
