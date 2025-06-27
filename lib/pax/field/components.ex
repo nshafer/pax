@@ -3,9 +3,11 @@ defmodule Pax.Field.Components do
   import Pax.Components
 
   @doc """
-  Renders a label for the given Pax.Field. If the Pax.Field has a `:label` option set, it will be used as the label text,
-  otherwise the field name will be used. The `:for` option can be used to set the `for` attribute of the label, otherwise
-  the `:form` will be used if set, and finally the field name will be used.
+  Renders a label for the given Pax.Field.
+
+  If the Pax.Field has a `:label` option set, it will be used as the label text, otherwise the field name will be used.
+  The `:for` option can be used to set the `for` attribute of the label, otherwise the `:form` will be used if set,
+  and finally the field name will be used.
   """
 
   attr :field, :any, required: true
@@ -23,29 +25,40 @@ defmodule Pax.Field.Components do
   end
 
   @doc """
-  Renders a link or text for the given Pax.Field. A link is rendered if the field has a valid `:link` option set.
+  Renders a link or text for the given Pax.Field.
 
-  If the field has a link set, then this turns into `<.pax_field_link class={@link_class} link={link}>...</.pax_field_link>`.
+  A link is rendered if the field has a valid `:link` option set.
 
-  If the field does not have a link set, then this turns into `<.pax_field_text class={@text_class}>...</.pax_field_text>`.
+  If the field has a link set, then this turns into:
+
+      <.pax_field_link class={@link_class} link={link}>...</.pax_field_link>
+
+  If the field does not have a link set, then this turns into:
+
+      `<.pax_field_text class={@text_class}>...</.pax_field_text>`.
+
   """
 
   attr :field, :any, required: true
   attr :object, :map, required: true
+  attr :params, :any, default: nil
+  attr :local_params, :any, default: nil
   attr :link_class, :string, default: nil
   attr :text_class, :string, default: nil
 
   def pax_field_link_or_text(assigns) do
-    case Pax.Field.link(assigns.field, assigns.object) do
+    case Pax.Field.link(assigns.field, assigns.object, params: assigns.params, local_params: assigns.local_params) do
       nil -> pax_field_text(assign(assigns, :class, assigns.text_class))
       link -> pax_field_link(assign(assigns, class: assigns.link_class, link: link))
     end
   end
 
   @doc """
-  Renders the `:value` of the given Pax.Field as plain text. The field's value will be resolved depending on what it
-  is set to, calling any functions or using any other field names as required. Otherwise it will find the value in the
-  `object` map by the field name. A `nil` value will be rendered as a unicode bullet character (`•`, U+2022).
+  Renders the `:value` of the given Pax.Field as plain text.
+
+  The field's value will be resolved depending on what it is set to, calling any functions or using any other field
+  names as required. Otherwise it will find the value in the `object` map by the field name. A `nil` value will be
+  rendered as a unicode bullet character (`•`, U+2022).
   """
 
   attr :field, :any, required: true
@@ -61,17 +74,29 @@ defmodule Pax.Field.Components do
   end
 
   @doc """
-  Renders a link for the given Pax.Field, similar to `pax_field_text/1`, but wrapped in a `<.pax_link>` component. The
-  link will use the `navigate` attribute, which results in patches to the same LiveView, navigates to different
+  Renders a link for the given Pax.Field.
+
+  If the `link` attribute is not set, then it will be generated using the `Pax.Field.link/3` function, which will
+  generate a link based on the field's `:link` option, the `object`, and any additional `params` or `local_params`
+  passed in.
+
+  The link will use the `navigate` attribute, which results in patches to the same LiveView, navigates to different
   LiveViews in the same `live_session`, and finally a normal, full page navigation to other URLs.
   """
 
   attr :field, :any, required: true
   attr :object, :map, required: true
-  attr :link, :string, required: true
+  attr :link, :string, required: false
+  attr :params, :any, default: nil
+  attr :local_params, :any, default: nil
   attr :class, :any, default: nil
 
   def pax_field_link(assigns) do
+    assigns =
+      assign_new(assigns, :link, fn ->
+        Pax.Field.link(assigns.field, assigns.object, params: assigns.params, local_params: assigns.local_params)
+      end)
+
     ~H"""
     <.pax_link class={["pax-field-link", @class]} navigate={@link}>
       {Pax.Field.render(@field, @object)}

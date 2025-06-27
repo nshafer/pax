@@ -18,24 +18,6 @@ defmodule Pax.Components do
   end
 
   @doc """
-  Renders a link using Phoenix.Component.link. All attributes from Phoenix.Component.link are passed through.
-  """
-  @doc type: :component
-  attr :class, :any, default: nil
-  attr :rest, :global, include: ~w(
-    navigate patch href replace method csrf_token
-    download hreflang referrerpolicy rel target type)
-  slot :inner_block, required: true
-
-  def pax_link(assigns) do
-    ~H"""
-    <Phoenix.Component.link class={["pax-link", @class]} {@rest}>
-      {render_slot(@inner_block)}
-    </Phoenix.Component.link>
-    """
-  end
-
-  @doc """
   Renders a badge.
   """
   @doc type: :component
@@ -54,8 +36,26 @@ defmodule Pax.Components do
   end
 
   @doc """
+  Renders a link using `Phoenix.Component.link/1`. All attributes from Phoenix.Component.link are passed through.
+  """
+  @doc type: :component
+  attr :class, :any, default: nil
+  attr :rest, :global, include: ~w(
+    navigate patch href replace method csrf_token
+    download hreflang referrerpolicy rel target type)
+  slot :inner_block, required: true
+
+  def pax_link(assigns) do
+    ~H"""
+    <Phoenix.Component.link class={["pax-link", @class]} {@rest}>
+      {render_slot(@inner_block)}
+    </Phoenix.Component.link>
+    """
+  end
+
+  @doc """
   Renders a button. Can be called with "navigate", "patch" or "href" to render as a link styled like a button. All
-  other attributes from Phoenix.Component.link are passed through in that case.
+  other attributes from `link/1` are passed through in that case.
 
   ## Examples
 

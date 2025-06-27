@@ -166,31 +166,79 @@ defmodule Pax.Field do
     Map.get(opts, :label) || Pax.Util.Introspection.field_name_to_label(name)
   end
 
-  def link(%Field{opts: opts}, object) do
-    case Map.get(opts, :link, nil) do
+  def link(%Field{} = field, object, opts \\ []) do
+    local_params = Keyword.get(opts, :local_params)
+    params = Keyword.get(opts, :params)
+
+    field
+    |> resolve_link(object)
+    |> maybe_add_local_params(local_params)
+    |> maybe_add_params(params)
+  end
+
+  defp resolve_link(field, object) do
+    case Map.get(field.opts, :link, nil) do
       nil -> nil
-      {mod, fun} when is_atom(mod) and is_atom(fun) -> resolve_link_from_mod_fun(object, mod, fun)
-      fun when is_function(fun) -> resolve_link_from_function(object, fun)
-      %URI{} = link -> URI.to_string(link)
+      {mod, fun} when is_atom(mod) and is_atom(fun) -> resolve_link_from_mod_fun(field, object, mod, fun)
+      fun when is_function(fun) -> resolve_link_from_function(field, object, fun)
+      %URI{} = link -> link
       link -> link
     end
   end
 
-  defp resolve_link_from_mod_fun(object, mod, fun) do
+  # Add params to the given link, as long as it's not nil, and there are params to add
+  defp maybe_add_params(nil, _), do: nil
+  defp maybe_add_params(link, nil), do: link
+
+  defp maybe_add_params(link, params) when is_binary(link) do
+    Pax.Util.URI.with_params(link, params)
+  end
+
+  defp maybe_add_params(%URI{} = link, params) do
+    Pax.Util.URI.with_params(link, params)
+  end
+
+  # Add params to the given link if the link has no host
+  defp maybe_add_local_params(nil, _), do: nil
+  defp maybe_add_local_params(link, nil), do: link
+
+  defp maybe_add_local_params(%URI{} = link, local_params) do
+    case link.host do
+      nil -> maybe_add_params(link, local_params)
+      _ -> link
+    end
+  end
+
+  defp maybe_add_local_params(link, local_params) when is_binary(link) do
+    link
+    |> URI.parse()
+    |> maybe_add_local_params(local_params)
+  end
+
+  defp resolve_link_from_mod_fun(field, object, mod, fun) do
     cond do
-      function_exported?(mod, fun, 1) -> apply(mod, fun, [object]) |> resolve_returned_link()
-      true -> raise UndefinedFunctionError, "function #{mod}.#{fun}/1 is undefined or private"
+      function_exported?(mod, fun, 1) ->
+        link = apply(mod, fun, [object])
+        resolve_returned_link(field, link)
+
+      true ->
+        raise UndefinedFunctionError,
+              "function #{mod}.#{fun}/1 is undefined or private for field #{inspect(field.name)}"
     end
   end
 
-  defp resolve_link_from_function(object, fun) do
+  defp resolve_link_from_function(field, object, fun) do
     case Function.info(fun, :arity) do
-      {:arity, 1} -> fun.(object) |> resolve_returned_link()
-      _ -> raise ArgumentError, "Invalid function arity: #{inspect(fun)}. Must be a fn/1."
+      {:arity, 1} ->
+        link = fun.(object)
+        resolve_returned_link(field, link)
+
+      _ ->
+        raise ArgumentError, "Invalid function arity: #{inspect(fun)} for field #{inspect(field.name)}. Must be a fn/1."
     end
   end
 
-  defp resolve_returned_link(link) do
+  defp resolve_returned_link(field, link) do
     case link do
       nil ->
         nil
@@ -204,15 +252,17 @@ defmodule Pax.Field do
       link when is_binary(link) ->
         link
 
-      %URI{} ->
-        URI.to_string(link)
+      %URI{} = link ->
+        link
 
-      _ ->
-        Logger.warning(
-          "Invalid link returned from link/1 function. Must be a string, atom or URI. Got: #{inspect(link)}"
-        )
+      link ->
+        raise """
+        Invalid link returned from link/1 function for field #{inspect(field.name)}.
 
-        nil
+        #{inspect(link)}
+
+        Must be a string, atom or URI.
+        """
     end
   end
 
