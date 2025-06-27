@@ -18,11 +18,13 @@ defmodule SandboxWeb.Admin.LabelResource do
   def config(_socket) do
     [
       fields: [
-        {:id, sort: true},
+        {:id, sort: true, immutable: true},
         {:name, link: true, sort: true},
-        :founded,
-        {:rating, :float, round: 2},
-        :accepting_submissions,
+        {:slug, except: :index},
+        {:founded, sort: true},
+        {:rating, :float,
+         round: 2, sort: true, sort_asc: :asc_nulls_first, sort_desc: :desc_nulls_last},
+        {:accepting_submissions, sort: true},
         {:inserted_at, immutable: true, except: :index},
         {:updated_at, immutable: true, except: :index}
       ],
@@ -34,6 +36,7 @@ defmodule SandboxWeb.Admin.LabelResource do
           fieldsets: [
             default: [
               [:name, :slug],
+              :founded,
               :rating,
               :accepting_submissions
             ],

@@ -1,9 +1,9 @@
-defmodule Pax.UtilTest do
+defmodule Pax.Util.URITest do
   use ExUnit.Case, async: true
 
-  import Pax.Util.Params
+  import Pax.Util.URI
 
-  doctest Pax.Util.Params
+  doctest Pax.Util.URI
 
   describe "Params" do
     test "can call with path and no params" do

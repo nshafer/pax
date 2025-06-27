@@ -3,6 +3,8 @@ defmodule SandboxWeb.LabelLive do
   use Pax.Interface
 
   def render(assigns) do
+    # dbg(assigns.pax)
+
     ~H"""
     <Layouts.app flash={@flash}>
       <Pax.Interface.Components.pax_interface :if={assigns[:pax]} pax={@pax} />
@@ -26,7 +28,7 @@ defmodule SandboxWeb.LabelLive do
 
   def handle_event("append_title", _params, socket) do
     plural_name = socket.assigns.pax.plural_name
-    {:noreply, Pax.Interface.Context.assign_pax(socket, :plural_name, plural_name <> ".")}
+    {:noreply, assign_pax(socket, :plural_name, plural_name <> ".")}
   end
 
   # def pax_init(_params, _session, socket) do
@@ -56,7 +58,7 @@ defmodule SandboxWeb.LabelLive do
       edit_path: fn object, _socket -> ~p"/labels/#{object}/edit" end,
       object_name: fn object, _socket -> object.name end,
       fields: [
-        {:id, immutable: true},
+        {:id, immutable: true, sort: true},
         {:name, only: [:show, :edit, :new]},
         {:name_link, :string, value: :name, sort: :name, link: true, only: :index},
         {:slug, except: [:index]},

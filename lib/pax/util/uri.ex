@@ -1,4 +1,39 @@
-defmodule Pax.Util.Params do
+defmodule Pax.Util.URI do
+  @doc """
+  Encodes a query string, escaping all that are unreserved, suitable for use in a URL query.
+
+  As specified in [RFC 3986, section 2.3](https://tools.ietf.org/html/rfc3986#section-2.3),
+  the following characters are unreserved:
+
+    * Alphanumeric characters: `A-Z`, `a-z`, `0-9`
+    * `~`, `_`, `-`, `.`
+
+  """
+  def encode_query_string(nil), do: nil
+  def encode_query_string(%URI{query: nil}), do: nil
+  def encode_query_string(%URI{query: query}), do: encode_query_string(query)
+  def encode_query_string(query) when is_binary(query), do: URI.encode(query, &URI.char_unreserved?/1)
+
+  def decode_query_string(nil), do: nil
+  def decode_query_string(%URI{query: nil}), do: nil
+  def decode_query_string(%URI{query: query}), do: decode_query_string(query)
+  def decode_query_string(query) when is_binary(query), do: URI.decode(query)
+
+  @doc """
+  Appends a query to a URI, returning a new URI with the query appended.
+  If the query is `nil`, it returns the original URI unchanged.
+  If the URI is a string, it parses it first.
+  """
+  def append_query(uri, nil), do: uri
+  def append_query(%URI{} = uri, query), do: URI.append_query(uri, query)
+
+  def append_query(uri, query) when is_binary(uri) do
+    uri
+    |> URI.parse()
+    |> append_query(query)
+    |> URI.to_string()
+  end
+
   @doc """
   Builds a URL or path with the given query parameters.
 

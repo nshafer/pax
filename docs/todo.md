@@ -61,6 +61,7 @@
 - [x] Crash when id field(s) changed
 - [ ] Crash with foreign_key_constraint violation when field that is a foreign_key on other table is changed. e.g.
       change author_id.
+  [ ] If changeset has an error for a field not visible, no errors are shown. Should show it still somewhere.
 
 ## Fields
 - [x] Allow specifying just `:fieldname` and default to Field.String maybe? Or callback to adapter to figure it out?

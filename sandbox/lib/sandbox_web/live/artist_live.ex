@@ -35,19 +35,26 @@ defmodule SandboxWeb.ArtistLive do
       edit_path: fn object, _socket -> ~p"/artists/#{object.slug}/edit" end,
       object_name: fn object, _socket -> object.name end,
       fields: [
-        {:id, immutable: true},
+        {:id, immutable: true, sort: true},
         {:slug, except: :index},
-        {:name, link: true},
-        {:rating_formatted, :string, label: "Rating", value: &format_rating/1, except: :edit},
+        {:name, link: true, sort: true},
+        {:rating_formatted, :string,
+         label: "Rating",
+         value: &format_rating/1,
+         except: :edit,
+         sort: :rating,
+         sort_asc: :asc_nulls_first,
+         sort_desc: :desc_nulls_last},
         {:rating, :float, round: 2, only: :edit},
-        {:started, :date, except: :index},
-        {:ended, :date, except: :index},
-        :current_label_id,
+        {:started, except: :index},
+        {:ended, required: false, except: :index},
+        {:current_label_id, required: false},
         {:inserted_at, :datetime, immutable: true, except: :index},
         {:updated_at, :datetime, immutable: true, except: :index}
       ],
       default_scope: [
-        order_by: :name
+        # order_by: :name
+        order_by: [desc_nulls_last: :rating, asc: :name]
         # where: [current_label_id: 1]
       ],
       plugins: [

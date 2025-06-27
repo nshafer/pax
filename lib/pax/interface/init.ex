@@ -1,7 +1,10 @@
 defmodule Pax.Interface.Init do
   @moduledoc false
 
+  import Pax.Interface.Context
   alias Pax.Config
+
+  # mount init helpers
 
   def init_adapter(module, socket) do
     case module.pax_adapter(socket) do
@@ -85,14 +88,44 @@ defmodule Pax.Interface.Init do
     Pax.Config.validate!(config_spec, config_data)
   end
 
-  def get_module_config(module, socket) do
+  defp get_module_config(module, socket) do
     case module.pax_config(socket) do
       config when is_map(config) or is_list(config) -> config
       _ -> raise ArgumentError, "invalid config returned from #{inspect(module)}.pax_config/1"
     end
   end
 
-  def init_id_fields(config, adapter, socket) do
+  # Global handle_params init helpers
+
+  def assign_action(socket) do
+    assign_pax(socket, :action, init_action(socket))
+  end
+
+  def init_action(socket) do
+    # Action is derived from the router, and could be anything
+    socket.assigns.live_action
+  end
+
+  def assign_path(socket, uri) do
+    assign_pax(socket, :path, init_path(uri))
+  end
+
+  def init_path(uri) do
+    # Parse the URI of the current request and Extract just the path and query from the URL.
+    # TODO: Determine what happens when a very large URL is passed in, especially memory of the LV process.
+    #       Bandit defaults to 10k request lines for http1, 50k headers for http2, which will include the `:path`
+    #       pseudo-header.
+    url = URI.parse(uri)
+    %URI{path: url.path, query: url.query}
+  end
+
+  def assign_id_fields(socket) do
+    assign_pax(socket, :id_fields, init_id_fields(socket))
+  end
+
+  def init_id_fields(socket) do
+    %{config: config, adapter: adapter} = socket.assigns.pax
+
     case Pax.Config.fetch(config, :id_fields, [socket]) do
       {:ok, id_fields} -> id_fields
       :error -> init_adapter_id_fields(adapter)
@@ -106,83 +139,8 @@ defmodule Pax.Interface.Init do
     end
   end
 
-  def init_singular_name(config, adapter, socket) do
-    case Config.fetch(config, :singular_name, [socket]) do
-      {:ok, value} -> value
-      :error -> init_adapter_singular_name(adapter)
-    end
-  end
-
-  defp init_adapter_singular_name(adapter) do
-    case Pax.Adapter.singular_name(adapter) do
-      nil -> "Object"
-      name -> name
-    end
-  end
-
-  def init_plural_name(config, adapter, socket) do
-    case Config.fetch(config, :plural_name, [socket]) do
-      {:ok, value} -> value
-      :error -> init_adapter_plural_name(adapter)
-    end
-  end
-
-  defp init_adapter_plural_name(adapter) do
-    case Pax.Adapter.plural_name(adapter) do
-      nil -> "Objects"
-      name -> name
-    end
-  end
-
-  def init_object_name(nil, _socket), do: "Object"
-
-  def init_object_name(object, socket) do
-    %{config: config, adapter: adapter} = socket.assigns.pax
-
-    case Config.fetch(config, :object_name, [object, socket]) do
-      {:ok, nil} -> init_adapter_object_name(adapter, object)
-      {:ok, value} -> value
-      :error -> init_adapter_object_name(adapter, object)
-    end
-  end
-
-  defp init_adapter_object_name(adapter, object) do
-    case Pax.Adapter.object_name(adapter, object) do
-      nil -> "Object"
-      name -> name
-    end
-  end
-
-  def init_index_path(config, socket) do
-    case Config.fetch(config, :index_path, [socket]) do
-      {:ok, value} -> value
-      :error -> nil
-    end
-  end
-
-  def init_new_path(config, socket) do
-    case Config.fetch(config, :new_path, [socket]) do
-      {:ok, value} -> value
-      :error -> nil
-    end
-  end
-
-  def init_show_path(config, object, socket) do
-    case Config.fetch(config, :show_path, [object, socket]) do
-      {:ok, value} -> value
-      :error -> nil
-    end
-  end
-
-  def init_edit_path(config, object, socket) do
-    case Config.fetch(config, :edit_path, [object, socket]) do
-      {:ok, value} -> value
-      :error -> nil
-    end
-  end
-
-  def init_fields(action, socket) do
-    %{config: config, adapter: adapter} = socket.assigns.pax
+  def init_fields(socket) do
+    %{config: config, adapter: adapter, action: action} = socket.assigns.pax
     fields = get_fields(config, adapter, socket)
 
     # Iterate through the list of fieldspecs, initializing them with Pax.Field.init, then for any field
@@ -279,5 +237,281 @@ defmodule Pax.Interface.Init do
       end
 
     [first_field | rest]
+  end
+
+  def assign_singular_name(socket) do
+    assign_pax(socket, :singular_name, init_singular_name(socket))
+  end
+
+  def init_singular_name(socket) do
+    %{config: config, adapter: adapter} = socket.assigns.pax
+
+    case Config.fetch(config, :singular_name, [socket]) do
+      {:ok, value} -> value
+      :error -> init_adapter_singular_name(adapter)
+    end
+  end
+
+  defp init_adapter_singular_name(adapter) do
+    case Pax.Adapter.singular_name(adapter) do
+      nil -> "Object"
+      name -> name
+    end
+  end
+
+  def assign_plural_name(socket) do
+    assign_pax(socket, :plural_name, init_plural_name(socket))
+  end
+
+  def init_plural_name(socket) do
+    %{config: config, adapter: adapter} = socket.assigns.pax
+
+    case Config.fetch(config, :plural_name, [socket]) do
+      {:ok, value} -> value
+      :error -> init_adapter_plural_name(adapter)
+    end
+  end
+
+  defp init_adapter_plural_name(adapter) do
+    case Pax.Adapter.plural_name(adapter) do
+      nil -> "Objects"
+      name -> name
+    end
+  end
+
+  def assign_index_path(socket, params) do
+    assign_pax(socket, :index_path, init_index_path(params, socket))
+  end
+
+  def init_index_path(params, socket) do
+    %{config: config, action: action, path: path} = socket.assigns.pax
+
+    case Config.fetch(config, :index_path, [socket]) do
+      {:ok, value} ->
+        case action do
+          :index ->
+            path
+
+          _ ->
+            index_query = Map.get(params, "index_query")
+            Pax.Util.URI.append_query(value, Pax.Util.URI.decode_query_string(index_query))
+        end
+
+      :error ->
+        nil
+    end
+  end
+
+  def assign_new_path(socket, params) do
+    assign_pax(socket, :new_path, init_new_path(params, socket))
+  end
+
+  def init_new_path(params, socket) do
+    %{config: config, action: action, path: path} = socket.assigns.pax
+
+    case Config.fetch(config, :new_path, [socket]) do
+      {:ok, value} ->
+        case action do
+          :index ->
+            Pax.Util.URI.with_params(value, index_query: Pax.Util.URI.encode_query_string(path))
+
+          _ ->
+            index_query = Map.get(params, "index_query")
+            Pax.Util.URI.with_params(value, index_query: index_query)
+        end
+
+      :error ->
+        nil
+    end
+  end
+
+  def assign_default_scope(socket) do
+    default_scope = init_default_scope(socket)
+
+    socket
+    |> assign_pax(:default_scope, default_scope)
+    |> assign_pax(:scope, default_scope)
+  end
+
+  def init_default_scope(socket) do
+    %{config: config} = socket.assigns.pax
+
+    case Pax.Config.fetch(config, :default_scope, [socket]) do
+      {:ok, value} -> Map.new(value)
+      :error -> %{}
+    end
+  end
+
+  # Detail handle_params init helpers
+
+  def assign_object(socket, params, uri) do
+    assign_pax(socket, :object, init_object(params, uri, socket))
+  end
+
+  def init_object(params, uri, socket) do
+    %{adapter: adapter, action: action, scope: scope} = socket.assigns.pax
+
+    case action do
+      action when action in [:show, :edit] ->
+        lookup = init_lookup(params, uri, socket)
+        Pax.Adapter.get_object(adapter, lookup, scope, socket)
+
+      :new ->
+        Pax.Adapter.new_object(adapter, socket)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp init_lookup(params, uri, socket) do
+    %{config: config} = socket.assigns.pax
+
+    # Check if the user has defined a `:lookup` config option, which can only be a function, and call it.
+    # Otherwise, construct a lookup map using config, the adapter, and some sensible defaults.
+    case Config.fetch(config, :lookup, [params, uri, socket]) do
+      {:ok, value} -> value
+      :error -> construct_lookup_map(params, socket)
+    end
+  end
+
+  defp construct_lookup_map(params, socket) do
+    %{config: config, adapter: adapter} = socket.assigns.pax
+
+    # Get the list of params, which could be individually specified as `lookup_params` or a list of strings from
+    # `lookup_glob` depending on how they configured their router.
+    param_values = lookup_params(params, socket)
+
+    # Get the list of id fields for the object, which should be a list of atoms. If none are defined in the config,
+    # then use the adapter to figure out a default. If the adapter can't help then just use a default.
+    id_fields =
+      case Config.fetch(config, :id_fields, [socket]) do
+        {:ok, value} ->
+          value
+
+        :error ->
+          case Pax.Adapter.id_fields(adapter) do
+            nil -> Pax.Interface.Config.default_id_fields()
+            fields -> fields
+          end
+      end
+
+    # Make sure that the number of lookup params matches the number of id fields
+    if length(param_values) != length(id_fields) do
+      raise ArgumentError, "The number of params must match the number of id_fields"
+    end
+
+    # Zip the id fields with the param values to create a map of id field -> param value
+    Enum.zip_reduce(id_fields, param_values, %{}, fn id_field, param_value, acc ->
+      if not is_atom(id_field) do
+        raise ArgumentError, "id_fields must be a list of atoms, got #{inspect(id_field)}"
+      end
+
+      Map.put(acc, id_field, param_value)
+    end)
+  end
+
+  defp lookup_params(params, socket) do
+    %{config: config} = socket.assigns.pax
+
+    lookup_params = Config.get(config, :lookup_params, [socket])
+    lookup_glob = Config.get(config, :lookup_glob, [socket])
+
+    cond do
+      lookup_params != nil and lookup_glob != nil ->
+        raise ArgumentError, "You can't define both :lookup_params and :lookup_glob in the config"
+
+      lookup_params != nil ->
+        fetch_lookup_params(lookup_params, params)
+
+      lookup_glob != nil ->
+        fetch_lookup_glob(lookup_glob, params)
+
+      true ->
+        Pax.Interface.Config.default_lookup_params() |> fetch_lookup_params(params)
+    end
+  end
+
+  defp fetch_lookup_params(lookup_params, params) do
+    for lookup_param <- lookup_params do
+      case Map.fetch(params, to_string(lookup_param)) do
+        {:ok, value} -> value
+        :error -> raise ArgumentError, "Missing param: #{lookup_param}"
+      end
+    end
+  end
+
+  defp fetch_lookup_glob(lookup_glob, params) do
+    case Map.fetch(params, lookup_glob) do
+      {:ok, value} -> value
+      :error -> raise ArgumentError, "Missing param: #{lookup_glob}"
+    end
+  end
+
+  def assign_object_name(socket) do
+    assign_pax(socket, :object_name, init_object_name(socket))
+  end
+
+  def init_object_name(socket) do
+    %{config: config, adapter: adapter, object: object} = socket.assigns.pax
+
+    if object do
+      case Config.fetch(config, :object_name, [object, socket]) do
+        {:ok, nil} -> init_adapter_object_name(adapter, object)
+        {:ok, value} -> value
+        :error -> init_adapter_object_name(adapter, object)
+      end
+    else
+      "Object"
+    end
+  end
+
+  defp init_adapter_object_name(adapter, object) do
+    case Pax.Adapter.object_name(adapter, object) do
+      nil -> "Object"
+      name -> name
+    end
+  end
+
+  def assign_show_path(socket) do
+    %{action: action} = socket.assigns.pax
+
+    if action in [:show, :edit] do
+      assign_pax(socket, :show_path, init_show_path(socket))
+    else
+      socket
+    end
+  end
+
+  def init_show_path(socket) do
+    %{config: config, object: object, index_query: index_query} = socket.assigns.pax
+
+    case Config.fetch(config, :show_path, [object, socket]) do
+      {:ok, value} -> Pax.Util.URI.with_params(value, index_query: index_query)
+      :error -> nil
+    end
+  end
+
+  def assign_edit_path(socket) do
+    %{action: action} = socket.assigns.pax
+
+    if action in [:show, :edit] do
+      assign_pax(socket, :edit_path, init_edit_path(socket))
+    else
+      socket
+    end
+  end
+
+  def init_edit_path(socket) do
+    %{config: config, object: object, index_query: index_query} = socket.assigns.pax
+
+    case Config.fetch(config, :edit_path, [object, socket]) do
+      {:ok, value} -> Pax.Util.URI.with_params(value, index_query: index_query)
+      :error -> nil
+    end
+  end
+
+  def assign_fields(socket) do
+    assign_pax(socket, :fields, init_fields(socket))
   end
 end

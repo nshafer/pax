@@ -9,13 +9,14 @@ defmodule SandboxWeb.Admin.AlbumResource do
     [
       id_fields: [:uuid],
       fields: [
-        {:name, link: true},
+        {:name, link: true, sort: true},
         :artist_id,
-        {:rating, round: 2},
-        {:length, :string, value: {__MODULE__, :length}, only: [:index, :show]},
+        {:rating, round: 2, sort: true},
+        {:length, :string,
+         value: {__MODULE__, :length}, only: [:index, :show], sort: :length_sec},
         {:length_sec, label: "Length (seconds)", only: [:edit, :new]},
         {:id, only: :show},
-        {:uuid, only: :show}
+        {:uuid, except: :index}
       ],
       default_scope: [
         order_by: :name

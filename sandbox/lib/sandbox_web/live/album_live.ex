@@ -37,16 +37,17 @@ defmodule SandboxWeb.AlbumLive do
       fields: [
         {:id, immutable: true, only: :show},
         {:uuid, immutable: true, only: :show},
-        {:name, link: true},
+        {:name, link: true, sort: true},
         :artist_id,
-        {:rating, :float, round: 3},
-        :length_sec,
+        {:rating, :float,
+         round: 3, sort: true, sort_asc: :asc_nulls_first, sort_desc: :desc_nulls_last},
+        {:length_sec, sort: true},
         {:label_id, except: :index},
         {:inserted_at, :datetime, immutable: true, except: :index},
         {:updated_at, :datetime, immutable: true, except: :index}
       ],
       default_scope: [
-        order_by: :name
+        # order_by: :name
       ]
     ]
   end

@@ -26,6 +26,8 @@ defmodule Pax.Interface do
 
   defmacro __using__(_opts) do
     quote do
+      import Pax.Interface.Context
+
       @behaviour Pax.Interface
       def on_mount(:pax_interface, params, session, socket),
         do: Pax.Interface.on_mount(__MODULE__, params, session, socket)
@@ -95,26 +97,11 @@ defmodule Pax.Interface do
       |> assign_pax(:module, module)
       |> assign_pax(:adapter, adapter)
       |> assign_pax(:plugins, plugins)
-      |> assign_pax(:id_fields, init_id_fields(config, adapter, socket))
-      |> assign_pax(:singular_name, init_singular_name(config, adapter, socket))
-      |> assign_pax(:plural_name, init_plural_name(config, adapter, socket))
-      |> assign_pax(:index_path, init_index_path(config, socket))
-      |> assign_pax(:new_path, init_new_path(config, socket))
-      |> attach_hook(:pax_handle_params, :handle_params, fn params, uri, socket ->
-        handle_params(params, uri, socket)
-      end)
-      |> attach_hook(:pax_handle_event, :handle_event, fn event, params, socket ->
-        handle_event(event, params, socket)
-      end)
-      |> attach_hook(:pax_handle_info, :handle_info, fn msg, socket ->
-        handle_info(msg, socket)
-      end)
-      |> attach_hook(:pax_handle_async, :handle_async, fn name, async_fun_result, socket ->
-        handle_async(name, async_fun_result, socket)
-      end)
-      |> attach_hook(:pax_after_render, :after_render, fn socket ->
-        after_render(socket)
-      end)
+      |> attach_hook(:pax_handle_params, :handle_params, &handle_params/3)
+      |> attach_hook(:pax_handle_event, :handle_event, &handle_event/3)
+      |> attach_hook(:pax_handle_info, :handle_info, &handle_info/2)
+      |> attach_hook(:pax_handle_async, :handle_async, &handle_async/3)
+      |> attach_hook(:pax_after_render, :after_render, &after_render/1)
 
     {:cont, socket}
   end
@@ -136,29 +123,18 @@ defmodule Pax.Interface do
     end
   end
 
-  defp global_handle_params(_params, uri, socket) do
-    %{config: config} = socket.assigns.pax
-
-    # Action is derived from the router, and could be anything
-    action = socket.assigns.live_action
-
-    # Parse the URI of the current request
-    url = URI.parse(uri)
-
-    # Extract just the path and query from the URL. Fragment should never be set here, but...
-    path = %URI{path: url.path, query: url.query, fragment: url.fragment}
-
-    # Get the default scope from the config
-    default_scope = Pax.Config.get(config, :default_scope, [socket], %{}) |> Map.new()
-
+  defp global_handle_params(params, uri, socket) do
     socket =
       socket
-      |> assign_pax(:url, url)
-      |> assign_pax(:path, path)
-      |> assign_pax(:action, action)
-      |> assign_pax(:fields, init_fields(action, socket))
-      |> assign_pax(:default_scope, default_scope)
-      |> assign_pax(:scope, default_scope)
+      |> assign_action()
+      |> assign_path(uri)
+      |> assign_id_fields()
+      |> assign_fields()
+      |> assign_singular_name()
+      |> assign_plural_name()
+      |> assign_index_path(params)
+      |> assign_new_path(params)
+      |> assign_default_scope()
 
     {:cont, socket}
   end

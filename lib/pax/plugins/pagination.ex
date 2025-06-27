@@ -3,7 +3,7 @@ defmodule Pax.Plugins.Pagination do
   use Phoenix.Component
   import Pax.Components
   import Pax.Interface.Context
-  import Pax.Util.Params
+  import Pax.Util.URI
 
   @default_objects_per_page 10
   @default_count_placement :index_footer_primary
@@ -147,7 +147,7 @@ defmodule Pax.Plugins.Pagination do
       <%!-- Link to first page (<<) --%>
       <.pax_link
         class={["pax-pagination-link", !@pax.private.pagination.has_prev && "disabled"]}
-        patch={with_params(@pax.url, page: nil)}
+        patch={with_params(@pax.path, page: nil)}
       >
         <.angles_left />
       </.pax_link>
@@ -155,7 +155,7 @@ defmodule Pax.Plugins.Pagination do
       <%!-- Link to previous page (<) --%>
       <.pax_link
         class={["pax-pagination-link", !@pax.private.pagination.has_prev && "disabled"]}
-        patch={with_params(@pax.url, page: [value: @pax.private.pagination.page - 1, default: 1])}
+        patch={with_params(@pax.path, page: [value: @pax.private.pagination.page - 1, default: 1])}
       >
         <.angle_left />
       </.pax_link>
@@ -188,7 +188,7 @@ defmodule Pax.Plugins.Pagination do
       <%!-- Link to next page (>) --%>
       <.pax_link
         class={["pax-pagination-link", !@pax.private.pagination.has_next && "disabled"]}
-        patch={with_params(@pax.url, page: [value: @pax.private.pagination.page + 1, default: 1])}
+        patch={with_params(@pax.path, page: [value: @pax.private.pagination.page + 1, default: 1])}
       >
         <.angle_right />
       </.pax_link>
@@ -196,7 +196,7 @@ defmodule Pax.Plugins.Pagination do
       <%!-- Link to last page (>>) --%>
       <.pax_link
         class={["pax-pagination-link", !@pax.private.pagination.has_next && "disabled"]}
-        patch={with_params(@pax.url, page: [value: @pax.private.pagination.num_pages, default: 1])}
+        patch={with_params(@pax.path, page: [value: @pax.private.pagination.num_pages, default: 1])}
       >
         <.angles_right />
       </.pax_link>

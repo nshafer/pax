@@ -1,4 +1,6 @@
 defmodule Pax.Interface.Config do
+  # TODO: Explain which config callbacks happen during mount or handle_params, and which actions they happen on.
+
   @moduledoc """
   Configuration for a Pax Interface.
 
@@ -242,10 +244,10 @@ defmodule Pax.Interface.Config do
       singular_name: [:string, {:function, 1, :string}],
       plural_name: [:string, {:function, 1, :string}],
       object_name: [:string, {:function, 2, [nil, :string]}],
-      index_path: [:string, {:function, 1, :string}],
-      new_path: [:string, {:function, 1, :string}],
-      show_path: {:function, 2, :string},
-      edit_path: {:function, 2, :string},
+      index_path: [:uri, :string, {:function, 1, [:uri, :string]}],
+      new_path: [:uri, :string, {:function, 1, [:uri, :string]}],
+      show_path: {:function, 2, [:uri, :string]},
+      edit_path: {:function, 2, [:uri, :string]},
       fields: [:list, {:function, 1, :list}],
       lookup: {:function, 3, :map},
       lookup_params: [:list, {:function, 1, :list}],

@@ -13,7 +13,7 @@ defmodule Pax.Plugins.IndexTable do
   import Pax.Interface.Context
   import Pax.Components
   import Pax.Field.Components
-  import Pax.Util.Params
+  import Pax.Util.URI
   require Logger
 
   @default_placement :index_body
@@ -90,7 +90,6 @@ defmodule Pax.Plugins.IndexTable do
       [] -> :not_found
       order_by -> {:ok, order_by}
     end)
-    |> dbg()
   end
 
   defp get_sort(_params, _socket), do: :not_found
@@ -234,6 +233,7 @@ defmodule Pax.Plugins.IndexTable do
                     text_class="pax-table-datacell-text pax-index-table-datacell-text"
                     field={field}
                     object={object}
+                    local_params={[index_query: encode_query_string(@pax.path.query)]}
                   />
                 </td>
               <% end %>
@@ -358,15 +358,15 @@ defmodule Pax.Plugins.IndexTable do
   defp sort_link(%Pax.Field{opts: %{sort: sort_field}} = field, pax) do
     sort_asc = field.opts[:sort_asc] || :asc
     sort_desc = field.opts[:sort_desc] || :desc
-    %{url: url, private: %{index_table: %{default_sort_params: default_sort_params, sorts: sorts}}} = pax
+    %{path: path, private: %{index_table: %{default_sort_params: default_sort_params, sorts: sorts}}} = pax
     {_sort_num, sort_direction} = sorts[sort_field] || {nil, nil}
 
     if sort_direction == sort_asc do
       value = sort_param({sort_desc, sort_field})
-      with_params(url, sort: [value: value, default: default_sort_params])
+      with_params(path, sort: [value: value, default: default_sort_params], page: nil)
     else
       value = sort_param({sort_asc, sort_field})
-      with_params(url, sort: [value: value, default: default_sort_params])
+      with_params(path, sort: [value: value, default: default_sort_params], page: nil)
     end
   end
 

@@ -2,29 +2,31 @@ defmodule Pax.Interface.Context do
   @moduledoc """
   The Pax Interface Context contains information on how to build the page; Accessed with `@pax` in templates.
 
-  This module defines a struct and some helper functions for assigned values into it easily.
+  This module defines a struct and some helper functions for assigning values into it easily.
 
   ## Context fields
 
   * `module` - The module that is using the Pax Interface
+  * `config` - The processed `Pax.Config` map.
   * `adapter` - The adapter module to use for the interface
   * `plugins` - A list of plugins to use for the interface
   * `action` - The current action being performed, one of `:index`, `:show`, `:edit`, `:new` or `:delete`
   * `objects` - A list of objects to display, for the `:index` action
   * `object` - The current object being displayed in `:show`, `:edit` or `:delete` actions
   * `object_count` - The number of objects in the `:objects` list
-  * `url` - The URL of the current page
+  * `path` - The path of the URL of the current page, as a `%URI{}` with only `path` and `query` fields set.
   * `form` - The form to use for the current object in `:new` or `:edit` actions
   * `singular_name` - The singular name of the object
   * `plural_name` - The plural name of the object
   * `object_name` - The name of the object being displayed
   * `index_path` - The path to the index page
+  * `index_query` - An encoded query for the Index page, if any. Used by Detail Interface views for index links.
   * `new_path` - The path to the new page
   * `show_path` - The path to the show page
   * `edit_path` - The path to the edit page
   * `fields` - A list of fields to display in the index page
   * `scope` - A map of scope values to use for the adapter, see the [Scope](#scope) section
-  * `private` - A map of private values for pax internals and plugins to use.
+  * `private` - A map of private values for pax internals and plugins to use, see the [Private](#private) section
 
   ## Scope
 
@@ -38,24 +40,32 @@ defmodule Pax.Interface.Context do
   and the interface and plugins will only set certain keys. All of these interactions should be documented in the
   respective modules.
 
+  ## Private
+
+  The `:private` map is used to store data for plugins to use. The private map is keyed by a `prefix`, which is
+  typically the name of the plugin. This allows plugins to store their own data without interfering with
+  each other. The private map is not intended to be used by the interface or the implementing module using Pax.
+
   """
 
   import Phoenix.Component, only: [assign: 3]
   alias Pax.Interface.Context
 
   defstruct module: nil,
+            config: %{},
             adapter: nil,
             plugins: [],
             action: nil,
             objects: [],
             object: nil,
             object_count: 0,
-            url: nil,
+            path: nil,
             form: nil,
             singular_name: nil,
             plural_name: nil,
             object_name: nil,
             index_path: nil,
+            index_query: nil,
             new_path: nil,
             show_path: nil,
             edit_path: nil,
@@ -72,21 +82,13 @@ defmodule Pax.Interface.Context do
   def assign_pax(socket_or_assigns, key, value)
 
   def assign_pax(%Phoenix.LiveView.Socket{} = socket, key, value) do
-    pax =
-      socket.assigns
-      |> Map.get(:pax, %Context{})
-      |> Map.put(key, value)
-
-    assign(socket, :pax, pax)
+    pax = Map.get(socket.assigns, :pax, %Context{})
+    assign(socket, :pax, %{pax | key => value})
   end
 
   def assign_pax(%{} = assigns, key, value) do
-    pax =
-      assigns
-      |> Map.get(:pax, %Context{})
-      |> Map.put(key, value)
-
-    assign(assigns, :pax, pax)
+    pax = Map.get(assigns, :pax, %Context{})
+    assign(assigns, :pax, %{pax | key => value})
   end
 
   def assign_pax(socket_or_assigns, keyword_or_map) when is_map(keyword_or_map) or is_list(keyword_or_map) do
@@ -169,9 +171,8 @@ defmodule Pax.Interface.Context do
       socket.assigns
       |> Map.get(:pax, %Context{})
       |> Map.get(:scope, %{})
-      |> Map.put(key, value)
 
-    assign_pax(socket, :scope, scope)
+    assign_pax(socket, :scope, Map.put(scope, key, value))
   end
 
   def assign_pax_scope(%{} = assigns, key, value) do
@@ -179,9 +180,8 @@ defmodule Pax.Interface.Context do
       assigns
       |> Map.get(:pax, %Context{})
       |> Map.get(:scope, %{})
-      |> Map.put(key, value)
 
-    assign_pax(assigns, :scope, scope)
+    assign_pax(assigns, :scope, Map.put(scope, key, value))
   end
 
   def assign_pax_scope(socket_or_assigns, keyword_or_map) when is_map(keyword_or_map) or is_list(keyword_or_map) do
