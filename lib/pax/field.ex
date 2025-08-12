@@ -21,20 +21,20 @@ defmodule Pax.Field do
   @spec init(Pax.Adapter.t(), fieldspec()) :: t()
   def init(adapter, name) when is_atom(name) do
     type = Pax.Adapter.field_type!(adapter, name)
-    do_init(adapter, name, type, [])
+    do_init(name, type, [])
   end
 
   def init(adapter, {name, opts}) when is_atom(name) and is_list(opts) do
     type = Pax.Adapter.field_type!(adapter, name)
-    do_init(adapter, name, type, opts)
+    do_init(name, type, opts)
   end
 
-  def init(adapter, {name, type}) when is_atom(name) and is_atom(type) do
-    do_init(adapter, name, type, [])
+  def init(_adapter, {name, type}) when is_atom(name) and is_atom(type) do
+    do_init(name, type, [])
   end
 
-  def init(adapter, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
-    do_init(adapter, name, type, opts)
+  def init(_adapter, {name, type, opts}) when is_atom(name) and is_atom(type) and is_list(opts) do
+    do_init(name, type, opts)
   end
 
   def init(_adapter, arg) do
@@ -48,40 +48,40 @@ defmodule Pax.Field do
     """
   end
 
-  defp do_init(adapter, name, :boolean, opts) do
-    do_init(adapter, name, Field.Boolean, opts)
+  defp do_init(name, :boolean, opts) do
+    do_init(name, Field.Boolean, opts)
   end
 
-  defp do_init(adapter, name, :date, opts) do
-    do_init(adapter, name, Field.Date, opts)
+  defp do_init(name, :date, opts) do
+    do_init(name, Field.Date, opts)
   end
 
-  defp do_init(adapter, name, :datetime, opts) do
-    do_init(adapter, name, Field.Datetime, opts)
+  defp do_init(name, :datetime, opts) do
+    do_init(name, Field.Datetime, opts)
   end
 
-  defp do_init(adapter, name, :time, opts) do
-    do_init(adapter, name, Field.Time, opts)
+  defp do_init(name, :time, opts) do
+    do_init(name, Field.Time, opts)
   end
 
   # TODO: :decimal
 
-  defp do_init(adapter, name, :float, opts) do
-    do_init(adapter, name, Field.Float, opts)
+  defp do_init(name, :float, opts) do
+    do_init(name, Field.Float, opts)
   end
 
-  defp do_init(adapter, name, :integer, opts) do
-    do_init(adapter, name, Field.Integer, opts)
+  defp do_init(name, :integer, opts) do
+    do_init(name, Field.Integer, opts)
   end
 
   # TODO: :list
   # TODO: :map ?
 
-  defp do_init(adapter, name, :string, opts) do
-    do_init(adapter, name, Field.String, opts)
+  defp do_init(name, :string, opts) do
+    do_init(name, Field.String, opts)
   end
 
-  defp do_init(_adapter, name, type, opts) do
+  defp do_init(name, type, opts) do
     if Code.ensure_loaded?(type) and function_exported?(type, :init, 1) do
       validate_field_name!(name)
       global = init_global_opts(opts, name, type)
