@@ -11,8 +11,8 @@ defmodule SandboxWeb.LabelLive do
 
       <p>
         Counter: {@counter}
-        <button class="btn" phx-click="increment">Increment</button>
-        <button class="btn" phx-click="append_title">Append title</button>
+        <button class="btn btn-secondary" phx-click="increment">Increment</button>
+        <button class="btn btn-secondary" phx-click="append_title">Append title</button>
       </p>
     </Layouts.app>
     """
