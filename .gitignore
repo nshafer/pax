@@ -29,6 +29,8 @@ pax-*.tar
 /local/
 
 # Ignore static files that are produced by build tools.
+/priv/assets/*
+/priv/static/cache_manifest.json
 /priv/static/*.css
 /priv/static/*.js
 

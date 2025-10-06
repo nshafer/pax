@@ -312,7 +312,7 @@ defmodule Pax.Admin.Site do
   end
 
   # TODO: if the user's router.ex does not `use Pax.Admin.Router` then we should raise an error here
-  #       Right now there is just a warning during complication:application
+  #       Right now there is just a warning during compilation
   #
   #   warning: SandboxWeb.Router.__pax__/1 is undefined or private
   #   │

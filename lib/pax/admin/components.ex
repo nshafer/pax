@@ -4,6 +4,45 @@ defmodule Pax.Admin.Components do
   import Pax.Components
   import Pax.Util.String
 
+  @doc """
+  Includes the Pax Admin CSS and JS assets. Should be included in the `<head>` of your
+  admin layout, for example:
+      <head>
+        ...
+        <Pax.Admin.Components.assets />
+        ...
+      </head>
+  """
+  @doc type: :component
+  attr :at, :string, default: "/pax"
+
+  def assets(assigns) do
+    ~H"""
+    <link phx-track-static rel="stylesheet" href={Pax.Admin.Assets.asset_path(:css, @at, "pax_admin.css")} />
+    <script defer phx-track-static type="text/javascript" src={Pax.Admin.Assets.asset_path(:js, @at, "pax_admin.js")}>
+    </script>
+    """
+  end
+
+  @doc """
+  Includes the FontAwesome CSS asset for use in admin pages. Should be included in the `<head>` of your
+  admin layout, for example:
+      <head>
+        ...
+        <Pax.Admin.Components.fontawesome />
+        ...
+      </head>
+  """
+
+  @doc type: :component
+  attr :at, :string, default: "/pax"
+
+  def fontawesome(assigns) do
+    ~H"""
+    <link phx-track-static rel="stylesheet" href={Pax.Assets.static_path(@at, "fontawesome/css/all.min.css")} />
+    """
+  end
+
   attr :pax_admin, Pax.Admin.Context, required: true
 
   def admin_title(assigns) do
@@ -12,7 +51,7 @@ defmodule Pax.Admin.Components do
       <%= if @pax_admin.config.title != nil do %>
         {@pax_admin.config.title}
       <% else %>
-        Pax Admin
+        <i class="fa-solid fa-fire-flame-curved"></i> Pax Admin
       <% end %>
     </div>
     """

@@ -8,15 +8,9 @@
       {assigns[:page_title] || "Pax"}
     </.live_title>
 
-    <link phx-track-static rel="stylesheet" href="/pax/fontawesome/css/all.min.css" />
-
-    <link phx-track-static rel="stylesheet" href="/pax/pax.css" />
-    <script defer phx-track-static type="text/javascript" src="/pax/pax.js">
-    </script>
-
-    <link phx-track-static rel="stylesheet" href="/pax/admin.css" />
-    <script defer phx-track-static type="text/javascript" src="/pax/admin.js">
-    </script>
+    <Pax.Components.assets />
+    <Pax.Admin.Components.assets />
+    <Pax.Admin.Components.fontawesome />
   </head>
   <body>
     {@inner_content}

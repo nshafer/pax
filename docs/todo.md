@@ -89,12 +89,12 @@
 - [ ] Sidebar menu icons for resources, default to squares with first letter. Section arrow instead of icon.
 
 ## Static
-- [ ] Create single entry point Plug for all Pax related paths. Mainly static for now.
+- [x] Create single entry point Plug for all Pax related paths. Mainly static for now.
 - [ ] Create system for plugin static files to be accessible without extra config by user.
-- [ ] Fix/figure out phx.digest. Do it or not? (Probably not...)
+- [x] Fix/figure out phx.digest. Do it or not? (Probably not...)
     - [ ] Figure out / write docs on importing pax.css directly.
     - [ ] Figure out / write docs on creating custom admin.css that imports pax_admin.css
-- [ ] Rejig `mix assets.deploy` to output to pax.min.css
+- [x] ~~Rejig `mix assets.deploy` to output minified css and js in "pax.min.css", "pax.min.js" etc.~~
 - [x] Make basic pax.css using minimal css instead of tailwind?
 - [x] Maybe don't use tailwind for pax.css? Use ~~postcss~~ sass instead?
 

@@ -25,12 +25,11 @@ end
 
 ### Static assets
 
-Add a `Plug.Static` plug to load static assets at /pax directly from the pax dependency. Add the
-following to your "lib/myapp_web/endpoint.ex", after any `socket` lines, and before
+Add the following to your "lib/myapp_web/endpoint.ex", after any `socket` lines, and before
 `plug Plug.Parsers`. The best place is right after any existing `plug Plug.Static` lines.
 
 ```elixir
-plug Plug.Static, at: "/pax", from: :pax, gzip: false
+plug Pax.Assets
 ```
 
 Add the pax static assets to "myapp_web/components/root.html.heex", in the `<head>`, and before your own css and js
@@ -42,8 +41,10 @@ customizations.
 This is only needed if you're using `Pax.Interface` directly, and not needed if you are only using `Pax.Admin`.
 
 ```html
-<link phx-track-static rel="stylesheet" href="/pax/pax.css" />
-<script defer phx-track-static type="text/javascript" src="/pax/pax.js">
-</script>
+<head>
+  ...
+  <Pax.Components.assets />
+  ...
+</head>
 ```
 

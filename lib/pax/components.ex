@@ -2,6 +2,26 @@ defmodule Pax.Components do
   use Phoenix.Component
 
   @doc """
+  Includes the Pax CSS and JS assets. Should be included in the `<head>` of your
+  layout, for example:
+      <head>
+        ...
+        <Pax.Components.assets />
+        ...
+      </head>
+  """
+  @doc type: :component
+  attr :at, :string, default: "/pax"
+
+  def assets(assigns) do
+    ~H"""
+    <link phx-track-static rel="stylesheet" href={Pax.Assets.asset_path(:css, @at, "pax.css")} />
+    <script defer phx-track-static type="text/javascript" src={Pax.Assets.asset_path(:js, @at, "pax.js")}>
+    </script>
+    """
+  end
+
+  @doc """
   Renders a title element with the given level. The level can be 1, 2 or 3. The default is 1.
   """
   @doc type: :component

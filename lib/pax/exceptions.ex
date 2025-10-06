@@ -83,3 +83,7 @@ end
 defmodule Pax.Config.ArityError do
   defexception [:message]
 end
+
+defmodule Pax.Assets.NotFoundError do
+  defexception [:message, plug_status: 404]
+end

@@ -26,7 +26,6 @@ defmodule Pax.MixProject do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(:dev), do: ["lib", "dev"]
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
@@ -38,6 +37,7 @@ defmodule Pax.MixProject do
     [
       name: "pax",
       files: ~w(lib priv .formatter.exs mix.exs README* LICENSE*),
+      exclude_patterns: ~w(lib/mix/tasks/watch.ex),
       licenses: ["MIT"],
       links: %{
         "GitHub" => "https://github.com/nshafer/pax"
@@ -54,7 +54,7 @@ defmodule Pax.MixProject do
       {:phoenix_live_view, "~> 1.0"},
       {:ecto, "~> 3.10"},
       {:gettext, "~> 0.26"},
-      {:jason, "~> 1.2", only: :dev},
+      {:jason, "~> 1.2", only: [:dev, :test]},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:esbuild, "~> 0.9", only: :dev},
       {:dart_sass, "~> 0.7", only: :dev},
@@ -71,14 +71,16 @@ defmodule Pax.MixProject do
       setup: ["deps.get", "assets.setup", "assets.build"],
       # test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       build: ["assets.deploy", "hex.build"],
-      "build.unpack": ["assets.deploy", "hex.build --unpack"],
       "assets.setup": ["sass.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["assets.build.pax", "assets.build.admin"],
+      "assets.build": ["assets.build.pax", "assets.build.pax_admin"],
       "assets.build.pax": ["sass pax --embed-source-map", "esbuild pax"],
-      "assets.build.admin": ["sass admin --embed-source-map", "esbuild admin"],
-      "assets.deploy": ["assets.deploy.pax", "assets.deploy.admin"],
+      "assets.build.pax_admin": ["sass pax_admin --embed-source-map", "esbuild pax_admin"],
+      "assets.deploy": ["assets.deploy.pax", "assets.deploy.pax_admin"],
       "assets.deploy.pax": ["sass pax --no-source-map --style=compressed", "esbuild pax --minify"],
-      "assets.deploy.admin": ["sass admin --no-source-map --style=compressed", "esbuild admin --minify"]
+      "assets.deploy.pax_admin": ["sass pax_admin --no-source-map --style=compressed", "esbuild pax_admin --minify"],
+      package: ["assets.deploy", "phx.digest"],
+      "build.unpack": ["package", "hex.build --unpack"],
+      clean: ["clean", "phx.digest.clean --all"]
     ]
   end
 end

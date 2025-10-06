@@ -26,8 +26,10 @@ defmodule SandboxWeb.Endpoint do
     gzip: not code_reloading?,
     only: SandboxWeb.static_paths()
 
-  plug Plug.Static, at: "/pax", from: :pax, gzip: false
+  # Pax static assets
+  plug Pax.Assets
 
+  # Tidewave MCP server
   if Code.ensure_loaded?(Tidewave) do
     plug Tidewave
   end
