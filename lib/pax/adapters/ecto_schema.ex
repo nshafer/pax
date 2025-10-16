@@ -185,7 +185,7 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   defp filter_lookup(query, lookup) do
-    from(query, where: ^Map.to_list(lookup))
+    from q in query, where: ^Map.to_list(lookup)
   end
 
   @impl Pax.Adapter
@@ -217,23 +217,22 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def cast(%{schema: schema} = opts, nil, params, fields) do
-    # Cast with a default/empty schema struct, e.g. %User{}
-    cast(opts, struct(schema), params, fields)
-  end
+  def change_object(_opts, object, params, fields) do
+    mutable_fields = Pax.Field.mutable_fields(fields)
+    mutable_field_names = Enum.map(mutable_fields, fn %Pax.Field{name: name} -> name end)
 
-  def cast(_opts, object, params, fields) do
-    field_names = Enum.map(fields, fn %Pax.Field{name: name} -> name end)
-    Ecto.Changeset.cast(object, params, field_names)
+    object
+    |> Ecto.Changeset.cast(params, mutable_field_names)
+    |> Pax.Field.validate_required(mutable_fields)
   end
 
   @impl Pax.Adapter
-  def create_object(%{repo: repo}, _object, changeset) do
+  def create_object(%{repo: repo}, _object, changeset, _params) do
     repo.insert(changeset)
   end
 
   @impl Pax.Adapter
-  def update_object(%{repo: repo}, _object, changeset) do
+  def update_object(%{repo: repo}, _object, changeset, _params) do
     repo.update(changeset)
   end
 end

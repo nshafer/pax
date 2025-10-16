@@ -1,4 +1,5 @@
 defmodule Pax.Adapter do
+  alias Pax.Interface
   require Logger
 
   @type adapter_module :: module
@@ -18,7 +19,6 @@ defmodule Pax.Adapter do
           | %{optional(opts()) => opts()}
           | MapSet.t()
 
-  @type object :: %{atom() => any()}
   @type lookup :: %{atom() => any()}
   @type scope :: %{atom() => any()}
 
@@ -48,25 +48,25 @@ defmodule Pax.Adapter do
 
   @callback count_objects(opts(), scope()) :: integer()
 
-  @callback list_objects(opts(), scope()) :: [object()]
+  @callback list_objects(opts(), scope()) :: [Interface.object()]
 
-  @callback new_object(opts(), socket()) :: object()
+  @callback new_object(opts(), socket()) :: Interface.object()
 
-  @callback get_object(opts(), lookup(), scope(), socket()) :: object()
+  @callback get_object(opts(), lookup(), scope(), socket()) :: Interface.object()
 
   @callback id_fields(opts()) :: [atom()] | nil
 
-  @callback object_ids(opts(), object()) :: [String.Chars.t()] | nil
+  @callback object_ids(opts(), Interface.object()) :: [String.Chars.t()] | nil
 
-  @callback object_name(opts(), object()) :: String.t() | nil
+  @callback object_name(opts(), Interface.object()) :: String.t() | nil
 
-  @callback cast(opts(), object(), unsigned_params(), fields :: [Pax.Field.t()]) ::
+  @callback change_object(opts(), Interface.object(), unsigned_params(), fields :: [Pax.Field.t()]) ::
               Ecto.Changeset.t()
 
-  @callback create_object(opts(), object(), Ecto.Changeset.t()) ::
+  @callback create_object(opts(), Interface.object(), Ecto.Changeset.t(), unsigned_params()) ::
               {:ok, map()} | {:error, Ecto.Changeset.t()}
 
-  @callback update_object(opts(), object(), Ecto.Changeset.t()) ::
+  @callback update_object(opts(), Interface.object(), Ecto.Changeset.t(), unsigned_params()) ::
               {:ok, map()} | {:error, Ecto.Changeset.t()}
 
   @spec init(module(), opts :: []) :: t()
@@ -76,6 +76,10 @@ defmodule Pax.Adapter do
       opts: adapter_module.init(callback_module, opts)
     }
   end
+
+  @spec adapter?(term()) :: boolean()
+  def adapter?(%Pax.Adapter{}), do: true
+  def adapter?(_), do: false
 
   @spec config_spec(t()) :: map()
   def config_spec(%Pax.Adapter{} = adapter) do
@@ -106,7 +110,7 @@ defmodule Pax.Adapter do
     adapter.module.id_fields(adapter.opts)
   end
 
-  @spec object_ids(t(), object()) :: [String.Chars.t()]
+  @spec object_ids(t(), Interface.object()) :: [String.Chars.t()]
   def object_ids(%Pax.Adapter{} = adapter, object) do
     case adapter.module.object_ids(adapter.opts, object) do
       nil -> default_object_ids(adapter, object)
@@ -132,40 +136,42 @@ defmodule Pax.Adapter do
     adapter.module.count_objects(adapter.opts, scope)
   end
 
-  @spec list_objects(t(), scope()) :: [object()]
+  @spec list_objects(t(), scope()) :: [Interface.object()]
   def list_objects(%Pax.Adapter{} = adapter, scope) do
     adapter.module.list_objects(adapter.opts, scope)
   end
 
-  @spec new_object(t(), socket()) :: object()
+  @spec new_object(t(), socket()) :: Interface.object()
   def new_object(%Pax.Adapter{} = adapter, socket) do
     adapter.module.new_object(adapter.opts, socket)
   end
 
-  @spec get_object(t(), lookup(), scope(), socket()) :: object()
+  @spec get_object(t(), lookup(), scope(), socket()) :: Interface.object()
   def get_object(%Pax.Adapter{} = adapter, lookup, scope, socket) do
     adapter.module.get_object(adapter.opts, lookup, scope, socket)
   end
 
   # TODO: Make this always return a string, return nil if adapter returns nil. Remove `init_adapter_object_name`
-  @spec object_name(t(), object()) :: String.t() | nil
+  @spec object_name(t(), Interface.object()) :: String.t() | nil
   def object_name(%Pax.Adapter{} = adapter, object) do
     adapter.module.object_name(adapter.opts, object)
   end
 
-  @spec cast(t(), object(), unsigned_params(), fields :: [Pax.Field.t()]) :: Ecto.Changeset.t()
-  def cast(%Pax.Adapter{} = adapter, object, params, fields) do
-    adapter.module.cast(adapter.opts, object, params, fields)
+  @spec change_object(t(), Interface.object(), unsigned_params(), fields :: [Pax.Field.t()]) :: Ecto.Changeset.t()
+  def change_object(%Pax.Adapter{} = adapter, object, params, fields) do
+    adapter.module.change_object(adapter.opts, object, params, fields)
   end
 
-  @spec update_object(t(), object(), Ecto.Changeset.t()) :: {:ok, any()} | {:error, Ecto.Changeset.t()}
-  def create_object(%Pax.Adapter{} = adapter, object, changeset) do
-    adapter.module.create_object(adapter.opts, object, changeset)
+  @spec update_object(t(), Interface.object(), Ecto.Changeset.t(), unsigned_params()) ::
+          {:ok, any()} | {:error, Ecto.Changeset.t()}
+  def create_object(%Pax.Adapter{} = adapter, object, changeset, params) do
+    adapter.module.create_object(adapter.opts, object, changeset, params)
   end
 
-  @spec update_object(t(), object(), Ecto.Changeset.t()) :: {:ok, any()} | {:error, Ecto.Changeset.t()}
-  def update_object(%Pax.Adapter{} = adapter, object, changeset) do
-    adapter.module.update_object(adapter.opts, object, changeset)
+  @spec update_object(t(), Interface.object(), Ecto.Changeset.t(), unsigned_params()) ::
+          {:ok, any()} | {:error, Ecto.Changeset.t()}
+  def update_object(%Pax.Adapter{} = adapter, object, changeset, params) do
+    adapter.module.update_object(adapter.opts, object, changeset, params)
   end
 
   defp default_object_ids(adapter, object) do

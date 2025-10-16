@@ -200,6 +200,10 @@ defmodule Sandbox.Library do
 
   alias Sandbox.Library.Album
 
+  def count_albums do
+    Repo.aggregate(Album, :count)
+  end
+
   @doc """
   Returns the list of albums.
 
@@ -211,6 +215,40 @@ defmodule Sandbox.Library do
   """
   def list_albums do
     Repo.all(Album)
+  end
+
+  def list_albums(scope) do
+    from(a in Album)
+    |> filter_where(scope)
+    |> sort_albums(scope)
+    |> paginate_albums(scope)
+    |> Repo.all()
+  end
+
+  defp filter_where(query, %{where: where}) do
+    from(query, where: ^where)
+  end
+
+  defp filter_where(query, _scope), do: query
+
+  defp sort_albums(query, scope) do
+    case Map.get(scope, :order_by) do
+      nil -> query
+      order_by -> query |> order_by(^order_by)
+    end
+  end
+
+  defp paginate_albums(query, scope) do
+    limit = Map.get(scope, :limit, 10)
+    offset = Map.get(scope, :offset, 0)
+
+    query
+    |> limit(^limit)
+    |> offset(^offset)
+  end
+
+  def new_album do
+    %Album{}
   end
 
   @doc """
@@ -228,6 +266,12 @@ defmodule Sandbox.Library do
 
   """
   def get_album!(id), do: Repo.get!(Album, id)
+
+  def get_album!(lookup, scope) do
+    from(a in Album)
+    |> filter_where(scope)
+    |> Repo.get_by!(lookup)
+  end
 
   @doc """
   Creates a album.

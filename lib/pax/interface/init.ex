@@ -4,16 +4,21 @@ defmodule Pax.Interface.Init do
   import Pax.Interface.Context
   alias Pax.Config
 
-  # mount init helpers
+  #
+  # Interface init helpers
+  #
 
   def init_adapter(module, socket) do
     case module.pax_adapter(socket) do
-      {adapter_module, callback_module, opts} -> Pax.Adapter.init(adapter_module, callback_module, opts)
-      {adapter_module, opts} -> Pax.Adapter.init(adapter_module, module, opts)
+      nil -> nil
       adapter_module when is_atom(adapter_module) -> Pax.Adapter.init(adapter_module, module, [])
+      {adapter_module, opts} -> Pax.Adapter.init(adapter_module, module, opts)
+      {adapter_module, callback_module, opts} -> Pax.Adapter.init(adapter_module, callback_module, opts)
       _ -> raise ArgumentError, "Invalid adapter returned from #{inspect(module)}.pax_adapter/1"
     end
   end
+
+  def merge_adapter_config(nil, _config, _socket), do: nil
 
   def merge_adapter_config(adapter, config, socket) do
     adapter_config = Map.get(config, :adapter, %{})
@@ -45,7 +50,7 @@ defmodule Pax.Interface.Init do
   def init_config_spec(adapter, plugins) do
     # TODO: get config_spec from module, so things like admin can add additional config
     config_spec = Pax.Interface.Config.config_spec()
-    adapter_config_spec = Pax.Adapter.config_spec(adapter)
+    adapter_config_spec = init_adapter_config_spec(adapter)
     plugins_config_spec = init_plugins_config_spec(plugins)
 
     config_spec
@@ -53,7 +58,13 @@ defmodule Pax.Interface.Init do
     |> Map.put(:plugins, plugins_config_spec)
   end
 
-  def init_plugins_config_spec(plugins) do
+  defp init_adapter_config_spec(nil), do: %{}
+
+  defp init_adapter_config_spec(adapter) do
+    Pax.Adapter.config_spec(adapter)
+  end
+
+  defp init_plugins_config_spec(plugins) do
     for plugin <- plugins, reduce: %{} do
       plugins_config_spec ->
         case plugin.config_key do
@@ -132,11 +143,19 @@ defmodule Pax.Interface.Init do
     end
   end
 
+  defp init_adapter_id_fields(nil) do
+    Pax.Interface.Config.default_id_fields()
+  end
+
   defp init_adapter_id_fields(adapter) do
     case Pax.Adapter.id_fields(adapter) do
       nil -> Pax.Interface.Config.default_id_fields()
       fields -> fields
     end
+  end
+
+  def assign_fields(socket) do
+    assign_pax(socket, :fields, init_fields(socket))
   end
 
   def init_fields(socket) do
@@ -174,8 +193,14 @@ defmodule Pax.Interface.Init do
   defp get_fields(config, adapter, socket) do
     case Config.fetch(config, :fields, [socket]) do
       {:ok, fields} -> fields
-      :error -> Pax.Adapter.default_fields(adapter)
+      :error -> get_adapter_default_fields(adapter)
     end
+  end
+
+  defp get_adapter_default_fields(nil), do: []
+
+  defp get_adapter_default_fields(adapter) do
+    Pax.Adapter.default_fields(adapter)
   end
 
   defp fields_for_action(fields, action) do
@@ -223,6 +248,8 @@ defmodule Pax.Interface.Init do
     end
   end
 
+  defp maybe_set_first_field_linked([], _config, _socket), do: []
+
   defp maybe_set_first_field_linked([first_field | rest], config, socket) do
     first_field =
       cond do
@@ -252,6 +279,8 @@ defmodule Pax.Interface.Init do
     end
   end
 
+  defp init_adapter_singular_name(nil), do: "Object"
+
   defp init_adapter_singular_name(adapter) do
     case Pax.Adapter.singular_name(adapter) do
       nil -> "Object"
@@ -271,6 +300,8 @@ defmodule Pax.Interface.Init do
       :error -> init_adapter_plural_name(adapter)
     end
   end
+
+  defp init_adapter_plural_name(nil), do: "Objects"
 
   defp init_adapter_plural_name(adapter) do
     case Pax.Adapter.plural_name(adapter) do
@@ -349,22 +380,43 @@ defmodule Pax.Interface.Init do
   end
 
   def init_object(params, uri, socket) do
-    %{adapter: adapter, action: action, scope: scope} = socket.assigns.pax
+    %{module: module, adapter: adapter, action: action, scope: scope} = socket.assigns.pax
 
     case action do
-      action when action in [:show, :edit] ->
-        lookup = init_lookup(params, uri, socket)
-        Pax.Adapter.get_object(adapter, lookup, scope, socket)
-
-      :new ->
-        Pax.Adapter.new_object(adapter, socket)
-
-      _ ->
-        nil
+      :new -> init_new_object(module, adapter, socket)
+      action when action in [:show, :edit] -> init_get_object(module, adapter, scope, params, uri, socket)
+      _ -> nil
     end
   end
 
-  defp init_lookup(params, uri, socket) do
+  defp init_new_object(module, adapter, socket) do
+    case module.new_object(socket) do
+      :not_implemented -> init_adapter_new_object(adapter, socket)
+      object when is_map(object) -> object
+      other -> raise "new_object/1 must return an object (map), got: #{inspect(other)}"
+    end
+  end
+
+  defp init_adapter_new_object(nil, _socket) do
+    raise "Could not create a new object for the page. You must either define " <>
+            "a `new_object/1` callback, or configure a Pax.Adapter."
+  end
+
+  defp init_adapter_new_object(adapter, socket) do
+    Pax.Adapter.new_object(adapter, socket)
+  end
+
+  defp init_get_object(module, adapter, scope, params, uri, socket) do
+    lookup = init_lookup(params, uri, socket)
+
+    case module.get_object(lookup, scope, socket) do
+      :not_implemented -> init_adapter_get_object(adapter, lookup, scope, socket)
+      object when is_map(object) -> object
+      other -> raise "get_object/3 must return an object (map), got: #{inspect(other)}"
+    end
+  end
+
+  def init_lookup(params, uri, socket) do
     %{config: config} = socket.assigns.pax
 
     # Check if the user has defined a `:lookup` config option, which can only be a function, and call it.
@@ -373,6 +425,15 @@ defmodule Pax.Interface.Init do
       {:ok, value} -> value
       :error -> construct_lookup_map(params, socket)
     end
+  end
+
+  defp init_adapter_get_object(nil, _lookup, _scope, _socket) do
+    raise "Could not get the object for the page. You must either define " <>
+            "a `get_object/3` callback, or configure a Pax.Adapter."
+  end
+
+  defp init_adapter_get_object(adapter, lookup, scope, socket) do
+    Pax.Adapter.get_object(adapter, lookup, scope, socket)
   end
 
   defp construct_lookup_map(params, socket) do
@@ -390,9 +451,13 @@ defmodule Pax.Interface.Init do
           value
 
         :error ->
-          case Pax.Adapter.id_fields(adapter) do
-            nil -> Pax.Interface.Config.default_id_fields()
-            fields -> fields
+          if Pax.Adapter.adapter?(adapter) do
+            case Pax.Adapter.id_fields(adapter) do
+              nil -> Pax.Interface.Config.default_id_fields()
+              fields -> fields
+            end
+          else
+            Pax.Interface.Config.default_id_fields()
           end
       end
 
@@ -466,6 +531,8 @@ defmodule Pax.Interface.Init do
     end
   end
 
+  defp init_adapter_object_name(nil, _object), do: "Object"
+
   defp init_adapter_object_name(adapter, object) do
     case Pax.Adapter.object_name(adapter, object) do
       nil -> "Object"
@@ -509,9 +576,5 @@ defmodule Pax.Interface.Init do
       {:ok, value} -> Pax.Util.URI.with_params(value, index_query: index_query)
       :error -> nil
     end
-  end
-
-  def assign_fields(socket) do
-    assign_pax(socket, :fields, init_fields(socket))
   end
 end

@@ -10,50 +10,35 @@ defmodule Pax.Interface do
   alias Pax.Interface.Index
   alias Pax.Interface.Detail
 
+  @type object :: %{atom() => any()}
+
   # Common callbacks
   @callback pax_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
             ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
-
   @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
-              module() | {module(), keyword()} | {module(), module(), keyword()}
-
+              nil | module() | {module(), keyword()} | {module(), module(), keyword()}
   @callback pax_plugins(socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Plugin.pluginspec()]
-
   @callback pax_config(socket :: Phoenix.LiveView.Socket.t()) :: keyword() | map()
 
   defmacro __using__(_opts) do
     quote do
+      @behaviour Pax.Interface
+
+      use Pax.Interface.Index
+      use Pax.Interface.Detail
       import Pax.Interface.Context
 
-      @behaviour Pax.Interface
       def on_mount(:pax_interface, params, session, socket),
         do: Pax.Interface.on_mount(__MODULE__, params, session, socket)
 
       on_mount {__MODULE__, :pax_interface}
 
       def pax_init(_params, _session, socket), do: {:cont, socket}
-
-      def pax_adapter(_socket) do
-        raise """
-        No pax_adapter/1 callback found for #{inspect(__MODULE__)}.
-        Please configure an adapter by defining a `pax_adapter/1` function, for example:
-
-            def pax_adapter(_socket), do: Pax.Adapters.EctoSchema
-
-        or
-
-            def pax_adapter(_socket) do
-              {Pax.Adapters.EctoSchema, repo: MyAppWeb.Repo, schema: MyApp.MyContext.MySchema}
-            end
-
-        """
-      end
-
+      def pax_adapter(_socket), do: nil
       def pax_plugins(_socket), do: []
-
       def pax_config(_socket), do: []
 
       defoverridable pax_init: 3, pax_adapter: 1, pax_plugins: 1, pax_config: 1

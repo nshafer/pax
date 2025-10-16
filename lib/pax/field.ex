@@ -19,9 +19,17 @@ defmodule Pax.Field do
 
   @doc false
   @spec init(Pax.Adapter.t(), fieldspec()) :: t()
+  def init(nil, name) when is_atom(name) do
+    raise_adapter_required_for_field_introspection(name)
+  end
+
   def init(adapter, name) when is_atom(name) do
     type = Pax.Adapter.field_type!(adapter, name)
     do_init(name, type, [])
+  end
+
+  def init(nil, {name, opts}) when is_atom(name) and is_list(opts) do
+    raise_adapter_required_for_field_introspection(name)
   end
 
   def init(adapter, {name, opts}) when is_atom(name) and is_list(opts) do
@@ -45,6 +53,19 @@ defmodule Pax.Field do
       - `{:name, MyType}` where MyType implements the Pax.Field.Type behaviour.
       - `{:name, :type, [opts]}` where :type is a valid field type like `:string`, `:integer`, etc.
       - `{:name, MyType, [opts]}` where MyType implements the Pax.Field.Type behaviour.
+    """
+  end
+
+  defp raise_adapter_required_for_field_introspection(name) do
+    raise """
+    Unable to introspect field #{inspect(name)}.
+
+    You must specify the field's type when not using a Pax.Adapter.
+
+    Examples:
+    - {:name, :string}
+    - {:age, :integer, required: true}
+    - {:is_active, :boolean, default: true}
     """
   end
 
@@ -326,6 +347,19 @@ defmodule Pax.Field do
   def required?(%Field{opts: opts}) do
     # Fields are required by default unless `required: false` is set in opts
     Map.get(opts, :required, true)
+  end
+
+  def mutable_fields(fields) do
+    Enum.reject(fields, &immutable?/1)
+  end
+
+  def validate_required(changeset, fields) do
+    required_field_names =
+      fields
+      |> Enum.filter(fn field -> not immutable?(field) and required?(field) end)
+      |> Enum.map(fn %Field{name: name} -> name end)
+
+    Ecto.Changeset.validate_required(changeset, required_field_names)
   end
 
   def label_for(%Field{name: name}, nil), do: name

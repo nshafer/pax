@@ -24,6 +24,8 @@ defmodule Pax.Admin.Resource.Live do
     """
   end
 
+  # Pax.Interface callbacks
+
   def pax_init(site_mod, params, session, socket) do
     resources = Pax.Admin.Site.resources_for(site_mod, params, session, socket)
     resource = get_resource(resources, params)
@@ -36,11 +38,14 @@ defmodule Pax.Admin.Resource.Live do
       |> assign_admin(resources: resources)
       |> assign_admin(resource: resource)
 
-    if Phoenix.LiveView.connected?(socket) do
-      resource.mod.init(params, session, socket)
-    else
-      {:halt, socket}
-    end
+    resource.mod.init(params, session, socket)
+
+    # TODO: make this configurable to skip the init call for unconnected sockets?
+    # if Phoenix.LiveView.connected?(socket) do
+    # resource.mod.init(params, session, socket)
+    # else
+    #   {:halt, socket}
+    # end
   end
 
   def handle_params(_params, _uri, socket) do
@@ -91,6 +96,7 @@ defmodule Pax.Admin.Resource.Live do
 
     # Set the resource_mod as the callback_module for the adapter if none were specified
     case resource_mod.adapter(socket) do
+      nil -> nil
       {adapter, callback_module, adapter_opts} -> {adapter, callback_module, adapter_opts}
       {adapter, adapter_opts} -> {adapter, resource_mod, adapter_opts}
       adapter when is_atom(adapter) -> {adapter, resource_mod, []}
@@ -163,5 +169,44 @@ defmodule Pax.Admin.Resource.Live do
     for id_field <- id_fields do
       Map.get(object, id_field)
     end
+  end
+
+  # Pax.Interface.Index callbacks
+
+  def count_objects(scope, socket) do
+    %{resource: resource} = socket.assigns.pax_admin
+    resource.mod.count_objects(scope, socket)
+  end
+
+  def list_objects(scope, socket) do
+    %{resource: resource} = socket.assigns.pax_admin
+    resource.mod.list_objects(scope, socket)
+  end
+
+  # Pax.Interface.Detail callbacks
+
+  def new_object(socket) do
+    %{resource: resource} = socket.assigns.pax_admin
+    resource.mod.new_object(socket)
+  end
+
+  def get_object(lookup, scope, socket) do
+    %{resource: resource} = socket.assigns.pax_admin
+    resource.mod.get_object(lookup, scope, socket)
+  end
+
+  def change_object(object, params, socket) do
+    %{resource: resource} = socket.assigns.pax_admin
+    resource.mod.change_object(object, params, socket)
+  end
+
+  def create_object(object, changeset, params, socket) do
+    %{resource: resource} = socket.assigns.pax_admin
+    resource.mod.create_object(object, changeset, params, socket)
+  end
+
+  def update_object(object, changeset, params, socket) do
+    %{resource: resource} = socket.assigns.pax_admin
+    resource.mod.update_object(object, changeset, params, socket)
   end
 end
