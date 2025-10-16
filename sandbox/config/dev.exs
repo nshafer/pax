@@ -65,7 +65,7 @@ config :sandbox, SandboxWeb.Endpoint,
     patterns: [
       ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/sandbox_web/(?:controllers|live|components|router)/?.*\.(ex|heex)$",
+      ~r"lib/sandbox_web/(?:controllers|live|admin|components|router)/?.*\.(ex|heex)$",
       # Also watch pax for changes during development
       ~r"priv/assets/.*(js|css)$",
       ~r"lib/pax/.*(interface|live|components).*(ex|heex)$"
