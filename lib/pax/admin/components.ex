@@ -96,8 +96,8 @@ defmodule Pax.Admin.Components do
   def admin_breadcrumbs(assigns) do
     ~H"""
     <div class="admin-breadcrumbs">
-      <%= if @pax_admin.site_mod do %>
-        <.pax_link class="admin-breadcrumb-link" navigate={@pax_admin.site_mod.dashboard_path()}>
+      <%= if @pax_admin.admin_mod do %>
+        <.pax_link class="admin-breadcrumb-link" navigate={@pax_admin.admin_mod.dashboard_path()}>
           Dashboard
         </.pax_link>
 
@@ -151,7 +151,7 @@ defmodule Pax.Admin.Components do
     ~H"""
     <div class="admin-menu">
       <.admin_menu_link
-        navigate={Pax.Admin.Site.dashboard_path(@pax_admin.site_mod)}
+        navigate={Pax.Admin.dashboard_path(@pax_admin.admin_mod)}
         active={@pax_admin.active == :dashboard}
         class="admin-menu-link-dashboard"
       >
@@ -164,7 +164,7 @@ defmodule Pax.Admin.Components do
         <% else %>
           <%= for resource <- entry.resources do %>
             <.admin_menu_link
-              navigate={Pax.Admin.Site.resource_index_path(@pax_admin.site_mod, resource.section, resource)}
+              navigate={Pax.Admin.resource_index_path(@pax_admin.admin_mod, resource.section, resource)}
               active={resource == @pax_admin.resource}
             >
               {truncate(resource.label, 35)}
@@ -199,7 +199,7 @@ defmodule Pax.Admin.Components do
         <div class="admin-menu-section-contents">
           <%= for resource <- @resources do %>
             <.admin_menu_link
-              navigate={Pax.Admin.Site.resource_index_path(@pax_admin.site_mod, resource.section, resource)}
+              navigate={Pax.Admin.resource_index_path(@pax_admin.admin_mod, resource.section, resource)}
               active={resource == @pax_admin.resource}
               indented={true}
             >

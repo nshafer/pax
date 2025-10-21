@@ -21,9 +21,9 @@ Two methods of including statics:
         - files are not cache-busted, and updates to :pax will require force reloads.
 
 
-## Admin Sites
+## Admins
 
-Each Admin Site is a collection of resources to facilitate the administration of an application.
+Each Admin is a collection of resources to facilitate the administration of an application.
 
 Resources can be any of:
 - Pax.Admin.Resource    - Based on Pax.Index and Pax.Detail, allows CRUD operations on a schema or other data source.

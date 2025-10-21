@@ -1,5 +1,5 @@
-defmodule SandboxWeb.Admin.Site do
-  use Pax.Admin.Site, router: SandboxWeb.Router
+defmodule SandboxWeb.Admin do
+  use Pax.Admin, router: SandboxWeb.Router
   # use Phoenix.Component
 
   # def render_index(assigns) do

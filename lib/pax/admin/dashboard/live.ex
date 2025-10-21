@@ -1,12 +1,12 @@
 defmodule Pax.Admin.Dashboard.Live do
   # import Phoenix.LiveView
   use Phoenix.Component
-  import Pax.Admin
+  import Pax.Admin, only: [assign_admin: 2, assign_admin: 3], warn: false
   import Pax.Components
 
-  def render(site_mod, assigns) do
+  def render(admin_mod, assigns) do
     cond do
-      function_exported?(site_mod, :render_dashboard, 1) -> site_mod.render_dashboard(assigns)
+      function_exported?(admin_mod, :render_dashboard, 1) -> admin_mod.render_dashboard(assigns)
       true -> render_dashboard(assigns)
     end
   end
@@ -23,14 +23,14 @@ defmodule Pax.Admin.Dashboard.Live do
     """
   end
 
-  def mount(site_mod, params, session, socket) do
-    resources = Pax.Admin.Site.resources_for(site_mod, params, session, socket)
+  def mount(admin_mod, params, session, socket) do
+    resources = Pax.Admin.resources_for(admin_mod, params, session, socket)
 
     socket =
       socket
       |> assign(page_title: "Dashboard")
-      |> assign_admin(site_mod: site_mod)
-      |> assign_admin(config: Pax.Admin.Site.config_for(site_mod, params, session, socket))
+      |> assign_admin(admin_mod: admin_mod)
+      |> assign_admin(config: Pax.Admin.config_for(admin_mod, params, session, socket))
       |> assign_admin(active: :dashboard)
       |> assign_admin(resources: resources)
 

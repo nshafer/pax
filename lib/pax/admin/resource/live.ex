@@ -1,13 +1,13 @@
 defmodule Pax.Admin.Resource.Live do
   use Phoenix.Component
-  import Pax.Admin
+  import Pax.Admin, only: [assign_admin: 2, assign_admin: 3], warn: false
 
-  def render(site_mod, assigns) do
+  def render(admin_mod, assigns) do
     resource_mod = assigns.pax_admin.resource.mod
 
     cond do
       function_exported?(resource_mod, :render, 1) -> resource_mod.render_index(assigns)
-      function_exported?(site_mod, :render, 1) -> site_mod.render_index(assigns)
+      function_exported?(admin_mod, :render, 1) -> admin_mod.render_index(assigns)
       true -> render(assigns)
     end
   end
@@ -26,14 +26,14 @@ defmodule Pax.Admin.Resource.Live do
 
   # Pax.Interface callbacks
 
-  def pax_init(site_mod, params, session, socket) do
-    resources = Pax.Admin.Site.resources_for(site_mod, params, session, socket)
+  def pax_init(admin_mod, params, session, socket) do
+    resources = Pax.Admin.resources_for(admin_mod, params, session, socket)
     resource = get_resource(resources, params)
 
     socket =
       socket
-      |> assign_admin(site_mod: site_mod)
-      |> assign_admin(config: Pax.Admin.Site.config_for(site_mod, params, session, socket))
+      |> assign_admin(admin_mod: admin_mod)
+      |> assign_admin(config: Pax.Admin.config_for(admin_mod, params, session, socket))
       |> assign_admin(active: :resource)
       |> assign_admin(resources: resources)
       |> assign_admin(resource: resource)
@@ -85,7 +85,7 @@ defmodule Pax.Admin.Resource.Live do
     section = Map.get(params, "section")
     resource = Map.get(params, "resource")
 
-    case Pax.Admin.Site.match_resource(resources, section, resource) do
+    case Pax.Admin.match_resource(resources, section, resource) do
       nil -> raise Pax.Admin.ResourceNotFoundError.exception(section: section, resource: resource)
       %{} = resource -> resource
     end
@@ -136,33 +136,33 @@ defmodule Pax.Admin.Resource.Live do
   end
 
   def index_path(socket) do
-    %{site_mod: site_mod, resource: resource} = socket.assigns.pax_admin
+    %{admin_mod: admin_mod, resource: resource} = socket.assigns.pax_admin
 
-    Pax.Admin.Site.resource_index_path(site_mod, resource.section, resource)
+    Pax.Admin.resource_index_path(admin_mod, resource.section, resource)
   end
 
   def new_path(socket) do
-    %{site_mod: site_mod, resource: resource} = socket.assigns.pax_admin
+    %{admin_mod: admin_mod, resource: resource} = socket.assigns.pax_admin
 
-    Pax.Admin.Site.resource_new_path(site_mod, resource.section, resource)
+    Pax.Admin.resource_new_path(admin_mod, resource.section, resource)
   end
 
   def show_path(object, socket) do
-    %{site_mod: site_mod, resource: resource} = socket.assigns.pax_admin
+    %{admin_mod: admin_mod, resource: resource} = socket.assigns.pax_admin
     object_ids = object_ids(object, socket)
 
-    Pax.Admin.Site.resource_show_path(site_mod, resource.section, resource, object_ids)
+    Pax.Admin.resource_show_path(admin_mod, resource.section, resource, object_ids)
   end
 
   def edit_path(object, socket) do
-    %{site_mod: site_mod, resource: resource} = socket.assigns.pax_admin
+    %{admin_mod: admin_mod, resource: resource} = socket.assigns.pax_admin
     object_ids = object_ids(object, socket)
 
-    Pax.Admin.Site.resource_edit_path(site_mod, resource.section, resource, object_ids)
+    Pax.Admin.resource_edit_path(admin_mod, resource.section, resource, object_ids)
   end
 
   # Build a list of ids for this object based on the value of the `id_fields` config option. These will be appended to
-  # the path by the Site module, separated by slashes, so they match the default `/*ids` glob in the default routes.
+  # the path by the admin module, separated by slashes, so they match the default `/*ids` glob in the default routes.
   defp object_ids(object, socket) do
     %{id_fields: id_fields} = socket.assigns.pax
 

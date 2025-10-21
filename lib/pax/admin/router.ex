@@ -1,12 +1,12 @@
 defmodule Pax.Admin.Router do
   @moduledoc """
-  Provides functionality for mounting Pax.Admin sites in your router.
+  Provides functionality for mounting Pax.Admin's in your router.
 
   > #### `use Pax.Admin.Router` {: .info}
   >
   > When you `use Pax.Admin.Router` the `pax_admin/3` macro will be imported for use in your router. A module attribute
-  > called `@pax_paths` will also be defined. This attribute is used by `Pax.Admin.Site` to determine the path
-  > to a given admin site. It will be exposed with a `__pax__/1` function that returns a map of site modules to
+  > called `@pax_paths` will also be defined. This attribute is used by `Pax.Admin` to determine the path
+  > to a given admin module. It will be exposed with a `__pax__/1` function that returns a map of module names to
   > paths when called with `:paths`.
 
   Note: This must be done in your main Router, not in a Router that is forwarded from another router. This is currently
@@ -23,15 +23,15 @@ defmodule Pax.Admin.Router do
   end
 
   @doc """
-  Mounts a Pax.Admin.Site at the given path in your router.
+  Mounts a Pax.Admin at the given path in your router.
 
   This macro will define a `live_session` block that contains many `Phoenix.LiveView.Router.live/4` calls to define
-  endpoints for the admin site. If router helpers are enabled, then it will generate route helper names based on the
-  Site module's name.
+  endpoints for the admin. If router helpers are enabled, then it will generate route helper names based on the
+  Admin module's name.
 
   ## Options
 
-    * `:as` - The name to use for the route helpers. Defaults to the underscored version of the Site module's name.
+    * `:as` - The name to use for the route helpers. Defaults to the underscored version of the Admin module's name.
 
     * `:root_layout` - An optional root layout tuple for the initial HTTP render. Defaults to
       `{Pax.Admin.Layouts, :root}`.
@@ -46,23 +46,23 @@ defmodule Pax.Admin.Router do
         scope "/", MyappWeb do
           pipe_through [:browser]
 
-          pax_admin "/admin", MainAdmin.Site,
+          pax_admin "/admin", MainAdmin,
             as: :admin,
             on_mount: {MyAppWeb.AdminAuth, :ensure_user_is_admin}
-          pax_admin "/public/admin", PublicAdmin.Site
+          pax_admin "/public/admin", PublicAdmin
         end
 
   """
-  defmacro pax_admin(path, site_mod, opts \\ []) do
-    site_mod = Macro.expand(site_mod, __CALLER__)
+  defmacro pax_admin(path, admin_mod, opts \\ []) do
+    admin_mod = Macro.expand(admin_mod, __CALLER__)
 
     quote bind_quoted: binding() do
-      {full_path, full_site_mod, modules, opts} =
-        Pax.Admin.Router.__pax_admin__(__MODULE__, path, site_mod, opts)
+      {full_path, full_admin_mod, modules, opts} =
+        Pax.Admin.Router.__pax_admin__(__MODULE__, path, admin_mod, opts)
 
-      @pax_paths Map.put(@pax_paths, full_site_mod, full_path)
+      @pax_paths Map.put(@pax_paths, full_admin_mod, full_path)
 
-      live_session site_mod, opts.live_session do
+      live_session admin_mod, opts.live_session do
         live "#{path}", modules.dashboard, :dashboard, opts.dashboard
 
         live "#{path}/r/:resource", modules.resource, :index, opts.resource
@@ -86,14 +86,14 @@ defmodule Pax.Admin.Router do
     end
   end
 
-  def __pax_admin__(router_mod, path, site_mod, opts) do
+  def __pax_admin__(router_mod, path, admin_mod, opts) do
     full_path = Phoenix.Router.scoped_path(router_mod, path)
-    full_site_mod = Phoenix.Router.scoped_alias(router_mod, site_mod)
-    base_as = as_from_site_mod(opts[:as], full_site_mod)
+    full_admin_mod = Phoenix.Router.scoped_alias(router_mod, admin_mod)
+    base_as = as_from_admin_mod(opts[:as], full_admin_mod)
 
     modules = %{
-      dashboard: Module.concat(site_mod, DashboardLive),
-      resource: Module.concat(site_mod, ResourceLive)
+      dashboard: Module.concat(admin_mod, DashboardLive),
+      resource: Module.concat(admin_mod, ResourceLive)
     }
 
     live_session_opts =
@@ -109,22 +109,21 @@ defmodule Pax.Admin.Router do
       resource: [as: :"#{base_as}_resource"]
     }
 
-    {full_path, full_site_mod, modules, opts}
+    {full_path, full_admin_mod, modules, opts}
   end
 
-  defp as_from_site_mod(nil, site_mod) do
-    site_mod
+  defp as_from_admin_mod(nil, admin_mod) do
+    admin_mod
     |> Module.split()
     |> Enum.drop_while(&(not String.ends_with?(&1, "Admin")))
-    |> Enum.map(&(&1 |> String.replace_suffix("Site", "") |> Macro.underscore()))
-    |> Enum.reject(&(&1 == ""))
+    |> Enum.map(&Macro.underscore(&1))
     |> Enum.join("_")
     |> case do
       "" ->
         raise ArgumentError,
-              "could not infer :as option from #{site_mod} because it does not have an \"Admin\" suffix " <>
-                "anywhere in the module path. Please pass :as explicitly or make sure your admin site is " <>
-                "named like \"MyAppWeb.Admin.Site\" or \"MyAppWeb.MainAdmin\". This must be provided even " <>
+              "could not infer :as option from #{admin_mod} because it does not have an \"Admin\" suffix " <>
+                "anywhere in the module path. Please pass :as explicitly or make sure your admin module is " <>
+                "named like \"MyAppWeb.Admin\" or \"MyAppWeb.MainAdmin\". This must be provided even " <>
                 "if you don't have `helpers: true` in your Router or use path helpers."
 
       as ->
@@ -132,5 +131,5 @@ defmodule Pax.Admin.Router do
     end
   end
 
-  defp as_from_site_mod(as, _site_mod), do: as
+  defp as_from_admin_mod(as, _admin_mod), do: as
 end

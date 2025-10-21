@@ -40,7 +40,7 @@ defmodule SandboxWeb.Router do
       live "/albums/:uuid/delete", AlbumLive, :delete
     end
 
-    pax_admin "/admin", Admin.Site, as: :admin
+    pax_admin "/admin", Admin
   end
 
   # Other scopes may use custom stacks.

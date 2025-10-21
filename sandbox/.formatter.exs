@@ -5,7 +5,7 @@ locals_without_parens = [
   pax_admin: 2,
   pax_admin: 3,
 
-  # Pax.Admin.Site macros
+  # Pax.Admin macros
   config: 1,
   section: 2,
   section: 3,
