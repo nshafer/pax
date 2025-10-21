@@ -2,7 +2,7 @@ defmodule Pax.Interface.Components do
   use Phoenix.Component
   import Pax.Components
 
-  attr :pax, Pax.Interface.Context, required: true
+  attr :pax, Pax.Interface, required: true
   attr :class, :string, default: nil
   attr :index_class, :string, default: nil
   attr :show_class, :string, default: nil
@@ -20,7 +20,7 @@ defmodule Pax.Interface.Components do
     """
   end
 
-  attr :pax, Pax.Interface.Context, required: true
+  attr :pax, Pax.Interface, required: true
   attr :class, :string, default: nil
 
   def pax_index(assigns) do
@@ -61,7 +61,7 @@ defmodule Pax.Interface.Components do
     """
   end
 
-  attr :pax, Pax.Interface.Context, required: true
+  attr :pax, Pax.Interface, required: true
   attr :class, :string, default: nil
 
   def pax_show(assigns) do
@@ -102,7 +102,7 @@ defmodule Pax.Interface.Components do
     """
   end
 
-  attr :pax, Pax.Interface.Context, required: true
+  attr :pax, Pax.Interface, required: true
   attr :class, :string, default: nil
 
   def pax_edit(assigns) do
@@ -142,7 +142,7 @@ defmodule Pax.Interface.Components do
     """
   end
 
-  attr :pax, Pax.Interface.Context, required: true
+  attr :pax, Pax.Interface, required: true
   attr :class, :string, default: nil
 
   def pax_new(assigns) do

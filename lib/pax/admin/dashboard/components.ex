@@ -1,7 +1,7 @@
 defmodule Pax.Admin.Dashboard.Components do
   use Phoenix.Component
 
-  # attr :pax_admin, Pax.Admin.Context, required: true
+  # attr :pax_admin, Pax.Admin, required: true
 
   # def toc(assigns) do
   #   ~H"""
@@ -13,7 +13,7 @@ defmodule Pax.Admin.Dashboard.Components do
   #   """
   # end
 
-  # attr :pax_admin, Pax.Admin.Context, required: true
+  # attr :pax_admin, Pax.Admin, required: true
   # attr :entry, :map, required: true
 
   # def toc_section(assigns) do

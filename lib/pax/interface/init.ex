@@ -1,7 +1,7 @@
 defmodule Pax.Interface.Init do
   @moduledoc false
 
-  import Pax.Interface.Context
+  import Pax.Interface
   alias Pax.Config
 
   #

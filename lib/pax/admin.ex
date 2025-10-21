@@ -1,6 +1,6 @@
-defmodule Pax.Admin.Context do
+defmodule Pax.Admin do
   import Phoenix.Component, only: [assign: 3]
-  alias Pax.Admin.Context
+  alias Pax.Admin
 
   defstruct [:site_mod, :config, :resources, :active, :resource]
 
@@ -9,7 +9,7 @@ defmodule Pax.Admin.Context do
   def assign_admin(%Phoenix.LiveView.Socket{} = socket, key, value) do
     pax =
       socket.assigns
-      |> Map.get(:pax_admin, %Context{})
+      |> Map.get(:pax_admin, %Admin{})
       |> Map.put(key, value)
 
     assign(socket, :pax_admin, pax)
@@ -18,7 +18,7 @@ defmodule Pax.Admin.Context do
   def assign_admin(%{} = assigns, key, value) do
     pax =
       assigns
-      |> Map.get(:pax, %Context{})
+      |> Map.get(:pax, %Admin{})
       |> Map.put(key, value)
 
     assign(assigns, :pax_admin, pax)

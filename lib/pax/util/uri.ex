@@ -38,7 +38,7 @@ defmodule Pax.Util.URI do
   Builds a URL or path with the given query parameters.
 
   Accepts a URL or path and a keyword list or map of parameters. Handles merging, overriding, and removing
-  parameters, including support for complex values (lists, maps and keyword lists as supported by `Plug.Conn.Query/2`).
+  parameters, including support for complex values (lists, maps and keyword lists as supported by `Plug.Conn.Query`).
 
   If a value of `[value: v, default: d]` option is given, the parameter is omitted if `v == d`. In this format,
   `:value` must come first, otherwise it is treated as a list. If you must provide a list with `{:value, _something}`,

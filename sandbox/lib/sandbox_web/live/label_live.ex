@@ -1,6 +1,7 @@
 defmodule SandboxWeb.LabelLive do
   use SandboxWeb, :live_view
   use Pax.Interface
+  import Pax.Interface
 
   def render(assigns) do
     # dbg(assigns.pax)

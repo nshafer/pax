@@ -68,14 +68,14 @@ defmodule Pax.Adapters.EctoSchema do
 
       Examples:
           def pax_adapter(_socket) do
-            {Pax.Adapters.EctoSchema, repo: MyApp.Repo, schema: MyApp.MyContext.MySchema}
+            {Pax.Adapters.EctoSchema, repo: MyApp.Repo, schema: MyApp.MySchema}
           end
 
           def pax_config(socket) do
             [
               adapter: [
                 repo: MyApp.Repo,
-                schema: MyApp.MyContext.MySchema
+                schema: MyApp.MySchema
               ]
             ]
           end

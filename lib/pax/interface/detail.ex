@@ -3,7 +3,7 @@ defmodule Pax.Interface.Detail do
   import Phoenix.Component, only: [to_form: 2]
   import Phoenix.LiveView
   import Pax.Interface.Init
-  import Pax.Interface.Context
+  import Pax.Interface
   require Logger
 
   @callback new_object(socket :: Phoenix.LiveView.Socket.t()) :: Pax.Interface.object()

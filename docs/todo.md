@@ -26,7 +26,7 @@
       [
         adapter: [
             repo: Myapp.Repo,
-            schema: Myapp.Mycontext.Myschema
+            schema: Myapp.Myschema
         ],
         plugins: [
             pagination: [

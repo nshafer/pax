@@ -120,12 +120,12 @@ defmodule Pax.Admin.Site do
   defp merge_config(conf) when is_map(conf), do: Keyword.new(conf) |> merge_config()
   defp merge_config(arg), do: raise("invalid config: #{inspect(arg)}")
 
-  defmacro section(name, opts \\ [], do: context) when is_atom(name) and is_list(opts) do
+  defmacro section(name, opts \\ [], do: body) when is_atom(name) and is_list(opts) do
     quote do
       Pax.Admin.Site.__section__(__MODULE__, unquote(name), unquote(opts))
 
       try do
-        unquote(context)
+        unquote(body)
       after
         Module.put_attribute(__MODULE__, :pax_current_section, nil)
       end

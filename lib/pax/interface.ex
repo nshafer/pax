@@ -1,14 +1,83 @@
 defmodule Pax.Interface do
   @moduledoc """
   Pax.Interface enables the creation of CRUD interfaces based on Phoenix.LiveView.
+
+  ## The `@pax` assign
+
+  The `@pax` assign contains information on how to build the page.
+
+  This module defines a struct and some helper functions for assigning values into it easily.
+
+  ## Fields
+
+  * `module` - The module that is using the Pax Interface
+  * `config` - The processed `Pax.Config` map.
+  * `adapter` - The adapter module to use for the interface
+  * `plugins` - A list of plugins to use for the interface
+  * `action` - The current action being performed, one of `:index`, `:show`, `:edit`, `:new` or `:delete`
+  * `objects` - A list of objects to display, for the `:index` action
+  * `object` - The current object being displayed in `:show`, `:edit` or `:delete` actions
+  * `object_count` - The number of objects in the `:objects` list
+  * `path` - The path of the URL of the current page, as a `%URI{}` with only `path` and `query` fields set.
+  * `form` - The form to use for the current object in `:new` or `:edit` actions
+  * `singular_name` - The singular name of the object
+  * `plural_name` - The plural name of the object
+  * `object_name` - The name of the object being displayed
+  * `index_path` - The path to the index page
+  * `index_query` - An encoded query for the Index page, if any. Used by Detail Interface views for index links.
+  * `new_path` - The path to the new page
+  * `show_path` - The path to the show page
+  * `edit_path` - The path to the edit page
+  * `fields` - A list of fields to display in the index page
+  * `scope` - A map of scope values to use for the adapter, see the [Scope](#scope) section
+  * `private` - A map of private values for pax internals and plugins to use, see the [Private](#private) section
+
+  ### Scope
+
+  The `:scope` map is used to pass information to the adapter for it to do some of its basic operations, such as
+  fetching objects for the index pages, or fetching individual objects for the show, edit and delete pages. The main
+  purpose of the scope is to decouple the interface, plugins and implementing module from the adapter, so that the
+  adapter is not concerned with any of those things, it simply operates on a set of expected keys in the scope. In this
+  way the adapter is only loosely coupled with the rest of the system.
+
+  Any keys can be set in the scope, since it's a map, but adapter(s) will only be expecting certain keys to be set,
+  and the interface and plugins will only set certain keys. All of these interactions should be documented in the
+  respective modules.
+
+  ### Private
+
+  The `:private` map is used to store data for plugins to use. The private map is keyed by a `prefix`, which is
+  typically the name of the plugin. This allows plugins to store their own data without interfering with
+  each other. The private map is not intended to be used by the interface or the implementing module using Pax.
   """
+
   import Phoenix.LiveView
+  import Phoenix.Component, only: [assign: 3]
   require Logger
 
-  import Pax.Interface.Init
-  import Pax.Interface.Context
-  alias Pax.Interface.Index
-  alias Pax.Interface.Detail
+  defstruct module: nil,
+            config: %{},
+            adapter: nil,
+            plugins: [],
+            action: nil,
+            objects: [],
+            object: nil,
+            object_count: 0,
+            path: nil,
+            form: nil,
+            singular_name: nil,
+            plural_name: nil,
+            object_name: nil,
+            index_path: nil,
+            index_query: nil,
+            new_path: nil,
+            show_path: nil,
+            edit_path: nil,
+            id_fields: [],
+            fields: [],
+            default_scope: %{},
+            scope: %{},
+            private: %{}
 
   @type object :: %{atom() => any()}
 
@@ -29,12 +98,11 @@ defmodule Pax.Interface do
 
       use Pax.Interface.Index
       use Pax.Interface.Detail
-      import Pax.Interface.Context
-
-      def on_mount(:pax_interface, params, session, socket),
-        do: Pax.Interface.on_mount(__MODULE__, params, session, socket)
 
       on_mount {__MODULE__, :pax_interface}
+
+      def on_mount(:pax_interface, params, session, socket),
+        do: Pax.Interface.Live.on_mount(__MODULE__, params, session, socket)
 
       def pax_init(_params, _session, socket), do: {:cont, socket}
       def pax_adapter(_socket), do: nil
@@ -49,284 +117,118 @@ defmodule Pax.Interface do
     end
   end
 
-  # Mount initialization
+  @doc """
+  Assigns a value to the `:pax` assign in the socket or assigns map.
+  """
 
-  def on_mount(module, params, session, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
+  def assign_pax(socket_or_assigns, key, value)
 
-    # module.pax_init can return {:halt, socket} to halt the pax initialization process, but we don't want to halt the
-    # mount process, so we will always return {:cont, socket}. If the user wants to halt the mount after calling
-    # a redirect, then they will need to do so in their own mount callback.
-
-    with(
-      {:cont, socket} <- module.pax_init(params, session, socket),
-      {:cont, socket} <- init(module, socket)
-    ) do
-      {:cont, socket}
-    else
-      {:halt, socket} -> {:cont, socket}
-    end
+  def assign_pax(%Phoenix.LiveView.Socket{} = socket, key, value) do
+    pax = Map.get(socket.assigns, :pax, %Pax.Interface{})
+    assign(socket, :pax, %{pax | key => value})
   end
 
-  defp init(module, socket) do
-    adapter = init_adapter(module, socket)
-    plugins = init_plugins(module, socket)
-    config_spec = init_config_spec(adapter, plugins)
-    config = init_config(config_spec, module, socket)
-    adapter = merge_adapter_config(adapter, config, socket)
-    plugins = merge_plugins_config(plugins, config, socket)
-
-    socket =
-      socket
-      |> assign_pax(:config, config)
-      |> assign_pax(:module, module)
-      |> assign_pax(:adapter, adapter)
-      |> assign_pax(:plugins, plugins)
-      |> attach_hook(:pax_handle_params, :handle_params, &handle_params/3)
-      |> attach_hook(:pax_handle_event, :handle_event, &handle_event/3)
-      |> attach_hook(:pax_handle_info, :handle_info, &handle_info/2)
-      |> attach_hook(:pax_handle_async, :handle_async, &handle_async/3)
-      |> attach_hook(:pax_after_render, :after_render, &after_render/1)
-
-    {:cont, socket}
+  def assign_pax(%{} = assigns, key, value) do
+    pax = Map.get(assigns, :pax, %Pax.Interface{})
+    assign(assigns, :pax, %{pax | key => value})
   end
 
-  # handle_params
-  #
-  # This is the main entry point for the `:handle_params` hook.
-
-  defp handle_params(params, uri, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.handle_params(#{inspect(module)}, #{inspect(params)}, #{inspect(uri)})")
-
-    with(
-      {:cont, socket} <- global_handle_params(params, uri, socket),
-      {:cont, socket} <- plugin_handle_params(params, uri, socket),
-      {:cont, socket} <- action_handle_params(params, uri, socket),
-      {:cont, socket} <- plugin_after_params(socket)
-    ) do
-      {:cont, socket}
-    end
-  end
-
-  defp global_handle_params(params, uri, socket) do
-    socket =
-      socket
-      |> assign_action()
-      |> assign_path(uri)
-      |> assign_id_fields()
-      |> assign_fields()
-      |> assign_singular_name()
-      |> assign_plural_name()
-      |> assign_index_path(params)
-      |> assign_new_path(params)
-      |> assign_default_scope()
-
-    {:cont, socket}
-  end
-
-  defp action_handle_params(params, uri, socket) do
-    case socket.assigns.pax.action do
-      :index -> Index.handle_params(params, uri, socket)
-      :show -> Detail.handle_params(params, uri, socket)
-      :edit -> Detail.handle_params(params, uri, socket)
-      :new -> Detail.handle_params(params, uri, socket)
-      :delete -> raise "Delete action not implemented"
-      _ -> {:cont, socket}
-    end
-  end
-
-  defp plugin_handle_params(params, uri, socket) do
-    %{plugins: plugins} = socket.assigns.pax
-
-    Enum.reduce_while(plugins, {:cont, socket}, fn plugin, {:cont, socket} ->
-      if function_exported?(plugin.module, :handle_params, 4) do
-        case apply(plugin.module, :handle_params, [plugin.opts, params, uri, socket]) do
-          {:cont, socket} -> {:cont, {:cont, socket}}
-          {:halt, socket} -> {:halt, {:halt, socket}}
-        end
-      else
-        {:cont, {:cont, socket}}
-      end
+  def assign_pax(socket_or_assigns, keyword_or_map) when is_map(keyword_or_map) or is_list(keyword_or_map) do
+    Enum.reduce(keyword_or_map, socket_or_assigns, fn {key, value}, acc ->
+      assign_pax(acc, key, value)
     end)
   end
 
-  defp plugin_after_params(socket) do
-    %{plugins: plugins} = socket.assigns.pax
+  @doc """
+  Makes sure that the given `prefix` exists in the `:private` map in the `:pax` assign in the socket or assigns map.
+  """
+  def ensure_pax_private(socket_or_assigns, prefix)
 
-    Enum.reduce_while(plugins, {:cont, socket}, fn plugin, {:cont, socket} ->
-      if function_exported?(plugin.module, :after_params, 2) do
-        case apply(plugin.module, :after_params, [plugin.opts, socket]) do
-          {:cont, socket} -> {:cont, {:cont, socket}}
-          {:halt, socket} -> {:halt, {:halt, socket}}
-        end
-      else
-        {:cont, {:cont, socket}}
-      end
+  def ensure_pax_private(%Phoenix.LiveView.Socket{} = socket, prefix) do
+    private =
+      socket.assigns
+      |> Map.get(:pax, %Pax.Interface{})
+      |> Map.get(:private, %{})
+
+    assign_pax(socket, :private, Map.put_new(private, prefix, %{}))
+  end
+
+  def ensure_pax_private(%{} = assigns, prefix) do
+    private =
+      assigns
+      |> Map.get(:pax, %Pax.Interface{})
+      |> Map.get(:private, %{})
+
+    assign_pax(assigns, :private, Map.put_new(private, prefix, %{}))
+  end
+
+  @doc """
+  Assigns the `value` to the `:private` map under the `prefix` in the `:pax` assign in the assigns.
+  """
+  def assign_pax_private(socket_or_assigns, prefix, key, value)
+
+  def assign_pax_private(%Phoenix.LiveView.Socket{} = socket, prefix, key, value) do
+    private =
+      socket.assigns
+      |> Map.get(:pax, %Pax.Interface{})
+      |> Map.get(:private, %{})
+
+    prefixed =
+      private
+      |> Map.get(prefix, %{})
+      |> Map.put(key, value)
+
+    assign_pax(socket, :private, Map.put(private, prefix, prefixed))
+  end
+
+  def assign_pax_private(%{} = assigns, prefix, key, value) do
+    private =
+      assigns
+      |> Map.get(:pax, %Pax.Interface{})
+      |> Map.get(:private, %{})
+
+    prefixed =
+      private
+      |> Map.get(prefix, %{})
+      |> Map.put(key, value)
+
+    assign_pax(assigns, :private, Map.put(private, prefix, prefixed))
+  end
+
+  def assign_pax_private(socket_or_assigns, prefix, keyword_or_map)
+      when is_map(keyword_or_map) or is_list(keyword_or_map) do
+    Enum.reduce(keyword_or_map, socket_or_assigns, fn {key, value}, acc ->
+      assign_pax_private(acc, prefix, key, value)
     end)
   end
 
-  # handle_event
-  #
-  # This is the main entry point for the `:handle_event` hook.
+  @doc """
+  Assigns a value to the `:scope` map in the `:pax` assign in the socket or assigns map.
+  """
 
-  defp handle_event(event, params, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.handle_event(#{inspect(event)}, #{inspect(params)})")
+  def assign_pax_scope(socket_or_assigns, key, value)
 
-    with(
-      {:cont, socket} <- action_handle_event(event, params, socket),
-      {:cont, socket} <- plugin_handle_event(event, params, socket)
-    ) do
-      {:cont, socket}
-    else
-      {:halt, socket} -> {:halt, socket}
-      {:halt, reply, socket} -> {:halt, reply, socket}
-    end
+  def assign_pax_scope(%Phoenix.LiveView.Socket{} = socket, key, value) do
+    scope =
+      socket.assigns
+      |> Map.get(:pax, %Pax.Interface{})
+      |> Map.get(:scope, %{})
+
+    assign_pax(socket, :scope, Map.put(scope, key, value))
   end
 
-  def action_handle_event(event, params, socket) do
-    case socket.assigns.pax.action do
-      # Index doesn't handle any events for now, skip it
-      # :index -> Index.handle_event(event, params, socket)
-      :new -> Detail.handle_event(event, params, socket)
-      :show -> Detail.handle_event(event, params, socket)
-      :edit -> Detail.handle_event(event, params, socket)
-      _ -> {:cont, socket}
-    end
+  def assign_pax_scope(%{} = assigns, key, value) do
+    scope =
+      assigns
+      |> Map.get(:pax, %Pax.Interface{})
+      |> Map.get(:scope, %{})
+
+    assign_pax(assigns, :scope, Map.put(scope, key, value))
   end
 
-  defp plugin_handle_event(event, params, socket) do
-    %{plugins: plugins} = socket.assigns.pax
-
-    Enum.reduce_while(plugins, {:cont, socket}, fn plugin, {:cont, socket} ->
-      if function_exported?(plugin.module, :handle_event, 4) do
-        case plugin.module.handle_event(plugin.opts, event, params, socket) do
-          {:cont, socket} -> {:cont, {:cont, socket}}
-          {:halt, socket} -> {:halt, {:halt, socket}}
-          {:halt, reply, socket} -> {:halt, {:halt, reply, socket}}
-        end
-      else
-        {:cont, {:cont, socket}}
-      end
-    end)
-  end
-
-  # handle_info
-  #
-  # This is the main entry point for the `:handle_info` hook.
-
-  defp handle_info(msg, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.handle_info(#{inspect(msg)})")
-
-    with(
-      # Action modules don't handle info messages for now, skip it
-      # {:cont, socket} <- action_handle_info(msg, socket),
-      {:cont, socket} <- plugin_handle_info(msg, socket)
-    ) do
-      {:cont, socket}
-    else
-      {:halt, socket} -> {:halt, socket}
-    end
-  end
-
-  def action_handle_info(msg, socket) do
-    case socket.assigns.pax.action do
-      :index -> Index.handle_info(msg, socket)
-      :new -> Detail.handle_info(msg, socket)
-      :show -> Detail.handle_info(msg, socket)
-      :edit -> Detail.handle_info(msg, socket)
-      _ -> {:cont, socket}
-    end
-  end
-
-  defp plugin_handle_info(msg, socket) do
-    %{plugins: plugins} = socket.assigns.pax
-
-    Enum.reduce_while(plugins, {:cont, socket}, fn plugin, {:cont, socket} ->
-      if function_exported?(plugin.module, :handle_info, 3) do
-        case plugin.module.handle_info(plugin.opts, msg, socket) do
-          {:cont, socket} -> {:cont, {:cont, socket}}
-          {:halt, socket} -> {:halt, {:halt, socket}}
-        end
-      else
-        {:cont, {:cont, socket}}
-      end
-    end)
-  end
-
-  # handle_async
-  #
-  # This is the main entry point for the `:handle_async` hook.
-
-  defp handle_async(name, async_fun_result, socket) do
-    # IO.puts("#{inspect(__MODULE__)}.handle_async(#{inspect(name)}, #{inspect(async_fun_result)})")
-
-    with(
-      # {:cont, socket} <- action_handle_async(name, async_fun_result, socket),
-      {:cont, socket} <- plugin_handle_async(name, async_fun_result, socket)
-    ) do
-      {:cont, socket}
-    else
-      {:halt, socket} -> {:halt, socket}
-    end
-  end
-
-  def action_handle_async(name, async_fun_result, socket) do
-    case socket.assigns.pax.action do
-      :index -> Index.handle_async(name, async_fun_result, socket)
-      :new -> Detail.handle_async(name, async_fun_result, socket)
-      :show -> Detail.handle_async(name, async_fun_result, socket)
-      :edit -> Detail.handle_async(name, async_fun_result, socket)
-      _ -> {:cont, socket}
-    end
-  end
-
-  defp plugin_handle_async(name, async_fun_result, socket) do
-    %{plugins: plugins} = socket.assigns.pax
-
-    Enum.reduce_while(plugins, {:cont, socket}, fn plugin, {:cont, socket} ->
-      if function_exported?(plugin.module, :handle_async, 4) do
-        case plugin.module.handle_async(plugin.opts, name, async_fun_result, socket) do
-          {:cont, socket} -> {:cont, {:cont, socket}}
-          {:halt, socket} -> {:halt, {:halt, socket}}
-        end
-      else
-        {:cont, {:cont, socket}}
-      end
-    end)
-  end
-
-  # after_render
-  #
-  # This is the main entry point for the `:after_render` hook.
-
-  defp after_render(socket) do
-    # IO.puts("#{inspect(__MODULE__)}.after_render()")
-
-    socket
-    |> action_after_render()
-    |> plugin_after_render()
-  end
-
-  def action_after_render(socket) do
-    case socket.assigns.pax.action do
-      :index -> Index.after_render(socket)
-      # Detail does not do anything after render for now, skip it
-      # :new -> Detail.after_render(socket)
-      # :show -> Detail.after_render(socket)
-      # :edit -> Detail.after_render(socket)
-      _ -> socket
-    end
-  end
-
-  defp plugin_after_render(socket) do
-    %{plugins: plugins} = socket.assigns.pax
-
-    Enum.reduce(plugins, socket, fn plugin, socket ->
-      if function_exported?(plugin.module, :after_render, 2) do
-        plugin.module.after_render(plugin.opts, socket)
-      else
-        socket
-      end
+  def assign_pax_scope(socket_or_assigns, keyword_or_map) when is_map(keyword_or_map) or is_list(keyword_or_map) do
+    Enum.reduce(keyword_or_map, socket_or_assigns, fn {key, value}, acc ->
+      assign_pax_scope(acc, key, value)
     end)
   end
 end

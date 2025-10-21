@@ -1,7 +1,7 @@
 defmodule Pax.Admin.Dashboard.Live do
   # import Phoenix.LiveView
   use Phoenix.Component
-  import Pax.Admin.Context
+  import Pax.Admin
   import Pax.Components
 
   def render(site_mod, assigns) do

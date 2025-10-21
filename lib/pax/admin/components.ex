@@ -43,7 +43,7 @@ defmodule Pax.Admin.Components do
     """
   end
 
-  attr :pax_admin, Pax.Admin.Context, required: true
+  attr :pax_admin, Pax.Admin, required: true
 
   def admin_title(assigns) do
     ~H"""
@@ -89,8 +89,8 @@ defmodule Pax.Admin.Components do
     """
   end
 
-  attr :pax_admin, Pax.Admin.Context, required: true
-  attr :pax, Pax.Interface.Context, default: nil
+  attr :pax_admin, Pax.Admin, required: true
+  attr :pax, Pax, default: nil
   attr :live_action, :atom, default: nil
 
   def admin_breadcrumbs(assigns) do
@@ -145,7 +145,7 @@ defmodule Pax.Admin.Components do
     """
   end
 
-  attr :pax_admin, Pax.Admin.Context, required: true
+  attr :pax_admin, Pax.Admin, required: true
 
   def admin_menu(assigns) do
     ~H"""
@@ -176,7 +176,7 @@ defmodule Pax.Admin.Components do
     """
   end
 
-  attr :pax_admin, Pax.Admin.Context, required: true
+  attr :pax_admin, Pax.Admin, required: true
   attr :section, Pax.Admin.Section, default: nil
   attr :resources, :list, default: []
 

@@ -2,7 +2,7 @@ defmodule Pax.Plugins.Pagination do
   use Pax.Interface.Plugin
   use Phoenix.Component
   import Pax.Components
-  import Pax.Interface.Context
+  import Pax.Interface
   import Pax.Util.URI
 
   @default_objects_per_page 10

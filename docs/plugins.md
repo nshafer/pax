@@ -78,7 +78,7 @@ interface that allow the insertion of miscellaneous "tools" in the admin header,
 Then any plugin that wants to insert something into this area of the interface just defines the proper component:
 
 ```elixir
-attr :pax, Pax.Interface.Context, required: true
+attr :pax, Pax.Interface, required: true
 attr :opts, :map, required: true
 
 def index_header_secondary(assigns) do

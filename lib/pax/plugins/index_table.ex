@@ -10,7 +10,7 @@ defmodule Pax.Plugins.IndexTable do
   """
   use Pax.Interface.Plugin
   use Phoenix.Component
-  import Pax.Interface.Context
+  import Pax.Interface
   import Pax.Components
   import Pax.Field.Components
   import Pax.Util.URI
