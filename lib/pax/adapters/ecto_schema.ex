@@ -227,12 +227,12 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def create_object(%{repo: repo}, _object, changeset, _params) do
+  def create_object(%{repo: repo}, _object, changeset) do
     repo.insert(changeset)
   end
 
   @impl Pax.Adapter
-  def update_object(%{repo: repo}, _object, changeset, _params) do
+  def update_object(%{repo: repo}, _object, changeset) do
     repo.update(changeset)
   end
 end

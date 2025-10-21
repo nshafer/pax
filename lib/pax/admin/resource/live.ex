@@ -200,13 +200,13 @@ defmodule Pax.Admin.Resource.Live do
     resource.mod.change_object(object, params, socket)
   end
 
-  def create_object(object, changeset, params, socket) do
+  def create_object(object, changeset, socket) do
     %{resource: resource} = socket.assigns.pax_admin
-    resource.mod.create_object(object, changeset, params, socket)
+    resource.mod.create_object(object, changeset, socket)
   end
 
-  def update_object(object, changeset, params, socket) do
+  def update_object(object, changeset, socket) do
     %{resource: resource} = socket.assigns.pax_admin
-    resource.mod.update_object(object, changeset, params, socket)
+    resource.mod.update_object(object, changeset, socket)
   end
 end

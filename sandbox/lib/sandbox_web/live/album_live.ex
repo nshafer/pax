@@ -36,12 +36,12 @@ defmodule SandboxWeb.AlbumLive do
     Library.change_album(object, params)
   end
 
-  def create_object(_object, _changeset, params, _socket) do
-    Library.create_album(params)
+  def create_object(_object, changeset, _socket) do
+    Library.create_album(changeset.params)
   end
 
-  def update_object(object, _changeset, params, _socket) do
-    Library.update_album(object, params)
+  def update_object(object, changeset, _socket) do
+    Library.update_album(object, changeset.params)
   end
 
   def pax_plugins(_socket) do

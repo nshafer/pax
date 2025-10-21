@@ -16,14 +16,12 @@ defmodule Pax.Interface.Detail do
   @callback create_object(
               object :: Pax.Interface.object(),
               changeset :: Ecto.Changeset.t(),
-              params :: Phoenix.LiveView.unsigned_params(),
               socket :: Phoenix.LiveView.Socket.t()
             ) ::
               {:ok, Pax.Interface.object()} | {:error, Ecto.Changeset.t()}
   @callback update_object(
               object :: Pax.Interface.object(),
               changeset :: Ecto.Changeset.t(),
-              params :: Phoenix.LiveView.unsigned_params(),
               socket :: Phoenix.LiveView.Socket.t()
             ) ::
               {:ok, Pax.Interface.object()} | {:error, Ecto.Changeset.t()}
@@ -32,8 +30,8 @@ defmodule Pax.Interface.Detail do
     new_object: 1,
     get_object: 3,
     change_object: 3,
-    create_object: 4,
-    update_object: 4
+    create_object: 3,
+    update_object: 3
   ]
 
   defmacro __using__(_opts) do
@@ -43,10 +41,10 @@ defmodule Pax.Interface.Detail do
       def new_object(_socket), do: :not_implemented
       def get_object(_lookup, _scope, _socket), do: :not_implemented
       def change_object(_object, _params, _socket), do: :not_implemented
-      def create_object(_object, _changeset, _params, _socket), do: :not_implemented
-      def update_object(_object, _changeset, _params, _socket), do: :not_implemented
+      def create_object(_object, _changeset, _socket), do: :not_implemented
+      def update_object(_object, _changeset, _socket), do: :not_implemented
 
-      defoverridable new_object: 1, get_object: 3, change_object: 3, create_object: 4, update_object: 4
+      defoverridable new_object: 1, get_object: 3, change_object: 3, create_object: 3, update_object: 3
     end
   end
 
@@ -80,7 +78,7 @@ defmodule Pax.Interface.Detail do
     # IO.puts("#{inspect(__MODULE__)}.handle_event(:pax_save, #{inspect(params)})")
     %{module: module, adapter: adapter, action: action, object: object} = socket.assigns.pax
     changeset = change_object(module, adapter, object, params, socket)
-    save_object(module, adapter, action, object, changeset, params, socket)
+    save_object(module, adapter, action, object, changeset, socket)
   end
 
   # Catch-all for all other events that we don't care about
@@ -140,8 +138,8 @@ defmodule Pax.Interface.Detail do
     Pax.Adapter.change_object(adapter, object, params, fields)
   end
 
-  defp save_object(module, adapter, :new, object, changeset, params, socket) do
-    case create_object(module, adapter, object, changeset, params, socket) do
+  defp save_object(module, adapter, :new, object, changeset, socket) do
+    case create_object(module, adapter, object, changeset, socket) do
       {:ok, object} ->
         {
           :halt,
@@ -156,8 +154,8 @@ defmodule Pax.Interface.Detail do
     end
   end
 
-  defp save_object(module, adapter, :edit, object, changeset, params, socket) do
-    case update_object(module, adapter, object, changeset, params, socket) do
+  defp save_object(module, adapter, :edit, object, changeset, socket) do
+    case update_object(module, adapter, object, changeset, socket) do
       {:ok, object} ->
         {
           :halt,
@@ -172,40 +170,40 @@ defmodule Pax.Interface.Detail do
     end
   end
 
-  defp create_object(module, adapter, object, changeset, params, socket) do
-    case module.create_object(object, changeset, params, socket) do
-      :not_implemented -> adapter_create_object(adapter, object, changeset, params)
+  defp create_object(module, adapter, object, changeset, socket) do
+    case module.create_object(object, changeset, socket) do
+      :not_implemented -> adapter_create_object(adapter, object, changeset)
       {:ok, object} when is_map(object) -> {:ok, object}
       {:error, %Ecto.Changeset{} = changeset} -> {:error, changeset}
-      other -> raise "create_object/4 must return {:ok, object} or {:error, changeset}, got: #{inspect(other)}"
+      other -> raise "create_object/3 must return {:ok, object} or {:error, changeset}, got: #{inspect(other)}"
     end
   end
 
-  defp adapter_create_object(nil, _object, _changeset, _params) do
+  defp adapter_create_object(nil, _object, _changeset) do
     raise "Could not create the object. You must either define " <>
-            "a `create_object/4` callback, or configure a Pax.Adapter."
+            "a `create_object/3` callback, or configure a Pax.Adapter."
   end
 
-  defp adapter_create_object(adapter, object, changeset, params) do
-    Pax.Adapter.create_object(adapter, object, changeset, params)
+  defp adapter_create_object(adapter, object, changeset) do
+    Pax.Adapter.create_object(adapter, object, changeset)
   end
 
-  defp update_object(module, adapter, object, changeset, params, socket) do
-    case module.update_object(object, changeset, params, socket) do
-      :not_implemented -> adapter_update_object(adapter, object, changeset, params)
+  defp update_object(module, adapter, object, changeset, socket) do
+    case module.update_object(object, changeset, socket) do
+      :not_implemented -> adapter_update_object(adapter, object, changeset)
       {:ok, object} when is_map(object) -> {:ok, object}
       {:error, %Ecto.Changeset{} = changeset} -> {:error, changeset}
-      other -> raise "update_object/4 must return {:ok, object} or {:error, changeset}, got: #{inspect(other)}"
+      other -> raise "update_object/3 must return {:ok, object} or {:error, changeset}, got: #{inspect(other)}"
     end
   end
 
-  defp adapter_update_object(nil, _object, _params, _changeset) do
+  defp adapter_update_object(nil, _object, _changeset) do
     raise "Could not update the object. You must either define " <>
-            "a `update_object/4` callback, or configure a Pax.Adapter."
+            "a `update_object/3` callback, or configure a Pax.Adapter."
   end
 
-  defp adapter_update_object(adapter, object, changeset, params) do
-    Pax.Adapter.update_object(adapter, object, changeset, params)
+  defp adapter_update_object(adapter, object, changeset) do
+    Pax.Adapter.update_object(adapter, object, changeset)
   end
 
   defp maybe_redir_after_save(socket, object) do

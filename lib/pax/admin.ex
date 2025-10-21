@@ -385,8 +385,8 @@ defmodule Pax.Admin do
         defdelegate new_object(socket), to: Pax.Admin.Resource.Live
         defdelegate get_object(lookup, scope, socket), to: Pax.Admin.Resource.Live
         defdelegate change_object(object, params, socket), to: Pax.Admin.Resource.Live
-        defdelegate create_object(object, changeset, params, socket), to: Pax.Admin.Resource.Live
-        defdelegate update_object(object, changeset, params, socket), to: Pax.Admin.Resource.Live
+        defdelegate create_object(object, changeset, socket), to: Pax.Admin.Resource.Live
+        defdelegate update_object(object, changeset, socket), to: Pax.Admin.Resource.Live
       end
     end
   end

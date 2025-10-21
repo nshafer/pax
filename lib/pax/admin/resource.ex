@@ -52,14 +52,12 @@ defmodule Pax.Admin.Resource do
   @callback create_object(
               object :: Pax.Interface.object(),
               changeset :: Ecto.Changeset.t(),
-              params :: Phoenix.LiveView.unsigned_params(),
               socket :: Phoenix.LiveView.Socket.t()
             ) ::
               {:ok, Pax.Interface.object()} | {:error, Ecto.Changeset.t()}
   @callback update_object(
               object :: Pax.Interface.object(),
               changeset :: Ecto.Changeset.t(),
-              params :: Phoenix.LiveView.unsigned_params(),
               socket :: Phoenix.LiveView.Socket.t()
             ) ::
               {:ok, Pax.Interface.object()} | {:error, Ecto.Changeset.t()}
@@ -68,8 +66,8 @@ defmodule Pax.Admin.Resource do
     new_object: 1,
     get_object: 3,
     change_object: 3,
-    create_object: 4,
-    update_object: 4
+    create_object: 3,
+    update_object: 3
   ]
 
   defmacro __using__(_opts) do
@@ -108,10 +106,10 @@ defmodule Pax.Admin.Resource do
       def new_object(_socket), do: :not_implemented
       def get_object(_lookup, _scope, _socket), do: :not_implemented
       def change_object(_object, _params, _socket), do: :not_implemented
-      def create_object(_object, _changeset, _params, _socket), do: :not_implemented
-      def update_object(_object, _changeset, _params, _socket), do: :not_implemented
+      def create_object(_object, _changeset, _socket), do: :not_implemented
+      def update_object(_object, _changeset, _socket), do: :not_implemented
 
-      defoverridable new_object: 1, get_object: 3, change_object: 3, create_object: 4, update_object: 4
+      defoverridable new_object: 1, get_object: 3, change_object: 3, create_object: 3, update_object: 3
     end
   end
 end
