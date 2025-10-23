@@ -15,7 +15,8 @@ defmodule Mix.Tasks.Watch do
       Task.async(Esbuild, :install_and_run, [:pax, ~w(--sourcemap=inline --watch)]),
       Task.async(DartSass, :install_and_run, [:pax, ~w(--embed-source-map --watch)]),
       Task.async(Esbuild, :install_and_run, [:pax_admin, ~w(--sourcemap=inline --watch)]),
-      Task.async(DartSass, :install_and_run, [:pax_admin, ~w(--embed-source-map --watch)])
+      Task.async(DartSass, :install_and_run, [:pax_admin, ~w(--embed-source-map --watch)]),
+      Task.async(Phoenix.Copy, :watch, [:static])
     ]
 
     Task.await_many(tasks, :infinity)

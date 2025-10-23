@@ -72,15 +72,15 @@ defmodule Pax.MixProject do
       # test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       build: ["assets.deploy", "hex.build"],
       "assets.setup": ["sass.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["assets.build.pax", "assets.build.pax_admin"],
+      "assets.build": ["assets.build.pax", "assets.build.pax_admin", "phx.copy static"],
       "assets.build.pax": ["sass pax --embed-source-map", "esbuild pax"],
       "assets.build.pax_admin": ["sass pax_admin --embed-source-map", "esbuild pax_admin"],
-      "assets.deploy": ["assets.deploy.pax", "assets.deploy.pax_admin"],
+      "assets.deploy": ["assets.deploy.pax", "assets.deploy.pax_admin", "phx.copy static"],
       "assets.deploy.pax": ["sass pax --no-source-map --style=compressed", "esbuild pax --minify"],
       "assets.deploy.pax_admin": ["sass pax_admin --no-source-map --style=compressed", "esbuild pax_admin --minify"],
       package: ["assets.deploy", "phx.digest"],
       "build.unpack": ["package", "hex.build --unpack"],
-      clean: ["clean", "phx.digest.clean --all"]
+      clean: ["clean", "cmd rm -rf priv/{assets,static}"]
     ]
   end
 end
