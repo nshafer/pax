@@ -1,8 +1,11 @@
 # Pax
 
-**DO NOT USE THIS MODULE... YET**
-
-This module is under heavy development, and is not ready for anyone to use it yet.
+> [!CAUTION]
+> **DO NOT USE THIS MODULE... YET**
+> 
+> This module is under heavy development, and is not ready for anyone to use it yet. It is poorly documented, poorly
+> tested, and in a heavy state of change. Nothing is being gracefully deprecated or even documented when it changes,
+> until the API stabilizes.
 
 Pax (Phoenix Admin eXtensions) is a toolkit for adding CRUD functionality to LiveViews, as well as
 an admin interface built on those tools.
@@ -18,7 +21,7 @@ Add `pax` to your list of dependencies in "mix.exs":
 ```elixir
 def deps do
   [
-    {:pax, "~> 0.1.0"}
+    {:pax, "~> 0.0.1-dev.20251023"}
   ]
 end
 ```
@@ -48,3 +51,10 @@ This is only needed if you're using `Pax.Interface` directly, and not needed if 
 </head>
 ```
 
+### Pax.Interface
+
+Create some modules that implement `Pax.Interface`.with `use Pax.Interface`. Now draw the rest of the owl.
+
+### Pax.Admin
+
+Create an admin with `use Pax.Admin`, then create some resources with `use Pax.Admin.Resource`. Now draw the rest of the owl.

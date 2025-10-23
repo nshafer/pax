@@ -4,7 +4,7 @@ defmodule Pax.MixProject do
   def project do
     [
       app: :pax,
-      version: "0.0.1-dev",
+      version: "0.0.1-dev.20251023",
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -79,8 +79,14 @@ defmodule Pax.MixProject do
       "assets.deploy.pax": ["sass pax --no-source-map --style=compressed", "esbuild pax --minify"],
       "assets.deploy.pax_admin": ["sass pax_admin --no-source-map --style=compressed", "esbuild pax_admin --minify"],
       package: ["assets.deploy", "phx.digest"],
+      publish: ["package", &hex_publish/1],
       "build.unpack": ["package", "hex.build --unpack"],
       clean: ["clean", "cmd rm -rf priv/{assets,static}"]
     ]
+  end
+
+  defp hex_publish(_) do
+    Mix.ensure_application!(:hex)
+    Mix.Task.run("hex.publish", [])
   end
 end
