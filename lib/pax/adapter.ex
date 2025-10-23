@@ -20,7 +20,7 @@ defmodule Pax.Adapter do
           | MapSet.t()
 
   @type lookup :: %{atom() => any()}
-  @type scope :: %{atom() => any()}
+  @type criteria :: %{atom() => any()}
 
   @typedoc "A Phoenix.LiveView socket"
   @type socket :: Phoenix.LiveView.Socket.t()
@@ -46,13 +46,13 @@ defmodule Pax.Adapter do
 
   @callback plural_name(opts()) :: String.t()
 
-  @callback count_objects(opts(), scope()) :: integer()
+  @callback count_objects(opts(), criteria()) :: integer()
 
-  @callback list_objects(opts(), scope()) :: [Interface.object()]
+  @callback list_objects(opts(), criteria()) :: [Interface.object()]
 
   @callback new_object(opts(), socket()) :: Interface.object()
 
-  @callback get_object(opts(), lookup(), scope(), socket()) :: Interface.object()
+  @callback get_object(opts(), lookup(), criteria(), socket()) :: Interface.object()
 
   @callback id_fields(opts()) :: [atom()] | nil
 
@@ -131,14 +131,14 @@ defmodule Pax.Adapter do
     adapter.module.plural_name(adapter.opts)
   end
 
-  @spec count_objects(t(), scope()) :: integer()
-  def count_objects(%Pax.Adapter{} = adapter, scope) do
-    adapter.module.count_objects(adapter.opts, scope)
+  @spec count_objects(t(), criteria()) :: integer()
+  def count_objects(%Pax.Adapter{} = adapter, criteria) do
+    adapter.module.count_objects(adapter.opts, criteria)
   end
 
-  @spec list_objects(t(), scope()) :: [Interface.object()]
-  def list_objects(%Pax.Adapter{} = adapter, scope) do
-    adapter.module.list_objects(adapter.opts, scope)
+  @spec list_objects(t(), criteria()) :: [Interface.object()]
+  def list_objects(%Pax.Adapter{} = adapter, criteria) do
+    adapter.module.list_objects(adapter.opts, criteria)
   end
 
   @spec new_object(t(), socket()) :: Interface.object()
@@ -146,9 +146,9 @@ defmodule Pax.Adapter do
     adapter.module.new_object(adapter.opts, socket)
   end
 
-  @spec get_object(t(), lookup(), scope(), socket()) :: Interface.object()
-  def get_object(%Pax.Adapter{} = adapter, lookup, scope, socket) do
-    adapter.module.get_object(adapter.opts, lookup, scope, socket)
+  @spec get_object(t(), lookup(), criteria(), socket()) :: Interface.object()
+  def get_object(%Pax.Adapter{} = adapter, lookup, criteria, socket) do
+    adapter.module.get_object(adapter.opts, lookup, criteria, socket)
   end
 
   # TODO: Make this always return a string, return nil if adapter returns nil. Remove `init_adapter_object_name`

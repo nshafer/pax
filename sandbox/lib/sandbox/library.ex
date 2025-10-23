@@ -217,11 +217,11 @@ defmodule Sandbox.Library do
     Repo.all(Album)
   end
 
-  def list_albums(scope) do
+  def list_albums(criteria) do
     from(a in Album)
-    |> filter_where(scope)
-    |> sort_albums(scope)
-    |> paginate_albums(scope)
+    |> filter_where(criteria)
+    |> sort_albums(criteria)
+    |> paginate_albums(criteria)
     |> Repo.all()
   end
 
@@ -229,18 +229,18 @@ defmodule Sandbox.Library do
     from(query, where: ^where)
   end
 
-  defp filter_where(query, _scope), do: query
+  defp filter_where(query, _criteria), do: query
 
-  defp sort_albums(query, scope) do
-    case Map.get(scope, :order_by) do
+  defp sort_albums(query, criteria) do
+    case Map.get(criteria, :order_by) do
       nil -> query
       order_by -> query |> order_by(^order_by)
     end
   end
 
-  defp paginate_albums(query, scope) do
-    limit = Map.get(scope, :limit, 10)
-    offset = Map.get(scope, :offset, 0)
+  defp paginate_albums(query, criteria) do
+    limit = Map.get(criteria, :limit, 10)
+    offset = Map.get(criteria, :offset, 0)
 
     query
     |> limit(^limit)
@@ -267,9 +267,9 @@ defmodule Sandbox.Library do
   """
   def get_album!(id), do: Repo.get!(Album, id)
 
-  def get_album!(lookup, scope) do
+  def get_album!(lookup, criteria) do
     from(a in Album)
-    |> filter_where(scope)
+    |> filter_where(criteria)
     |> Repo.get_by!(lookup)
   end
 

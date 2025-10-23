@@ -16,20 +16,20 @@ defmodule SandboxWeb.AlbumLive do
   #   {Pax.Adapters.EctoSchema, repo: Sandbox.Repo, schema: Sandbox.Library.Album}
   # end
 
-  def count_objects(_scope, _socket) do
+  def count_objects(_criteria, _socket) do
     Library.count_albums()
   end
 
-  def list_objects(scope, _socket) do
-    Library.list_albums(scope)
+  def list_objects(criteria, _socket) do
+    Library.list_albums(criteria)
   end
 
   def new_object(_socket) do
     Library.new_album()
   end
 
-  def get_object(lookup, scope, _socket) do
-    Library.get_album!(lookup, scope)
+  def get_object(lookup, criteria, _socket) do
+    Library.get_album!(lookup, criteria)
   end
 
   def change_object(object, params, _socket) do
@@ -77,7 +77,7 @@ defmodule SandboxWeb.AlbumLive do
         {:inserted_at, :datetime, immutable: true, except: :index},
         {:updated_at, :datetime, immutable: true, except: :index}
       ],
-      default_scope: [
+      default_criteria: [
         order_by: :name,
         where: [
           # artist_id: 6

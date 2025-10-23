@@ -4,8 +4,8 @@ defmodule Pax.Interface.Index do
   require Logger
   alias Phoenix.LiveView.LiveStream
 
-  @callback count_objects(scope :: map(), socket :: Phoenix.LiveView.Socket.t()) :: non_neg_integer()
-  @callback list_objects(scope :: map(), socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Interface.object()]
+  @callback count_objects(criteria :: map(), socket :: Phoenix.LiveView.Socket.t()) :: non_neg_integer()
+  @callback list_objects(criteria :: map(), socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Interface.object()]
 
   @optional_callbacks [
     count_objects: 2,
@@ -16,8 +16,8 @@ defmodule Pax.Interface.Index do
     quote do
       @behaviour Pax.Interface.Index
 
-      def count_objects(_scope, _socket), do: :not_implemented
-      def list_objects(_scope, _socket), do: :not_implemented
+      def count_objects(_criteria, _socket), do: :not_implemented
+      def list_objects(_criteria, _socket), do: :not_implemented
 
       defoverridable count_objects: 2, list_objects: 2
     end
@@ -68,22 +68,22 @@ defmodule Pax.Interface.Index do
   end
 
   defp init_object_count(socket) do
-    %{module: module, adapter: adapter, scope: scope} = socket.assigns.pax
+    %{module: module, adapter: adapter, criteria: criteria} = socket.assigns.pax
 
-    case module.count_objects(scope, socket) do
-      :not_implemented -> init_adapter_count_objects(adapter, scope)
+    case module.count_objects(criteria, socket) do
+      :not_implemented -> init_adapter_count_objects(adapter, criteria)
       count when is_integer(count) and count >= 0 -> count
       other -> raise "count_objects/2 must return a non-negative integer, got: #{inspect(other)}"
     end
   end
 
-  defp init_adapter_count_objects(nil, _scope) do
+  defp init_adapter_count_objects(nil, _criteria) do
     raise "Could not get a total count of objects for the page. You must either define " <>
             "a `count_objects/2` callback or configure a Pax.Adapter."
   end
 
-  defp init_adapter_count_objects(adapter, scope) do
-    Pax.Adapter.count_objects(adapter, scope)
+  defp init_adapter_count_objects(adapter, criteria) do
+    Pax.Adapter.count_objects(adapter, criteria)
   end
 
   # Object streaming
@@ -168,21 +168,21 @@ defmodule Pax.Interface.Index do
   # end
 
   defp init_objects(socket) do
-    %{module: module, adapter: adapter, scope: scope} = socket.assigns.pax
+    %{module: module, adapter: adapter, criteria: criteria} = socket.assigns.pax
 
-    case module.list_objects(scope, socket) do
-      :not_implemented -> init_adapter_list_objects(adapter, scope)
+    case module.list_objects(criteria, socket) do
+      :not_implemented -> init_adapter_list_objects(adapter, criteria)
       objects when is_list(objects) -> objects
       other -> raise "list_objects/2 must return a list of objects, got: #{inspect(other)}"
     end
   end
 
-  defp init_adapter_list_objects(nil, _scope) do
+  defp init_adapter_list_objects(nil, _criteria) do
     raise "Could not list objects for the page. You must either define " <>
             "a `list_objects/2` callback, or configure a Pax.Adapter."
   end
 
-  defp init_adapter_list_objects(adapter, scope) do
-    Pax.Adapter.list_objects(adapter, scope)
+  defp init_adapter_list_objects(adapter, criteria) do
+    Pax.Adapter.list_objects(adapter, criteria)
   end
 end

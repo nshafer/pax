@@ -52,7 +52,7 @@ defmodule SandboxWeb.ArtistLive do
         {:inserted_at, :datetime, immutable: true, except: :index},
         {:updated_at, :datetime, immutable: true, except: :index}
       ],
-      default_scope: [
+      default_criteria: [
         # order_by: :name
         order_by: [desc_nulls_last: :rating, asc: :name]
         # where: [current_label_id: 1]

@@ -75,7 +75,7 @@ defmodule SandboxWeb.LabelLive do
         {:inserted_at, :datetime, immutable: true, except: :index},
         {:updated_at, :datetime, immutable: true, except: :index}
       ],
-      default_scope: [
+      default_criteria: [
         order_by: :name
         # order_by: [asc: :name]
         # order_by: [asc_nulls_first: :name]

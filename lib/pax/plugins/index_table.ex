@@ -48,15 +48,15 @@ defmodule Pax.Plugins.IndexTable do
     socket =
       socket
       |> assign_pax_private(:index_table, :default_sort_params, default_sort_params(socket))
-      |> maybe_assign_sort_scope(params)
+      |> maybe_assign_sort_criteria(params)
 
     {:cont, socket}
   end
 
-  defp maybe_assign_sort_scope(socket, params) do
+  defp maybe_assign_sort_criteria(socket, params) do
     # TODO: support multiple sorts in params
     with {:ok, order_by} <- get_sort(params, socket) do
-      assign_pax_scope(socket, order_by: order_by)
+      assign_pax_criteria(socket, order_by: order_by)
     else
       :not_found ->
         socket
@@ -137,7 +137,7 @@ defmodule Pax.Plugins.IndexTable do
 
   @impl true
   def after_params(_opts, socket) do
-    with {:ok, sorts} <- get_sorts(socket.assigns.pax.scope) do
+    with {:ok, sorts} <- get_sorts(socket.assigns.pax.criteria) do
       # Logger.warning("[IndexTable] sorts #{inspect(sorts)}")
       {:cont, assign_pax_private(socket, :index_table, :sorts, sorts)}
     else
@@ -176,9 +176,9 @@ defmodule Pax.Plugins.IndexTable do
       {:warning, "unexpected entry in order_by: #{inspect(entry)}, expected atom or tuple of `{direction, field}`"}
   end
 
-  defp get_sorts(%{order_by: order_by}), do: {:warning, "order_by in scope is unsupported: #{inspect(order_by)}"}
+  defp get_sorts(%{order_by: order_by}), do: {:warning, "order_by in criteria is unsupported: #{inspect(order_by)}"}
 
-  defp get_sorts(_scope), do: :not_found
+  defp get_sorts(_criteria), do: :not_found
 
   @impl true
   def render(%{placement: placement} = opts, placement, %{pax: %{action: :index}} = assigns),
@@ -390,7 +390,7 @@ defmodule Pax.Plugins.IndexTable do
 
   defp sort_link(_field, _assigns), do: nil
 
-  defp default_sort_params(%{assigns: %{pax: %{fields: fields, default_scope: %{order_by: order_by}}}}) do
+  defp default_sort_params(%{assigns: %{pax: %{fields: fields, default_criteria: %{order_by: order_by}}}}) do
     field_sorts =
       for field <- fields, field.opts[:sort] != nil, into: %{} do
         {field.opts[:sort], %{asc: field.opts[:sort_asc] || :asc, desc: field.opts[:sort_desc] || :desc}}

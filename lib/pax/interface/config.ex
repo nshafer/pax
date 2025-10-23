@@ -197,11 +197,11 @@ defmodule Pax.Interface.Config do
   * `function` - A function that takes the socket and returns a list of field names as atoms.
 
 
-  ### `default_scope`
+  ### `default_criteria`
 
-  The default scope to be given to the adapter when fetching objects.
+  The default criteria to be given to the adapter when fetching objects.
 
-  to use for the adapter. This is a map of options that are passed directly to the adapter. This is
+  This is a map of criteria that are passed directly to the adapter. This is
   useful for setting default values for things like `limit`, `offset`, `order_by`, etc. This is passed directly to the
   adapter, so the keys and values should match the keys and values expected by the adapter.
 
@@ -253,7 +253,7 @@ defmodule Pax.Interface.Config do
       lookup_params: [:list, {:function, 1, :list}],
       lookup_glob: [:string, {:function, 1, :string}],
       id_fields: [:list, {:function, 1, :list}],
-      default_scope: [:map, :list, {:function, 1, [:map, :list]}]
+      default_criteria: [:map, :list, {:function, 1, [:map, :list]}]
     }
   end
 

@@ -77,7 +77,7 @@ defmodule Pax.Interface.Live do
       |> assign_plural_name()
       |> assign_index_path(params)
       |> assign_new_path(params)
-      |> assign_default_scope()
+      |> assign_default_criteria()
 
     {:cont, socket}
   end

@@ -32,8 +32,8 @@ defmodule Pax.Admin.Resource do
 
   # Pax.Interface.Index callbacks
 
-  @callback count_objects(scope :: map(), socket :: Phoenix.LiveView.Socket.t()) :: non_neg_integer()
-  @callback list_objects(scope :: map(), socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Interface.object()]
+  @callback count_objects(criteria :: map(), socket :: Phoenix.LiveView.Socket.t()) :: non_neg_integer()
+  @callback list_objects(criteria :: map(), socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Interface.object()]
 
   @optional_callbacks [
     count_objects: 2,
@@ -43,7 +43,8 @@ defmodule Pax.Admin.Resource do
   # Pax.Interface.Detail callbacks
 
   @callback new_object(socket :: Phoenix.LiveView.Socket.t()) :: Pax.Interface.object()
-  @callback get_object(lookup :: map(), scope :: map(), socket :: Phoenix.LiveView.Socket.t()) :: Pax.Interface.object()
+  @callback get_object(lookup :: map(), criteria :: map(), socket :: Phoenix.LiveView.Socket.t()) ::
+              Pax.Interface.object()
   @callback change_object(
               object :: Pax.Interface.object(),
               params :: Phoenix.LiveView.unsigned_params(),
@@ -96,15 +97,15 @@ defmodule Pax.Admin.Resource do
 
       # Pax.Interface.Index callbacks
 
-      def count_objects(_scope, _socket), do: :not_implemented
-      def list_objects(_scope, _socket), do: :not_implemented
+      def count_objects(_criteria, _socket), do: :not_implemented
+      def list_objects(_criteria, _socket), do: :not_implemented
 
       defoverridable count_objects: 2, list_objects: 2
 
       # Pax.Interface.Detail callbacks
 
       def new_object(_socket), do: :not_implemented
-      def get_object(_lookup, _scope, _socket), do: :not_implemented
+      def get_object(_lookup, _criteria, _socket), do: :not_implemented
       def change_object(_object, _params, _socket), do: :not_implemented
       def create_object(_object, _changeset, _socket), do: :not_implemented
       def update_object(_object, _changeset, _socket), do: :not_implemented

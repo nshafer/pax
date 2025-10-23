@@ -118,9 +118,9 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def count_objects(%{repo: repo, schema: schema}, scope) do
+  def count_objects(%{repo: repo, schema: schema}, criteria) do
     schema
-    |> build_query(scope)
+    |> build_query(criteria)
     |> repo.aggregate(:count)
   end
 
@@ -130,16 +130,16 @@ defmodule Pax.Adapters.EctoSchema do
   TODO: advanced filtering that allows different types of queries/operators
   """
   @impl Pax.Adapter
-  def list_objects(%{repo: repo, schema: schema}, scope) do
+  def list_objects(%{repo: repo, schema: schema}, criteria) do
     schema
-    |> build_query(scope)
-    |> sort(scope)
-    |> paginate(scope)
-    |> filter_where(scope)
+    |> build_query(criteria)
+    |> filter_where(criteria)
+    |> sort(criteria)
+    |> paginate(criteria)
     |> repo.all()
   end
 
-  defp build_query(schema, _scope) do
+  defp build_query(schema, _criteria) do
     from(o in schema)
   end
 
@@ -147,7 +147,7 @@ defmodule Pax.Adapters.EctoSchema do
     from q in query, order_by: ^order_by
   end
 
-  defp sort(query, _scope), do: query
+  defp sort(query, _criteria), do: query
 
   defp paginate(query, %{limit: limit, offset: offset}) do
     from q in query, limit: ^limit, offset: ^offset
@@ -157,13 +157,14 @@ defmodule Pax.Adapters.EctoSchema do
     from q in query, limit: ^limit
   end
 
-  defp paginate(query, _scope), do: query
+  defp paginate(query, _criteria), do: query
 
+  # TODO: just use the `filter` key from criteria
   defp filter_where(query, %{where: where}) do
     from q in query, where: ^where
   end
 
-  defp filter_where(query, _scope), do: query
+  defp filter_where(query, _criteria), do: query
 
   @impl Pax.Adapter
   def new_object(%{schema: schema}, _socket) do
@@ -176,10 +177,10 @@ defmodule Pax.Adapters.EctoSchema do
   TODO: advanced filtering
   """
   @impl Pax.Adapter
-  def get_object(%{repo: repo, schema: schema}, lookup, scope, _socket) do
+  def get_object(%{repo: repo, schema: schema}, lookup, criteria, _socket) do
     schema
-    |> build_query(scope)
-    |> filter_where(scope)
+    |> build_query(criteria)
+    |> filter_where(criteria)
     |> filter_lookup(lookup)
     |> repo.one!()
   end

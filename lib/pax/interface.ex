@@ -29,20 +29,37 @@ defmodule Pax.Interface do
   * `show_path` - The path to the show page
   * `edit_path` - The path to the edit page
   * `fields` - A list of fields to display in the index page
-  * `scope` - A map of scope values to use for the adapter, see the [Scope](#scope) section
+  * `criteria` - A map of various criteria for loading data, see the [Criteria](#criteria) section
   * `private` - A map of private values for pax internals and plugins to use, see the [Private](#private) section
 
-  ### Scope
+  ### Criteria
 
-  The `:scope` map is used to pass information to the adapter for it to do some of its basic operations, such as
-  fetching objects for the index pages, or fetching individual objects for the show, edit and delete pages. The main
-  purpose of the scope is to decouple the interface, plugins and implementing module from the adapter, so that the
-  adapter is not concerned with any of those things, it simply operates on a set of expected keys in the scope. In this
-  way the adapter is only loosely coupled with the rest of the system.
+  The `:criteria` map is used to pass information to the data loading callbacks or the adapter for basic operations,
+  such as fetching objects for the index pages, or fetching individual objects for the show, edit and delete pages.
+  The main purpose of the criteria is to decouple the interface and plugins from the process of loading data, so they
+  can concentrate on building the UI and handling user interactions, and just instruct the data loading layer on what
+  to fetch with the given criteria.
 
-  Any keys can be set in the scope, since it's a map, but adapter(s) will only be expecting certain keys to be set,
+  Any keys can be set in the criteria, since it's a map, but adapter(s) will only be expecting certain keys to be set,
   and the interface and plugins will only set certain keys. All of these interactions should be documented in the
   respective modules.
+
+  Example:
+
+      %{
+        search: "rock",
+        filter: %{
+          artist_id: 123,
+          %{
+            field: :release_year,
+            op: :>=,
+            value: 2000
+          }
+        },
+        order_by: [asc_nulls_first: :rating],
+        limit: 10,
+        offset: 10,
+      }
 
   ### Private
 
@@ -75,8 +92,8 @@ defmodule Pax.Interface do
             edit_path: nil,
             id_fields: [],
             fields: [],
-            default_scope: %{},
-            scope: %{},
+            default_criteria: %{},
+            criteria: %{},
             private: %{}
 
   @type object :: %{atom() => any()}
@@ -203,32 +220,32 @@ defmodule Pax.Interface do
   end
 
   @doc """
-  Assigns a value to the `:scope` map in the `:pax` assign in the socket or assigns map.
+  Assigns a value to the `:criteria` map in the `:pax` assign in the socket or assigns map.
   """
 
-  def assign_pax_scope(socket_or_assigns, key, value)
+  def assign_pax_criteria(socket_or_assigns, key, value)
 
-  def assign_pax_scope(%Phoenix.LiveView.Socket{} = socket, key, value) do
-    scope =
+  def assign_pax_criteria(%Phoenix.LiveView.Socket{} = socket, key, value) do
+    criteria =
       socket.assigns
       |> Map.get(:pax, %Pax.Interface{})
-      |> Map.get(:scope, %{})
+      |> Map.get(:criteria, %{})
 
-    assign_pax(socket, :scope, Map.put(scope, key, value))
+    assign_pax(socket, :criteria, Map.put(criteria, key, value))
   end
 
-  def assign_pax_scope(%{} = assigns, key, value) do
-    scope =
+  def assign_pax_criteria(%{} = assigns, key, value) do
+    criteria =
       assigns
       |> Map.get(:pax, %Pax.Interface{})
-      |> Map.get(:scope, %{})
+      |> Map.get(:criteria, %{})
 
-    assign_pax(assigns, :scope, Map.put(scope, key, value))
+    assign_pax(assigns, :criteria, Map.put(criteria, key, value))
   end
 
-  def assign_pax_scope(socket_or_assigns, keyword_or_map) when is_map(keyword_or_map) or is_list(keyword_or_map) do
+  def assign_pax_criteria(socket_or_assigns, keyword_or_map) when is_map(keyword_or_map) or is_list(keyword_or_map) do
     Enum.reduce(keyword_or_map, socket_or_assigns, fn {key, value}, acc ->
-      assign_pax_scope(acc, key, value)
+      assign_pax_criteria(acc, key, value)
     end)
   end
 end

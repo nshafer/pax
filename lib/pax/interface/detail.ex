@@ -7,7 +7,8 @@ defmodule Pax.Interface.Detail do
   require Logger
 
   @callback new_object(socket :: Phoenix.LiveView.Socket.t()) :: Pax.Interface.object()
-  @callback get_object(lookup :: map(), scope :: map(), socket :: Phoenix.LiveView.Socket.t()) :: Pax.Interface.object()
+  @callback get_object(lookup :: map(), criteria :: map(), socket :: Phoenix.LiveView.Socket.t()) ::
+              Pax.Interface.object()
   @callback change_object(
               object :: Pax.Interface.object(),
               params :: Phoenix.LiveView.unsigned_params(),
@@ -39,7 +40,7 @@ defmodule Pax.Interface.Detail do
       @behaviour Pax.Interface.Detail
 
       def new_object(_socket), do: :not_implemented
-      def get_object(_lookup, _scope, _socket), do: :not_implemented
+      def get_object(_lookup, _criteria, _socket), do: :not_implemented
       def change_object(_object, _params, _socket), do: :not_implemented
       def create_object(_object, _changeset, _socket), do: :not_implemented
       def update_object(_object, _changeset, _socket), do: :not_implemented

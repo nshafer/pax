@@ -54,7 +54,7 @@ defmodule Pax.Plugins.Pagination do
         |> assign_pax_private(:pagination, limit: limit)
         |> assign_pax_private(:pagination, page: page)
         |> assign_pax_private(:pagination, page_input_has_errors: false)
-        |> assign_pax_scope(limit: limit, offset: offset)
+        |> assign_pax_criteria(limit: limit, offset: offset)
 
       {:cont, socket}
     else

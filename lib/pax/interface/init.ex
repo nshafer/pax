@@ -356,18 +356,18 @@ defmodule Pax.Interface.Init do
     end
   end
 
-  def assign_default_scope(socket) do
-    default_scope = init_default_scope(socket)
+  def assign_default_criteria(socket) do
+    default_criteria = init_default_criteria(socket)
 
     socket
-    |> assign_pax(:default_scope, default_scope)
-    |> assign_pax(:scope, default_scope)
+    |> assign_pax(:default_criteria, default_criteria)
+    |> assign_pax(:criteria, default_criteria)
   end
 
-  def init_default_scope(socket) do
+  def init_default_criteria(socket) do
     %{config: config} = socket.assigns.pax
 
-    case Pax.Config.fetch(config, :default_scope, [socket]) do
+    case Pax.Config.fetch(config, :default_criteria, [socket]) do
       {:ok, value} -> Map.new(value)
       :error -> %{}
     end
@@ -380,11 +380,11 @@ defmodule Pax.Interface.Init do
   end
 
   def init_object(params, uri, socket) do
-    %{module: module, adapter: adapter, action: action, scope: scope} = socket.assigns.pax
+    %{module: module, adapter: adapter, action: action, criteria: criteria} = socket.assigns.pax
 
     case action do
       :new -> init_new_object(module, adapter, socket)
-      action when action in [:show, :edit] -> init_get_object(module, adapter, scope, params, uri, socket)
+      action when action in [:show, :edit] -> init_get_object(module, adapter, criteria, params, uri, socket)
       _ -> nil
     end
   end
@@ -406,11 +406,11 @@ defmodule Pax.Interface.Init do
     Pax.Adapter.new_object(adapter, socket)
   end
 
-  defp init_get_object(module, adapter, scope, params, uri, socket) do
+  defp init_get_object(module, adapter, criteria, params, uri, socket) do
     lookup = init_lookup(params, uri, socket)
 
-    case module.get_object(lookup, scope, socket) do
-      :not_implemented -> init_adapter_get_object(adapter, lookup, scope, socket)
+    case module.get_object(lookup, criteria, socket) do
+      :not_implemented -> init_adapter_get_object(adapter, lookup, criteria, socket)
       object when is_map(object) -> object
       other -> raise "get_object/3 must return an object (map), got: #{inspect(other)}"
     end
@@ -427,13 +427,13 @@ defmodule Pax.Interface.Init do
     end
   end
 
-  defp init_adapter_get_object(nil, _lookup, _scope, _socket) do
+  defp init_adapter_get_object(nil, _lookup, _criteria, _socket) do
     raise "Could not get the object for the page. You must either define " <>
             "a `get_object/3` callback, or configure a Pax.Adapter."
   end
 
-  defp init_adapter_get_object(adapter, lookup, scope, socket) do
-    Pax.Adapter.get_object(adapter, lookup, scope, socket)
+  defp init_adapter_get_object(adapter, lookup, criteria, socket) do
+    Pax.Adapter.get_object(adapter, lookup, criteria, socket)
   end
 
   defp construct_lookup_map(params, socket) do

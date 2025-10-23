@@ -173,14 +173,14 @@ defmodule Pax.Admin.Resource.Live do
 
   # Pax.Interface.Index callbacks
 
-  def count_objects(scope, socket) do
+  def count_objects(criteria, socket) do
     %{resource: resource} = socket.assigns.pax_admin
-    resource.mod.count_objects(scope, socket)
+    resource.mod.count_objects(criteria, socket)
   end
 
-  def list_objects(scope, socket) do
+  def list_objects(criteria, socket) do
     %{resource: resource} = socket.assigns.pax_admin
-    resource.mod.list_objects(scope, socket)
+    resource.mod.list_objects(criteria, socket)
   end
 
   # Pax.Interface.Detail callbacks
@@ -190,9 +190,9 @@ defmodule Pax.Admin.Resource.Live do
     resource.mod.new_object(socket)
   end
 
-  def get_object(lookup, scope, socket) do
+  def get_object(lookup, criteria, socket) do
     %{resource: resource} = socket.assigns.pax_admin
-    resource.mod.get_object(lookup, scope, socket)
+    resource.mod.get_object(lookup, criteria, socket)
   end
 
   def change_object(object, params, socket) do
