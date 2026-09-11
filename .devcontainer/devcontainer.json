@@ -1,0 +1,29 @@
+{
+  "name": "pax-devc",
+  "dockerComposeFile": "docker-compose.yaml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/pax",
+  "remoteUser": "devc",
+  "remoteEnv": {
+    "LANG": "en_US.UTF-8",
+    "LC_ALL": "en_US.UTF-8",
+    "TZ": "${localEnv:TZ}"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "username": "devc",
+      "installZsh": false,
+      "installOhMyZsh": false,
+      "installOhMyZshConfig": false,
+      "upgradePackages": true
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ExpertLSP.expert",
+        "phoenixframework.phoenix"
+      ]
+    }
+  }
+}

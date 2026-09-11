@@ -26,7 +26,9 @@ pax-*.tar
 /tmp/
 
 # Local files that shouldn't be checked in
-/local/
+local/
+*.local
+*.local.*
 
 # Ignore static files that are produced by build tools.
 /priv/assets

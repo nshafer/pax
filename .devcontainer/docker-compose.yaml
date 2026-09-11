@@ -1,0 +1,39 @@
+name: pax-devcontainer
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: sleep infinity
+    volumes:
+      - ..:/workspaces/pax
+      - ${HOME}/.config/git:/mnt/git-config:ro
+      - ${HOME}/.config/egress-filter:/mnt/egress-filter:ro
+    ports:
+      - 4008:4008
+      - 127.0.0.1:9008:9008
+    environment:
+      PORT: 4000
+      ERL_AFLAGS: -kernel shell_history enabled
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    # Ubuntu 26.04 (resolute): postgres 18.xx (https://packages.ubuntu.com/resolute/postgresql)
+    image: postgres:18
+    restart: unless-stopped
+    volumes:
+      - postgres:/var/lib/postgresql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres: {}
