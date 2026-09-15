@@ -14,7 +14,7 @@ services:
       - 4008:4008
       - 127.0.0.1:9008:9008
     environment:
-      PORT: 4000
+      PORT: 4008
       ERL_AFLAGS: -kernel shell_history enabled
     depends_on:
       db:
