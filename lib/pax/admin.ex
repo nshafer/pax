@@ -380,10 +380,10 @@ defmodule Pax.Admin do
         defdelegate pax_plugins(socket), to: Pax.Admin.Resource.Live
         defdelegate pax_config(socket), to: Pax.Admin.Resource.Live
         defdelegate handle_params(params, uri, socket), to: Pax.Admin.Resource.Live
-        defdelegate count_objects(scope, socket), to: Pax.Admin.Resource.Live
-        defdelegate list_objects(scope, socket), to: Pax.Admin.Resource.Live
+        defdelegate count_objects(criteria, socket), to: Pax.Admin.Resource.Live
+        defdelegate list_objects(criteria, socket), to: Pax.Admin.Resource.Live
         defdelegate new_object(socket), to: Pax.Admin.Resource.Live
-        defdelegate get_object(lookup, scope, socket), to: Pax.Admin.Resource.Live
+        defdelegate get_object(lookup, criteria, socket), to: Pax.Admin.Resource.Live
         defdelegate change_object(object, params, socket), to: Pax.Admin.Resource.Live
         defdelegate create_object(object, changeset, socket), to: Pax.Admin.Resource.Live
         defdelegate update_object(object, changeset, socket), to: Pax.Admin.Resource.Live
