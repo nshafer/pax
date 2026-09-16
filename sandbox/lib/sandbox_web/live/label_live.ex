@@ -10,11 +10,11 @@ defmodule SandboxWeb.LabelLive do
     <Layouts.app flash={@flash}>
       <Pax.Interface.Components.pax_interface :if={assigns[:pax]} pax={@pax} />
 
-      <p>
+      <div class="flex gap-2 items-center">
         Counter: {@counter}
         <button class="btn btn-secondary" phx-click="increment">Increment</button>
         <button class="btn btn-secondary" phx-click="append_title">Append title</button>
-      </p>
+      </div>
     </Layouts.app>
     """
   end
