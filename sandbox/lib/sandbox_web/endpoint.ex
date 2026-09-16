@@ -24,14 +24,15 @@ defmodule SandboxWeb.Endpoint do
     at: "/",
     from: :sandbox,
     gzip: not code_reloading?,
-    only: SandboxWeb.static_paths()
+    only: SandboxWeb.static_paths(),
+    raise_on_missing_only: code_reloading?
 
   # Pax static assets
   plug Pax.Assets
 
   # Tidewave MCP server
   if Code.ensure_loaded?(Tidewave) do
-    plug Tidewave
+    plug Tidewave, allow_remote_access: true
   end
 
   # Code reloading can be explicitly enabled under the

@@ -17,9 +17,10 @@ config :sandbox, Sandbox.Repo,
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
 config :sandbox, SandboxWeb.Endpoint,
-  # Binding to loopback ipv4 address prevents access from other machines.
-  # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "4000")],
+  # Bind to 0.0.0.0 to expose the server to the docker host machine.
+  # This makes make the service accessible from any network interface.
+  # Change to `ip: {127, 0, 0, 1}` to allow access only from the server machine.
+  http: [ip: {0, 0, 0, 0}],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
@@ -58,20 +59,6 @@ config :sandbox, SandboxWeb.Endpoint, reloadable_apps: [:sandbox, :pax]
 # Configure Phoenix.LiveReloader to Watch this app and the pax app during development and trigger reloads
 config :phoenix_live_reload, :dirs, ["../", "./"]
 
-# Watch static and templates for browser reloading.
-config :sandbox, SandboxWeb.Endpoint,
-  live_reload: [
-    # web_console_logger: true,
-    patterns: [
-      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
-      ~r"priv/gettext/.*(po)$",
-      ~r"lib/sandbox_web/(?:controllers|live|admin|components|router)/?.*\.(ex|heex)$",
-      # Also watch pax for changes during development
-      ~r"priv/assets/.*(js|css)$",
-      ~r"lib/pax/.*(interface|live|components).*(ex|heex)$"
-    ]
-  ]
-
 # Configure Pax for development
 config :pax,
   validate_config_spec: true,
@@ -94,7 +81,7 @@ config :phoenix, :plug_init_mode, :runtime
 config :phoenix_live_view,
   # Include debug annotations and locations in rendered markup.
   # Changing this configuration will require mix clean and a full recompile.
-  # debug_heex_annotations: true,
-  # debug_attributes: true,
+  debug_heex_annotations: true,
+  debug_attributes: true,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
