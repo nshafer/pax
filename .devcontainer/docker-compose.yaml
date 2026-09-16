@@ -12,7 +12,6 @@ services:
       - ${HOME}/.config/egress-filter:/mnt/egress-filter:ro
     ports:
       - 4008:4008
-      - 127.0.0.1:9008:9008
     environment:
       PORT: 4008
       ERL_AFLAGS: -kernel shell_history enabled
