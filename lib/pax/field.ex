@@ -1,6 +1,5 @@
 defmodule Pax.Field do
   alias Pax.Field
-  require Logger
 
   defstruct name: nil, type: nil, opts: []
 

@@ -70,7 +70,6 @@ defmodule Pax.Interface do
 
   import Phoenix.LiveView
   import Phoenix.Component, only: [assign: 3]
-  require Logger
 
   defstruct module: nil,
             config: %{},

@@ -19,7 +19,6 @@ defmodule Pax.Token do
     else
       :error -> {:error, :invalid_token}
       {:error, reason} -> {:error, reason}
-      _ -> {:error, :unknown}
     end
   end
 

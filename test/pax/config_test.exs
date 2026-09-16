@@ -696,7 +696,9 @@ defmodule Pax.ConfigTest do
     end
 
     test "does not swallow KeyError exceptions" do
-      assert {:ok, config} = Config.validate(%{foo: {:function, 0}}, %{foo: fn -> Map.fetch!(%{}, :foo) end})
+      # Built at runtime so the compiler cannot statically prove the Map.fetch!/2 below always raises.
+      data = Map.drop(%{foo: 1}, [:foo])
+      assert {:ok, config} = Config.validate(%{foo: {:function, 0}}, %{foo: fn -> Map.fetch!(data, :foo) end})
 
       assert_raise KeyError, fn ->
         Config.fetch(config, :foo)

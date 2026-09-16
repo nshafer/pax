@@ -11,7 +11,6 @@ defmodule Pax.Admin do
   """
 
   import Phoenix.Component, only: [assign: 3]
-  require Logger
   alias Pax.Admin.Config
   alias Pax.Admin.Section
   alias Pax.Admin.Resource

@@ -1,7 +1,6 @@
 defmodule Pax.Interface.Index do
   @moduledoc false
   import Pax.Interface
-  require Logger
   alias Phoenix.LiveView.LiveStream
 
   @callback count_objects(criteria :: map(), socket :: Phoenix.LiveView.Socket.t()) :: non_neg_integer()

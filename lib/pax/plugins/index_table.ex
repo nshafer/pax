@@ -388,8 +388,6 @@ defmodule Pax.Plugins.IndexTable do
     end
   end
 
-  defp sort_link(_field, _assigns), do: nil
-
   defp default_sort_params(%{assigns: %{pax: %{fields: fields, default_criteria: %{order_by: order_by}}}}) do
     field_sorts =
       for field <- fields, field.opts[:sort] != nil, into: %{} do
@@ -455,7 +453,6 @@ defmodule Pax.Plugins.IndexTable do
   defp sort_num(_field, _pax), do: nil
 
   defp num_sorts(%{private: %{index_table: %{sorts: sorts}}}), do: map_size(sorts)
-  defp num_sorts(_pax), do: 0
 
   defp sort_direction(%Pax.Field{opts: %{sort: sort_field}}, %{private: %{index_table: %{sorts: sorts}}}) do
     {_sort_num, sort_direction} = sorts[sort_field] || {nil, nil}

@@ -1,6 +1,5 @@
 defmodule Pax.Admin.Assets do
   @moduledoc false
-  require Logger
 
   # Include JS from the currently installed versions of the phoenix packages, preferring minified versions
   # if available This ensures that the JS included in the Pax Admin assets matches the versions used in

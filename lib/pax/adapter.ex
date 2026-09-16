@@ -1,6 +1,5 @@
 defmodule Pax.Adapter do
   alias Pax.Interface
-  require Logger
 
   @type adapter_module :: module
   @type callback_module :: module

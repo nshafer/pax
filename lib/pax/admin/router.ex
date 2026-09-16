@@ -12,7 +12,6 @@ defmodule Pax.Admin.Router do
   Note: This must be done in your main Router, not in a Router that is forwarded from another router. This is currently
   a limitation of LiveView per https://github.com/phoenixframework/phoenix_live_view/issues/476.
   """
-  require Phoenix.LiveView.Router
 
   defmacro __using__(_opts) do
     quote do
