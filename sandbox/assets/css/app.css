@@ -2,6 +2,14 @@
    https://tailwindcss.com/docs/configuration */
 
 @import "tailwindcss" source(none);
+
+/* The sandbox uses a relative path to include the Pax library, so it doesn't have the normal
+   dir in "deps/", so instead we include it straight from the parent directory. The "_build" dir
+   would also work since mix puts a symlink in there for "priv/" automatically. */
+/* @import "../../deps/pax/priv/assets/pax.css" layer(base); */
+/* @import "../../_build/dev/lib/pax/priv/assets/pax.css" layer(base); */
+@import "../../../priv/assets/pax.css" layer(base);
+
 @import "phoenix-colocated/sandbox/colocated.css";
 @source "../css";
 @source "../js";

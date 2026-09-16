@@ -25,6 +25,13 @@ import { LiveSocket } from "phoenix_live_view"
 import { hooks as colocatedHooks } from "phoenix-colocated/sandbox"
 import topbar from "../vendor/topbar"
 
+/* The sandbox uses a relative path to include the Pax library, so it doesn't have the normal
+   dir in "deps/", so instead we include it straight from the parent directory. The "_build" dir
+   would also work since mix puts a symlink in there for "priv/" automatically. */
+// import "../../deps/pax/priv/assets/pax.js"
+// import "../../_build/dev/lib/pax/priv/assets/pax.js"
+import "../../../priv/assets/pax.js"
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
