@@ -369,7 +369,6 @@ defmodule Pax.AdminTest do
       assert socket.assigns.pax_admin == %Admin{active: :dashboard, config: %Config{}}
     end
 
-    @tag :known_bug
     test "assigns into the admin struct in an assigns map" do
       assigns = %{__changed__: %{}, pax: %Pax.Interface{}, pax_admin: %Admin{active: :resource}}
       assigns = Admin.assign_admin(assigns, :config, %Config{})

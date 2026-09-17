@@ -48,7 +48,7 @@ defmodule Pax.Admin do
   def assign_admin(%{} = assigns, key, value) do
     pax =
       assigns
-      |> Map.get(:pax, %Admin{})
+      |> Map.get(:pax_admin, %Admin{})
       |> Map.put(key, value)
 
     assign(assigns, :pax_admin, pax)
