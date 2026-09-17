@@ -10,6 +10,7 @@ defmodule SandboxWeb.Admin.AlbumResource do
     [
       singular_name: "Album",
       plural_name: "Albums",
+      object_name: &object_name/2,
       id_fields: [:uuid],
       fields: [
         {:name, :string, link: true, sort: true},

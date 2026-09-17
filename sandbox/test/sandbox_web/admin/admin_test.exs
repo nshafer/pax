@@ -46,8 +46,7 @@ defmodule SandboxWeb.AdminTest do
     end
 
     test "shows, edits and creates labels", %{conn: conn} do
-      # LabelResource doesn't mark rating as optional, so it is required when saving
-      label = label_fixture(name: "Warp", founded: 1989, rating: 4.0)
+      label = label_fixture(name: "Warp", founded: 1989)
 
       conn
       |> visit(~p"/admin/r/labels")
@@ -149,6 +148,8 @@ defmodule SandboxWeb.AdminTest do
       |> visit(~p"/admin/r/albums")
       |> click_link("td a", "Syro")
       |> assert_path(~p"/admin/r/albums/#{album.uuid}")
+      |> assert_has(".pax-show-title", text: "Syro")
+      |> assert_has(".admin-breadcrumbs", text: "Albums ❯ Syro")
       |> assert_has(".pax-detail-list-item", text: "Uuid #{album.uuid}")
       |> assert_has(".pax-detail-list-item", text: "Length 65:05")
       |> click_link("Edit")

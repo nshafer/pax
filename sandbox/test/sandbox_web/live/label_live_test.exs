@@ -102,7 +102,7 @@ defmodule SandboxWeb.LabelLiveTest do
       |> assert_has(".pax-edit-title", text: "Edit: Warp")
       |> fill_in("Name", with: "Warp Records")
       |> fill_in("Founded", with: "1990")
-      |> fill_in("Rating", with: "4.5")
+      |> fill_in("Rating (0-5)", with: "4.5")
       |> check("Accepting Submissions")
       |> click_button("Save")
       |> assert_path(~p"/labels/#{label}")

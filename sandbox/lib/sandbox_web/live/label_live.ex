@@ -64,7 +64,7 @@ defmodule SandboxWeb.LabelLive do
         {:name_link, :string, value: :name, sort: :name, link: true, only: :index},
         {:slug, except: [:index]},
         {:founded, sort: true},
-        {:rating, :float, title: "Rating (0-5)", round: 3, required: false, only: :edit},
+        {:rating, :float, label: "Rating (0-5)", round: 3, required: false, only: :edit},
         {:rating_formatted, :string,
          value: &format_rating/1,
          sort: :rating,
