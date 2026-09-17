@@ -95,11 +95,14 @@ defmodule SandboxWeb.AdminTest do
       |> assert_has(".pax-detail-list-item", text: "Slug aphex-twin")
     end
 
-    test "every field is required when editing", %{conn: conn} do
+    test "shows the id and timestamps, and requires every other field when editing", %{conn: conn} do
       artist = artist_fixture(name: "Aphex Twin")
 
       conn
       |> visit(~p"/admin/r/artists/edit/#{artist.id}")
+      |> refute_has("input[name='detail[id]']")
+      |> refute_has("input[name='detail[inserted_at]']")
+      |> assert_has(".pax-detail-list-item", text: "Id #{artist.id}")
       |> fill_in("Name", with: "AFX")
       |> click_button("Save")
       |> assert_path(~p"/admin/r/artists/edit/#{artist.id}")
