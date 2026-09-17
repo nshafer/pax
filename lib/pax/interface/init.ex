@@ -403,7 +403,10 @@ defmodule Pax.Interface.Init do
   end
 
   defp init_adapter_new_object(adapter, socket) do
-    Pax.Adapter.new_object(adapter, socket)
+    case Pax.Adapter.new_object(adapter, socket) do
+      object when is_map(object) -> object
+      other -> raise "#{inspect(adapter.module)}.new_object/2 must return an object (map), got: #{inspect(other)}"
+    end
   end
 
   defp init_get_object(module, adapter, criteria, params, uri, socket) do
@@ -433,7 +436,10 @@ defmodule Pax.Interface.Init do
   end
 
   defp init_adapter_get_object(adapter, lookup, criteria, socket) do
-    Pax.Adapter.get_object(adapter, lookup, criteria, socket)
+    case Pax.Adapter.get_object(adapter, lookup, criteria, socket) do
+      object when is_map(object) -> object
+      other -> raise "#{inspect(adapter.module)}.get_object/4 must return an object (map), got: #{inspect(other)}"
+    end
   end
 
   defp construct_lookup_map(params, socket) do

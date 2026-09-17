@@ -82,7 +82,13 @@ defmodule Pax.Interface.Index do
   end
 
   defp init_adapter_count_objects(adapter, criteria) do
-    Pax.Adapter.count_objects(adapter, criteria)
+    case Pax.Adapter.count_objects(adapter, criteria) do
+      count when is_integer(count) and count >= 0 ->
+        count
+
+      other ->
+        raise "#{inspect(adapter.module)}.count_objects/2 must return a non-negative integer, got: #{inspect(other)}"
+    end
   end
 
   # Object streaming
@@ -182,6 +188,9 @@ defmodule Pax.Interface.Index do
   end
 
   defp init_adapter_list_objects(adapter, criteria) do
-    Pax.Adapter.list_objects(adapter, criteria)
+    case Pax.Adapter.list_objects(adapter, criteria) do
+      objects when is_list(objects) -> objects
+      other -> raise "#{inspect(adapter.module)}.list_objects/2 must return a list of objects, got: #{inspect(other)}"
+    end
   end
 end

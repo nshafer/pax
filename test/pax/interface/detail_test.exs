@@ -242,6 +242,33 @@ defmodule Pax.Interface.DetailTest do
       end
     end
 
+    test "show the adapter's errors when saving fails" do
+      changeset = Ecto.Changeset.change({%{}, %{name: :string}}) |> Ecto.Changeset.add_error(:name, "is taken")
+      adapter = Pax.Adapter.init(FakeAdapter, PaxTest.InterfaceLive, results: %{update_object: {:error, changeset}})
+
+      assert {:halt, socket} = save(socket(:edit, adapter: adapter))
+      assert socket.assigns.pax.form.source == changeset
+      assert socket.redirected == nil
+    end
+
+    test "raise when the adapter returns something unexpected" do
+      adapter = fn results -> Pax.Adapter.init(FakeAdapter, PaxTest.InterfaceLive, results: results) end
+
+      assert_raise RuntimeError,
+                   "PaxTest.FakeAdapter.change_object/4 must return an Ecto.Changeset, got: :changeset",
+                   fn ->
+                     validate(socket(:edit, adapter: adapter.(%{change_object: :changeset})))
+                   end
+
+      assert_raise RuntimeError,
+                   "PaxTest.FakeAdapter.create_object/3 must return {:ok, object} or {:error, changeset}, got: :ok",
+                   fn -> save(socket(:new, adapter: adapter.(%{create_object: :ok}))) end
+
+      assert_raise RuntimeError,
+                   "PaxTest.FakeAdapter.update_object/3 must return {:ok, object} or {:error, changeset}, got: {:ok, nil}",
+                   fn -> save(socket(:edit, adapter: adapter.(%{update_object: {:ok, nil}}))) end
+    end
+
     test "raise without create_object/3 or update_object/3 or an adapter" do
       interface(change_object: fn object, params, _ -> Author.changeset(object, params) end)
 

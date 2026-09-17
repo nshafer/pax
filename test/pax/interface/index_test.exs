@@ -82,6 +82,20 @@ defmodule Pax.Interface.IndexTest do
       assert_received {FakeAdapter, :list_objects, %{limit: 5}}
     end
 
+    test "raises when the adapter returns the wrong types", %{conn: conn} do
+      interface(pax_adapter: {FakeAdapter, results: %{count_objects: nil}})
+
+      assert_raise RuntimeError,
+                   "PaxTest.FakeAdapter.count_objects/2 must return a non-negative integer, got: nil",
+                   fn -> visit(conn, "/interface") end
+
+      interface(pax_adapter: {FakeAdapter, results: %{list_objects: :none}})
+
+      assert_raise RuntimeError, "PaxTest.FakeAdapter.list_objects/2 must return a list of objects, got: :none", fn ->
+        visit(conn, "/interface")
+      end
+    end
+
     test "raises without an adapter", %{conn: conn} do
       assert_raise RuntimeError,
                    ~r/You must either define a `count_objects\/2` callback or configure a Pax.Adapter/,

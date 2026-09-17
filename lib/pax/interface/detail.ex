@@ -136,7 +136,11 @@ defmodule Pax.Interface.Detail do
 
   defp adapter_change_object(adapter, object, params, socket) do
     %{fields: fields} = socket.assigns.pax
-    Pax.Adapter.change_object(adapter, object, params, fields)
+
+    case Pax.Adapter.change_object(adapter, object, params, fields) do
+      %Ecto.Changeset{} = changeset -> changeset
+      other -> raise "#{inspect(adapter.module)}.change_object/4 must return an Ecto.Changeset, got: #{inspect(other)}"
+    end
   end
 
   defp save_object(module, adapter, :new, object, changeset, socket) do
@@ -186,7 +190,9 @@ defmodule Pax.Interface.Detail do
   end
 
   defp adapter_create_object(adapter, object, changeset) do
-    Pax.Adapter.create_object(adapter, object, changeset)
+    adapter
+    |> Pax.Adapter.create_object(object, changeset)
+    |> check_adapter_save_result!(adapter, "create_object/3")
   end
 
   defp update_object(module, adapter, object, changeset, socket) do
@@ -204,7 +210,23 @@ defmodule Pax.Interface.Detail do
   end
 
   defp adapter_update_object(adapter, object, changeset) do
-    Pax.Adapter.update_object(adapter, object, changeset)
+    adapter
+    |> Pax.Adapter.update_object(object, changeset)
+    |> check_adapter_save_result!(adapter, "update_object/3")
+  end
+
+  defp check_adapter_save_result!(result, adapter, function) do
+    case result do
+      {:ok, object} when is_map(object) ->
+        {:ok, object}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, changeset}
+
+      other ->
+        raise "#{inspect(adapter.module)}.#{function} must return {:ok, object} or {:error, changeset}, " <>
+                "got: #{inspect(other)}"
+    end
   end
 
   defp maybe_redir_after_save(socket, object) do

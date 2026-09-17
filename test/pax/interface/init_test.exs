@@ -467,6 +467,14 @@ defmodule Pax.Interface.InitTest do
       assert_received {FakeAdapter, :new_object}
     end
 
+    test "raises when the adapter doesn't return a map" do
+      socket = socket(action: :new, adapter: fake_adapter(new_object: nil))
+
+      assert_raise RuntimeError, "PaxTest.FakeAdapter.new_object/2 must return an object (map), got: nil", fn ->
+        Init.init_object(%{}, "/", socket)
+      end
+    end
+
     test "raises without an adapter" do
       assert_raise RuntimeError,
                    ~r/You must either define a `new_object\/1` callback, or configure a Pax.Adapter/,
@@ -498,6 +506,14 @@ defmodule Pax.Interface.InitTest do
 
       assert Init.init_object(%{"id" => "1"}, "/", socket) == %{id: 1}
       assert_received {FakeAdapter, :get_object, %{id: "1"}, %{limit: 1}}
+    end
+
+    test "raises when the adapter doesn't return a map" do
+      socket = socket(action: :show, adapter: fake_adapter())
+
+      assert_raise RuntimeError, "PaxTest.FakeAdapter.get_object/4 must return an object (map), got: nil", fn ->
+        Init.init_object(%{"id" => "1"}, "/", socket)
+      end
     end
 
     test "raises without an adapter" do
