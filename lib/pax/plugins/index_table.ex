@@ -278,7 +278,6 @@ defmodule Pax.Plugins.IndexTable do
   defp sort_icon_title(:desc), do: "Descending"
   defp sort_icon_title(:desc_nulls_first), do: "Descending (nulls first)"
   defp sort_icon_title(:desc_nulls_last), do: "Descending (nulls last)"
-  defp sort_icon_title(nil), do: "Not sorted"
   defp sort_icon_title(sort), do: to_string(sort)
 
   defp sort_number(assigns) do
@@ -450,8 +449,6 @@ defmodule Pax.Plugins.IndexTable do
     sort_num
   end
 
-  defp sort_num(_field, _pax), do: nil
-
   defp num_sorts(%{private: %{index_table: %{sorts: sorts}}}), do: map_size(sorts)
 
   defp sort_direction(%Pax.Field{opts: %{sort: sort_field}}, %{private: %{index_table: %{sorts: sorts}}}) do
@@ -463,6 +460,4 @@ defmodule Pax.Plugins.IndexTable do
     {_sort_num, sort_direction} = sorts[field_name] || {nil, nil}
     sort_direction
   end
-
-  defp sort_direction(_field, _sorts), do: nil
 end

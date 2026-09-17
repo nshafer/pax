@@ -127,10 +127,6 @@ defmodule Pax.Field do
     end
   end
 
-  defp validate_field_name!(name) do
-    raise ArgumentError, "Field name must be an atom, got: #{inspect(name)}"
-  end
-
   defp init_global_opts(opts, name, _type) do
     Keyword.take(opts, @global_opts)
     |> Map.new()

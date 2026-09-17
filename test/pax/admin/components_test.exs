@@ -311,4 +311,23 @@ defmodule Pax.Admin.Resource.LiveTest do
       end
     end
   end
+
+  describe "handle_params/3" do
+    test "titles the page from the resource and action" do
+      pax = %Pax.Interface{singular_name: "Book", object_name: "Dune"}
+
+      for {action, title} <- [
+            index: "X",
+            show: "Dune · X",
+            edit: "Edit: Dune · X",
+            new: "New Book · X",
+            delete: "Delete: Dune · X"
+          ] do
+        socket = Phoenix.Component.assign(socket(), :pax, %{pax | action: action})
+        assert {:noreply, %{assigns: %{page_title: ^title}}} = Live.handle_params(%{}, "/", socket)
+      end
+
+      assert {:noreply, %{assigns: %{page_title: "X"}}} = Live.handle_params(%{}, "/", socket())
+    end
+  end
 end
