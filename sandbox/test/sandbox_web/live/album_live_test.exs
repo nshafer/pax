@@ -31,7 +31,7 @@ defmodule SandboxWeb.AlbumLiveTest do
       |> click_link("th a", "Length Sec")
       |> assert_has("tbody tr", count: 10)
       |> assert_has("tbody tr:nth-child(1)", text: "Album 11")
-      |> assert_has(".pax-footer", text: "Page: 1 / 2")
+      |> assert_has(".pax-index-footer", text: "Page: 1 / 2")
       |> visit(~p"/albums?page=2&sort=length_sec")
       |> assert_has("tbody tr", count: 1)
       |> assert_has("tbody tr", text: "Album 1")

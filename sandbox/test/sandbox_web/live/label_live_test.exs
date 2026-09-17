@@ -29,8 +29,8 @@ defmodule SandboxWeb.LabelLiveTest do
 
       conn
       |> visit(~p"/labels")
-      |> assert_has(".pax-footer", text: "Page: 1 / 2")
-      |> assert_has(".pax-footer", text: "Total: 12")
+      |> assert_has(".pax-index-footer", text: "Page: 1 / 2")
+      |> assert_has(".pax-index-footer", text: "Total: 12")
       |> assert_has("tbody tr", count: 10)
       |> refute_has("td", text: "Label 11")
       |> visit(~p"/labels?page=2")

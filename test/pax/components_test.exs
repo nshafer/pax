@@ -230,7 +230,6 @@ defmodule Pax.ComponentsTest do
       assert text(html, ".pax-footer-tertiary") == "Three"
     end
 
-    @tag :known_bug
     test "renders the class" do
       assigns = %{}
 

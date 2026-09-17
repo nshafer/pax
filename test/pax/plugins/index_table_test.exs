@@ -81,7 +81,7 @@ defmodule Pax.Plugins.IndexTableTest do
 
       conn
       |> visit("/interface")
-      |> assert_has(".pax-footer-primary .pax-index-table")
+      |> assert_has(".pax-index-footer .pax-index-table")
       |> refute_has(".pax-index-body .pax-index-table")
     end
 

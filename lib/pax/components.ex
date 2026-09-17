@@ -236,7 +236,7 @@ defmodule Pax.Components do
 
   def pax_footer(assigns) do
     ~H"""
-    <div class="pax-footer">
+    <div class={["pax-footer", @class]}>
       <div class="pax-footer-section pax-footer-primary">
         {render_slot(@primary)}
       </div>
