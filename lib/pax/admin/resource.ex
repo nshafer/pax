@@ -13,7 +13,12 @@ defmodule Pax.Admin.Resource do
   @enforce_keys [:name, :path, :label, :mod, :opts]
   defstruct [:name, :path, :label, :section, :mod, :opts]
 
-  # TODO: add @callback render()
+  @doc """
+  Renders this resource's pages, replacing the default and the admin's `c:Pax.Admin.render_resource/1`.
+  """
+  @callback render(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
+
+  @optional_callbacks render: 1
 
   # Pax.Interface callbacks
 

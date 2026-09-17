@@ -46,7 +46,9 @@ defmodule PaxTest.RuntimeAdmin do
 end
 
 defmodule PaxTest.CustomAdmin do
-  @moduledoc "An admin with no config, a custom dashboard, mounted in a nested scope with an on_mount hook."
+  @moduledoc """
+  An admin with no config, custom dashboard and resource pages, mounted in a nested scope with an on_mount hook.
+  """
   use Pax.Admin, router: PaxTest.Router
   use Phoenix.Component
 
@@ -55,6 +57,12 @@ defmodule PaxTest.CustomAdmin do
   def render_dashboard(assigns) do
     ~H"""
     <h1 id="custom-dashboard">Custom dashboard for {@hooked}</h1>
+    """
+  end
+
+  def render_resource(assigns) do
+    ~H"""
+    <h1 id="custom-resource">Custom page for {@pax_admin.resource.label}</h1>
     """
   end
 

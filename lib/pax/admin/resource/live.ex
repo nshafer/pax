@@ -6,8 +6,8 @@ defmodule Pax.Admin.Resource.Live do
     resource_mod = assigns.pax_admin.resource.mod
 
     cond do
-      function_exported?(resource_mod, :render, 1) -> resource_mod.render_index(assigns)
-      function_exported?(admin_mod, :render, 1) -> admin_mod.render_index(assigns)
+      function_exported?(resource_mod, :render, 1) -> resource_mod.render(assigns)
+      function_exported?(admin_mod, :render_resource, 1) -> admin_mod.render_resource(assigns)
       true -> render(assigns)
     end
   end

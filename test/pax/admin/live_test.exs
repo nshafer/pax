@@ -165,11 +165,18 @@ defmodule Pax.Admin.LiveTest do
       end
     end
 
-    @tag :known_bug
     test "resources can render the page themselves", %{conn: conn} do
       conn
       |> visit("/admin/misc/r/custom_render")
-      |> assert_has("#custom-resource-render")
+      |> assert_has("#custom-resource-render", text: "Custom resource render")
+      |> refute_has(".pax-interface")
+    end
+
+    test "admins can render every resource page", %{conn: conn} do
+      conn
+      |> visit("/nested/custom/r/authors")
+      |> assert_has("#custom-resource", text: "Custom page for Authors")
+      |> refute_has(".pax-interface")
     end
   end
 

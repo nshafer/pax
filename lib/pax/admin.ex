@@ -18,7 +18,16 @@ defmodule Pax.Admin do
 
   defstruct [:admin_mod, :config, :resources, :active, :resource]
 
-  # TODO: add @callback render()
+  @doc """
+  Renders the dashboard page, replacing the default dashboard.
+  """
+  @callback render_dashboard(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
+
+  @doc """
+  Renders every resource page in this admin, replacing the default. A resource's own `c:Pax.Admin.Resource.render/1`
+  takes precedence.
+  """
+  @callback render_resource(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
 
   @callback config(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
@@ -32,7 +41,7 @@ defmodule Pax.Admin do
               socket :: Phoenix.LiveView.Socket.t()
             ) :: nil | list()
 
-  @optional_callbacks config: 3, resources: 3
+  @optional_callbacks config: 3, resources: 3, render_dashboard: 1, render_resource: 1
 
   def assign_admin(socket_or_assigns, key, value)
 
