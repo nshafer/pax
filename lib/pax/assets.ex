@@ -82,6 +82,7 @@ defmodule Pax.Assets do
         ["admin", "assets" | segments] -> Pax.Admin.Assets.serve(conn, segments, cache_control: opts.cache_control)
         ["assets" | segments] -> serve(conn, segments, cache_control: opts.cache_control)
         ["static" | _segments] -> Plug.Static.call(conn, opts.static_opts)
+        _segments -> conn
       end
     else
       conn
@@ -134,6 +135,8 @@ defmodule Pax.Assets do
     defp asset_hash(:css), do: Pax.Util.Assets.stat(@css_path, time: :posix).mtime
     defp asset_hash(:js), do: Pax.Util.Assets.stat(@js_path, time: :posix).mtime
   end
+
+  defp serve(conn, [], _opts), do: conn
 
   defp serve(conn, [asset | _extra], opts) do
     {contents, content_type} = asset_data(asset)

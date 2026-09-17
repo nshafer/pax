@@ -107,10 +107,12 @@ defmodule Pax.AssetsTest do
       end
     end
 
-    @tag :known_bug
     test "passes through unknown paths under the mount point" do
-      refute call(conn(:get, "/pax/unknown/file.css")).halted
-      refute call(conn(:get, "/pax/assets")).halted
+      for path <- ["/pax/unknown/file.css", "/pax/assets", "/pax/admin/assets", "/pax/admin/other"] do
+        conn = call(conn(:get, path))
+        refute conn.halted
+        assert conn.status == nil
+      end
     end
   end
 

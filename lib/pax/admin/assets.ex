@@ -70,6 +70,8 @@ defmodule Pax.Admin.Assets do
     defp asset_hash(:js), do: Pax.Util.Assets.stat(@admin_js_path, time: :posix).mtime
   end
 
+  def serve(conn, [], _opts), do: conn
+
   def serve(conn, [asset | _extra], opts) do
     {contents, content_type} = asset_data(asset)
     Pax.Assets.serve_static(conn, contents, content_type, opts)
