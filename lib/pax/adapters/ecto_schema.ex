@@ -121,6 +121,7 @@ defmodule Pax.Adapters.EctoSchema do
   def count_objects(%{repo: repo, schema: schema}, criteria) do
     schema
     |> build_query(criteria)
+    |> filter_where(criteria)
     |> repo.aggregate(:count)
   end
 

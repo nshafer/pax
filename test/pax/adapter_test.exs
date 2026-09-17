@@ -238,7 +238,6 @@ defmodule Pax.Adapters.EctoSchemaTest do
       assert query_string(query) == "from b0 in PaxTest.Book"
     end
 
-    @tag :known_bug
     test "applies the where criteria, like list_objects/2" do
       EctoSchema.count_objects(@opts, %{where: [title: "Dune"]})
       assert received_query(:aggregate) == ~s(from b0 in PaxTest.Book, where: b0.title == ^"Dune")
