@@ -713,4 +713,42 @@ defmodule Pax.ConfigTest do
       end
     end
   end
+
+  describe "edge cases" do
+    test "raises when a struct spec names a module that doesn't exist" do
+      assert_raise Pax.Config.SpecError, ~r/invalid module 'NotAModule` in spec for struct/, fn ->
+        Config.validate(%{foo: {:struct, NotAModule}}, %{}, validate_config_spec: true)
+      end
+    end
+
+    test "fetching a nested key under a missing key is an error" do
+      config = Config.validate!(%{foo: %{bar: :string}}, %{})
+
+      assert Config.fetch(config, [:foo, :bar]) == :error
+      assert Config.get(config, [:foo, :bar], "default") == "default"
+    end
+
+    test "raises when not passing correct args for functions with a return type" do
+      config = Config.validate!(%{foo: {:function, 1, :integer}}, %{foo: fn a -> a end})
+
+      assert_raise Pax.Config.ArityError, "function for :foo requires 1 args, but got 0", fn ->
+        Config.fetch(config, :foo)
+      end
+    end
+
+    test "raises when a function returns none of the allowed types" do
+      config = Config.validate!(%{foo: {:function, [:atom, :string]}}, %{foo: fn -> 1 end})
+
+      assert_raise Pax.Config.TypeError, ~r/invalid type returned from function for foo: 1/, fn ->
+        Config.fetch(config, :foo)
+      end
+    end
+
+    @tag :known_bug
+    test "fetch!/3 accepts a list of keys" do
+      config = Config.validate!(%{foo: %{bar: :string}}, %{foo: %{bar: "baz"}})
+      # apply/3, since the type checker already knows a list of keys fails the guard
+      assert apply(Config, :fetch!, [config, [:foo, :bar]]) == "baz"
+    end
+  end
 end

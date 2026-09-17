@@ -13,7 +13,8 @@ defmodule Pax.MixProject do
       source_url: "https://github.com/nshafer/pax",
       package: package(),
       deps: deps(),
-      aliases: aliases()
+      aliases: aliases(),
+      test_coverage: test_coverage()
     ]
   end
 
@@ -45,6 +46,14 @@ defmodule Pax.MixProject do
     ]
   end
 
+  # Coverage for `mix test --cover`, excluding the test support modules and the dev-only Pax.Debug, Pax.Token and
+  # watch task
+  defp test_coverage do
+    [
+      ignore_modules: [~r/^PaxTest\./, Pax.Debug, Pax.Token, Mix.Tasks.Watch]
+    ]
+  end
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
@@ -59,7 +68,8 @@ defmodule Pax.MixProject do
       {:esbuild, "~> 0.9", only: :dev},
       {:dart_sass, "~> 0.7", only: :dev},
       {:phoenix_copy, "~> 0.1", only: :dev},
-      # {:floki, ">= 0.30.0", only: :test},
+      {:lazy_html, ">= 0.1.0", only: :test},
+      {:phoenix_test, "~> 0.12.1", only: :test, runtime: false},
       {:ecto_sql, "~> 3.10", only: [:dev, :test]}
       # {:postgrex, ">= 0.0.0", only: :test},
     ]

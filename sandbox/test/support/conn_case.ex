@@ -27,6 +27,8 @@ defmodule SandboxWeb.ConnCase do
       # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest
+      import PhoenixTest
+      import Sandbox.LibraryFixtures
       import SandboxWeb.ConnCase
     end
   end

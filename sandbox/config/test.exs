@@ -33,3 +33,9 @@ config :phoenix_live_view,
 # Sort query params output of verified routes for robust url comparisons
 config :phoenix,
   sort_verified_routes_query_params: true
+
+# Feature tests with PhoenixTest
+config :phoenix_test, :endpoint, SandboxWeb.Endpoint
+
+# Pax's pagination form has no id, which LiveViewTest warns about on every render
+config :phoenix_live_view, :test_warnings, missing_form_id: :ignore
