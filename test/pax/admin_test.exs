@@ -269,10 +269,43 @@ defmodule Pax.AdminTest do
       end
     end
 
-    @tag :known_bug
-    test "raises a useful error on invalid top level resources" do
-      assert_raise RuntimeError, ~r/invalid resource :books/, fn -> resources_for(books: %{mod: SomeResource}) end
-      assert_raise RuntimeError, ~r/invalid resource "books"/, fn -> resources_for(["books"]) end
+    test "raises on invalid top level resources" do
+      assert_raise RuntimeError, "invalid resource :books: '%{mod: SomeResource}'", fn ->
+        resources_for(books: %{mod: SomeResource})
+      end
+
+      assert_raise RuntimeError, ~s(invalid resource "books"), fn -> resources_for(["books"]) end
+    end
+
+    test "raises on duplicate resources, like the macros" do
+      assert_raise RuntimeError, "duplicate resource 'books'", fn ->
+        resources_for(books: %{resource: SomeResource}, authors: %{resource: SomeResource}, books: %{resource: Other})
+      end
+
+      assert_raise RuntimeError, "duplicate resource 'books' in section 'library'", fn ->
+        resources_for(library: [books: %{resource: SomeResource}, books: %{resource: Other}])
+      end
+    end
+
+    test "raises on duplicate sections, like the macros" do
+      assert_raise RuntimeError, "duplicate section 'library'", fn ->
+        resources_for(library: [books: %{resource: SomeResource}], library: %{resources: [authors: %{resource: Other}]})
+      end
+    end
+
+    test "allows the same resource name at the top level and in different sections" do
+      resources =
+        resources_for(
+          books: %{resource: SomeResource},
+          library: [books: %{resource: SomeResource}],
+          archive: %{resources: [books: %{resource: SomeResource}]}
+        )
+
+      assert Enum.map(resources, &{&1.section && &1.section.name, &1.name}) == [
+               {nil, :books},
+               {:library, :books},
+               {:archive, :books}
+             ]
     end
   end
 

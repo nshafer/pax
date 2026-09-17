@@ -174,7 +174,7 @@ defmodule Pax.Admin do
     sections = Module.get_attribute(admin_mod, :pax_sections)
 
     if Map.has_key?(sections, name) do
-      raise "duplicate section '#{name}'"
+      raise_duplicate_section!(name)
     else
       section = %Section{
         name: name,
@@ -199,11 +199,7 @@ defmodule Pax.Admin do
     exists? = Enum.any?(resources, &match?(%{section: ^current_section, name: ^name}, &1))
 
     if exists? do
-      if current_section do
-        raise "duplicate resource '#{name}' in section '#{current_section.name}'"
-      else
-        raise "duplicate resource '#{name}'"
-      end
+      raise_duplicate_resource!(name, current_section)
     else
       Module.put_attribute(admin_mod, :pax_resources, %Resource{
         name: name,
@@ -220,10 +216,14 @@ defmodule Pax.Admin do
 
   def resources_for(admin_mod, params, session, socket) do
     if Code.ensure_loaded?(admin_mod) and function_exported?(admin_mod, :resources, 3) do
-      admin_mod.resources(params, session, socket)
+      resources = admin_mod.resources(params, session, socket)
+      check_duplicate_sections!(resources)
+
+      resources
       |> merge_resources(nil)
       |> List.flatten()
       |> Enum.reverse()
+      |> check_duplicate_resources!()
     else
       admin_mod.__pax__(:resources)
     end
@@ -309,16 +309,55 @@ defmodule Pax.Admin do
   # TODO: parse links, pages, etc
 
   # Handle invalid resources
+  defp parse_resource({name, resource}, nil) do
+    raise "invalid resource #{inspect(name)}: '#{inspect(resource)}'"
+  end
+
   defp parse_resource({name, resource}, current_section) do
-    if current_section do
-      raise "invalid resource #{inspect(name)}: '#{inspect(resource)}' in section '#{inspect(current_section.name)}'"
-    else
-      raise "duplicate resource #{inspect(name)}: '#{inspect(resource)}'"
-    end
+    raise "invalid resource #{inspect(name)}: '#{inspect(resource)}' in section '#{inspect(current_section.name)}'"
+  end
+
+  defp parse_resource(arg, nil) do
+    raise "invalid resource #{inspect(arg)}"
   end
 
   defp parse_resource(arg, current_section) do
     raise "invalid resource #{inspect(arg)} in section '#{inspect(current_section.name)}'"
+  end
+
+  # The macros reject duplicate sections and resources as they are declared, so check the runtime resources the same way.
+  # Sections are checked before merging, since a section's resources are spread through the merged list.
+  defp check_duplicate_sections!(resources) when is_list(resources) do
+    Enum.reduce(resources, MapSet.new(), fn
+      {name, section}, seen when is_atom(name) and (is_list(section) or is_map_key(section, :resources)) ->
+        if MapSet.member?(seen, name), do: raise_duplicate_section!(name), else: MapSet.put(seen, name)
+
+      _resource, seen ->
+        seen
+    end)
+  end
+
+  defp check_duplicate_sections!(_resources), do: :ok
+
+  defp check_duplicate_resources!(resources) do
+    Enum.reduce(resources, MapSet.new(), fn %Resource{name: name, section: section}, seen ->
+      key = {section && section.name, name}
+      if MapSet.member?(seen, key), do: raise_duplicate_resource!(name, section), else: MapSet.put(seen, key)
+    end)
+
+    resources
+  end
+
+  defp raise_duplicate_section!(name) do
+    raise "duplicate section '#{name}'"
+  end
+
+  defp raise_duplicate_resource!(name, nil) do
+    raise "duplicate resource '#{name}'"
+  end
+
+  defp raise_duplicate_resource!(name, section) do
+    raise "duplicate resource '#{name}' in section '#{section.name}'"
   end
 
   def match_resource(resources, nil, resource_name) when is_atom(resource_name) do
