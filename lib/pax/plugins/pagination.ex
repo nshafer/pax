@@ -126,9 +126,11 @@ defmodule Pax.Plugins.Pagination do
   end
 
   defp calculate_num_pages(socket) do
+    # There is always at least one page, even when there are no objects
     (socket.assigns.pax.object_count / socket.assigns.pax.private.pagination.limit)
     |> Float.ceil()
     |> round()
+    |> max(1)
   end
 
   # Components

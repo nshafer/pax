@@ -122,7 +122,6 @@ defmodule Pax.Plugins.PaginationTest do
       assert pager_classes(session) |> Enum.all?(&String.contains?(&1, "disabled"))
     end
 
-    @tag :known_bug
     test "shows a single page with no objects", %{conn: conn} do
       books_interface(0)
 
