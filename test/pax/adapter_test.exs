@@ -97,6 +97,11 @@ defmodule Pax.Adapters.EctoSchemaTest do
 
   @opts %{repo: Repo, schema: Book}
 
+  # Ecto before 3.12 represented parameterized types as a 3-tuple
+  defmodule OldEnumSchema do
+    def __schema__(:type, :enum), do: {:parameterized, Ecto.Enum, %{}}
+  end
+
   defp query_string(query), do: query |> Inspect.Ecto.Query.to_string() |> PaxTest.HTML.squish()
 
   defp received_query(function) do
@@ -166,10 +171,8 @@ defmodule Pax.Adapters.EctoSchemaTest do
       assert EctoSchema.field_type(opts, :map) == {:error, "TODO: maps"}
       assert EctoSchema.field_type(opts, :typed_map) == {:error, "TODO: maps"}
       assert EctoSchema.field_type(opts, :decimal) == {:error, "TODO: decimals"}
-
-      # Ecto.Enum is a parameterized type, so it is reported as unknown rather than matching the `Ecto.Enum` clause
-      assert {:error, message} = EctoSchema.field_type(opts, :enum)
-      assert message =~ "Unknown schema type {:parameterized, {Ecto.Enum"
+      assert EctoSchema.field_type(opts, :enum) == {:error, "TODO: Enums"}
+      assert EctoSchema.field_type(%{schema: OldEnumSchema}, :enum) == {:error, "TODO: Enums"}
 
       assert {:error, message} = EctoSchema.field_type(opts, :custom)
       assert message =~ "Unknown schema type PaxTest.CustomType in schema PaxTest.AllTypes"

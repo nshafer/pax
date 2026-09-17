@@ -23,7 +23,8 @@ defmodule Pax.Adapters.EctoSchema do
       :utc_datetime -> {:ok, :datetime}
       :utc_datetime_usec -> {:ok, :datetime}
       Ecto.UUID -> {:ok, :string}
-      Ecto.Enum -> {:error, "TODO: Enums"}
+      {:parameterized, {Ecto.Enum, _params}} -> {:error, "TODO: Enums"}
+      {:parameterized, Ecto.Enum, _params} -> {:error, "TODO: Enums"}
       type -> {:error, invalid_type(type, schema)}
     end
   end
