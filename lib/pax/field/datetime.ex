@@ -6,8 +6,8 @@ defmodule Pax.Field.Datetime do
   def init(opts) do
     %{
       format: Keyword.get(opts, :format, nil),
-      date_format: Keyword.get(opts, :format, "%a, %B %d, %Y"),
-      time_format: Keyword.get(opts, :format, "%I:%M %p")
+      date_format: Keyword.get(opts, :date_format, "%a, %B %d, %Y"),
+      time_format: Keyword.get(opts, :time_format, "%I:%M %p")
     }
   end
 

@@ -68,7 +68,6 @@ defmodule Pax.Field.TypesTest do
       assert Field.Datetime.render(opts, ~U[2024-02-03 14:05:00Z]) == "2024-02-03 14:05"
     end
 
-    @tag :known_bug
     test "renders with separate date and time formats" do
       opts = Field.Datetime.init(date_format: "%Y-%m-%d", time_format: "%H:%M")
       html = Field.Datetime.render(opts, ~N[2024-02-03 14:05:00])
