@@ -44,8 +44,8 @@ defmodule Pax.Plugins.PaginationTest do
       assert texts(html(session), ".pax-footer-primary > div") == ["Page: 1 / 3", "Total: 25"]
       assert count(html(session), "tbody tr") == 10
 
-      # The first and previous links are disabled with a class, so only the others are checked
-      assert pager_links(session) |> Enum.drop(2) == ["/interface?page=2", "/interface?page=3"]
+      assert pager_links(session) == ["/interface", "/interface", "/interface?page=2", "/interface?page=3"]
+      assert attr(html(session), "form", "id") == ["pax-pagination-form"]
 
       assert pager_classes(session) == [
                "pax-link pax-pagination-link disabled",
@@ -79,7 +79,7 @@ defmodule Pax.Plugins.PaginationTest do
 
       assert received_criteria() == %{limit: 10, offset: 20}
       assert count(html(session), "tbody tr") == 5
-      assert pager_links(session) |> Enum.take(2) == ["/interface", "/interface?page=2"]
+      assert pager_links(session) == ["/interface", "/interface?page=2", "/interface?page=3", "/interface?page=3"]
       assert pager_classes(session) |> Enum.drop(2) |> Enum.all?(&String.contains?(&1, "disabled"))
     end
 

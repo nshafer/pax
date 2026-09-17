@@ -64,6 +64,7 @@ defmodule Pax.Interface.ComponentsTest do
         <.pax_interface pax={@pax} />
         """
 
+        assert attr(html, "form", "id") == ["pax-detail-form"]
         assert attr(html, "form", "phx-change") == ["pax_validate"]
         assert attr(html, "form", "phx-submit") == ["pax_save"]
       end

@@ -107,7 +107,13 @@ defmodule Pax.Interface.Components do
 
   def pax_edit(assigns) do
     ~H"""
-    <.form for={@pax.form} class={["pax-detail pax-detail-edit", @class]} phx-change="pax_validate" phx-submit="pax_save">
+    <.form
+      id="pax-detail-form"
+      for={@pax.form}
+      class={["pax-detail pax-detail-edit", @class]}
+      phx-change="pax_validate"
+      phx-submit="pax_save"
+    >
       <.pax_header class="pax-detail-header pax-detail-edit-header">
         <:primary>
           {Pax.Plugin.render(:edit_header_primary, assigns)}
@@ -147,7 +153,13 @@ defmodule Pax.Interface.Components do
 
   def pax_new(assigns) do
     ~H"""
-    <.form for={@pax.form} class={["pax-detail pax-detail-new", @class]} phx-change="pax_validate" phx-submit="pax_save">
+    <.form
+      id="pax-detail-form"
+      for={@pax.form}
+      class={["pax-detail pax-detail-new", @class]}
+      phx-change="pax_validate"
+      phx-submit="pax_save"
+    >
       <.pax_header class="pax-detail-header pax-detail-new-header">
         <:primary>
           {Pax.Plugin.render(:new_header_primary, assigns)}

@@ -13,6 +13,3 @@ config :logger, level: :warning
 
 # Initialize plugs at runtime, so the test endpoint can compile before the test router
 config :phoenix, :plug_init_mode, :runtime
-
-# The pagination plugin's page form has no id, which LiveViewTest warns about on every render
-config :phoenix_live_view, :test_warnings, missing_form_id: :ignore

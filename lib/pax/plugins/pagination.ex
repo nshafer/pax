@@ -157,13 +157,13 @@ defmodule Pax.Plugins.Pagination do
       <%!-- Link to previous page (<) --%>
       <.pax_link
         class={["pax-pagination-link", !@pax.private.pagination.has_prev && "disabled"]}
-        patch={with_params(@pax.path, page: [value: @pax.private.pagination.page - 1, default: 1])}
+        patch={with_params(@pax.path, page: [value: max(@pax.private.pagination.page - 1, 1), default: 1])}
       >
         <.angle_left />
       </.pax_link>
 
       <%!-- If there are less than 10 pages, show select, otherwise show a number input --%>
-      <form phx-change="pagination-page-change" phx-submit="pagination-page-submit">
+      <form id="pax-pagination-form" phx-change="pagination-page-change" phx-submit="pagination-page-submit">
         <%= if @pax.private.pagination.num_pages <= 10 do %>
           <.pax_select
             class="pax-pagination-page-select"
@@ -190,7 +190,11 @@ defmodule Pax.Plugins.Pagination do
       <%!-- Link to next page (>) --%>
       <.pax_link
         class={["pax-pagination-link", !@pax.private.pagination.has_next && "disabled"]}
-        patch={with_params(@pax.path, page: [value: @pax.private.pagination.page + 1, default: 1])}
+        patch={
+          with_params(@pax.path,
+            page: [value: min(@pax.private.pagination.page + 1, @pax.private.pagination.num_pages), default: 1]
+          )
+        }
       >
         <.angle_right />
       </.pax_link>
