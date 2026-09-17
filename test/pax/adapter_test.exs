@@ -196,12 +196,23 @@ defmodule Pax.Adapters.EctoSchemaTest do
              ]
     end
 
-    @tag :known_bug
     test "skips fields with unsupported types" do
-      fields = EctoSchema.default_fields(%{schema: PaxTest.AllTypes})
-
-      assert Keyword.has_key?(fields, :string)
-      refute Keyword.has_key?(fields, :binary)
+      assert EctoSchema.default_fields(%{schema: PaxTest.AllTypes}) == [
+               uuid: :string,
+               ref_id: :integer,
+               integer: :integer,
+               float: :float,
+               boolean: :boolean,
+               string: :string,
+               date: :date,
+               time: :time,
+               time_usec: :time,
+               naive_datetime: :datetime,
+               naive_datetime_usec: :datetime,
+               utc_datetime: :datetime,
+               utc_datetime_usec: :datetime,
+               ecto_uuid: :string
+             ]
     end
   end
 

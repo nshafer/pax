@@ -87,7 +87,7 @@ defmodule Pax.Adapters.EctoSchema do
   def default_fields(%{schema: schema}) do
     for field_name <- schema.__schema__(:fields),
         schema_type = schema.__schema__(:type, field_name),
-        {:ok, field_type} = schema_to_field_type(schema, schema_type) do
+        {:ok, field_type} <- [schema_to_field_type(schema, schema_type)] do
       {field_name, field_type}
     end
   end
