@@ -50,7 +50,8 @@ defmodule Pax.MixProject do
   # watch task
   defp test_coverage do
     [
-      ignore_modules: [~r/^PaxTest\./, Pax.Debug, Pax.Token, Mix.Tasks.Watch]
+      ignore_modules: [~r/^PaxTest\./, Pax.Debug, Pax.Token, Mix.Tasks.Watch],
+      summary: [threshold: 100]
     ]
   end
 
