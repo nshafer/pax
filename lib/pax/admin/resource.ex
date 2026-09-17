@@ -17,11 +17,17 @@ defmodule Pax.Admin.Resource do
 
   # Pax.Interface callbacks
 
+  @doc """
+  Called when a resource page mounts, before Pax is initialized. Returns the same values as `c:Pax.Interface.pax_init/3`.
+  """
   @callback init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
+            ) ::
+              {:cont, Phoenix.LiveView.Socket.t()}
+              | {:skip, Phoenix.LiveView.Socket.t()}
+              | {:halt, Phoenix.LiveView.Socket.t()}
 
   @callback adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               module() | {module(), keyword()} | {module(), module(), keyword()}

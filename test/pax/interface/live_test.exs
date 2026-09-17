@@ -37,8 +37,8 @@ defmodule Pax.Interface.LiveTest do
       assert has_element?(view, ".pax-index")
     end
 
-    test "pax_init/3 can halt pax initialization without halting the mount", %{conn: conn} do
-      index_interface(pax_init: fn _params, _session, socket -> {:halt, socket} end)
+    test "pax_init/3 can skip pax initialization without halting the mount", %{conn: conn} do
+      index_interface(pax_init: fn _params, _session, socket -> {:skip, socket} end)
 
       {:ok, view, _html} = live(conn, "/interface")
 
@@ -47,13 +47,44 @@ defmodule Pax.Interface.LiveTest do
       assert_received {:user_handle_params, _, _}
     end
 
-    @tag :known_bug
-    test "pax_init/3 can halt with a redirect", %{conn: conn} do
+    test "pax_init/3 can halt the mount with a redirect", %{conn: conn} do
       index_interface(
-        pax_init: fn _params, _session, socket -> {:halt, Phoenix.LiveView.push_navigate(socket, to: "/elsewhere")} end
+        pax_init: fn _params, _session, socket -> {:halt, Phoenix.LiveView.push_navigate(socket, to: "/elsewhere")} end,
+        mount: fn _params, _session, _socket -> raise "should not mount" end
       )
 
       assert {:error, {:live_redirect, %{to: "/elsewhere"}}} = live(conn, "/interface")
+      refute_received {:spy, :init, _, _}
+    end
+
+    test "pax_init/3 must redirect when halting", %{conn: conn} do
+      index_interface(pax_init: fn _params, _session, socket -> {:halt, socket} end)
+
+      assert_raise ArgumentError,
+                   ~r/PaxTest.InterfaceLive.pax_init\/3 returned {:halt, socket} without redirecting/,
+                   fn ->
+                     live(conn, "/interface")
+                   end
+    end
+
+    test "pax_init/3 must halt when redirecting", %{conn: conn} do
+      for tag <- [:cont, :skip] do
+        index_interface(
+          pax_init: fn _params, _session, socket -> {tag, Phoenix.LiveView.push_navigate(socket, to: "/")} end
+        )
+
+        assert_raise ArgumentError, ~r/returned {#{inspect(tag)}, socket} after redirecting the socket/, fn ->
+          live(conn, "/interface")
+        end
+      end
+    end
+
+    test "raises on an invalid pax_init/3 return", %{conn: conn} do
+      index_interface(pax_init: fn _params, _session, socket -> {:ok, socket} end)
+
+      assert_raise ArgumentError, ~r/Invalid return from PaxTest.InterfaceLive.pax_init\/3: {:ok, /, fn ->
+        live(conn, "/interface")
+      end
     end
 
     test "raises on invalid configuration", %{conn: conn} do

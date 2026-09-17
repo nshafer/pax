@@ -130,14 +130,25 @@ defmodule Pax.Admin.LiveTest do
       assert_received {:author_resource, :created, %Author{id: 99, name: "Octavia"}}
     end
 
-    test "the resource init can halt pax", %{conn: conn} do
-      Owner.put(:author_resource_init, fn _params, _session, socket -> {:halt, socket} end)
+    test "the resource init can skip pax", %{conn: conn} do
+      Owner.put(:author_resource_init, fn _params, _session, socket -> {:skip, socket} end)
 
       conn
       |> visit("/admin/library/r/authors")
       |> assert_has(".admin-loading", text: "Loading...")
       |> assert_has("title", text: "Authors · Pax Admin")
       |> assert_has(".admin-breadcrumbs", text: "Dashboard")
+    end
+
+    test "the resource init can redirect", %{conn: conn} do
+      Owner.put(:author_resource_init, fn _params, _session, socket ->
+        {:halt, Phoenix.LiveView.push_navigate(socket, to: "/admin")}
+      end)
+
+      conn
+      |> visit("/admin/library/r/authors")
+      |> assert_path("/admin")
+      |> assert_has("main .pax-title", text: "Dashboard")
     end
 
     test "raises when the resource doesn't exist", %{conn: conn} do

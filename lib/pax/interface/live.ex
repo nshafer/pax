@@ -6,24 +6,57 @@ defmodule Pax.Interface.Live do
   import Pax.Interface.Init
   alias Pax.Interface.Index
   alias Pax.Interface.Detail
+  alias Phoenix.LiveView.Socket
 
   # Mount initialization
 
   def on_mount(module, params, session, socket) do
     # IO.puts("#{inspect(__MODULE__)}.on_mount(#{inspect(module)}, #{inspect(params)}, #{inspect(session)}")
 
-    # module.pax_init can return {:halt, socket} to halt the pax initialization process, but we don't want to halt the
-    # mount process, so we will always return {:cont, socket}. If the user wants to halt the mount after calling
-    # a redirect, then they will need to do so in their own mount callback.
+    # module.pax_init decides whether Pax is initialized, and whether the LiveView keeps mounting:
+    #
+    #   * {:cont, socket} - initialize Pax and continue mounting.
+    #   * {:skip, socket} - continue mounting without initializing Pax, so there is no @pax and no Pax hooks.
+    #   * {:halt, socket} - stop mounting and follow the redirect, which LiveView requires when an on_mount hook halts.
 
-    with(
-      {:cont, socket} <- module.pax_init(params, session, socket),
-      {:cont, socket} <- init(module, socket)
-    ) do
-      {:cont, socket}
-    else
-      {:halt, socket} -> {:cont, socket}
+    case module.pax_init(params, session, socket) do
+      {:cont, %Socket{redirected: nil} = socket} -> init(module, socket)
+      {:skip, %Socket{redirected: nil} = socket} -> {:cont, socket}
+      {:halt, %Socket{redirected: redirected} = socket} when redirected != nil -> {:halt, socket}
+      other -> raise_invalid_pax_init!(module, other)
     end
+  end
+
+  defp raise_invalid_pax_init!(module, {:halt, %Socket{}}) do
+    raise ArgumentError, """
+    #{inspect(module)}.pax_init/3 returned {:halt, socket} without redirecting.
+
+    Halting stops the LiveView from mounting, so the socket must be redirected first, for example:
+
+        {:halt, push_navigate(socket, to: ~p"/login")}
+
+    To continue mounting without initializing Pax, return {:skip, socket} instead.
+    """
+  end
+
+  defp raise_invalid_pax_init!(module, {tag, %Socket{}}) when tag in [:cont, :skip] do
+    raise ArgumentError, """
+    #{inspect(module)}.pax_init/3 returned {#{inspect(tag)}, socket} after redirecting the socket.
+
+    To stop mounting and follow the redirect, return {:halt, socket} instead.
+    """
+  end
+
+  defp raise_invalid_pax_init!(module, other) do
+    raise ArgumentError, """
+    Invalid return from #{inspect(module)}.pax_init/3: #{inspect(other, limit: 5)}
+
+    Expected one of:
+
+        {:cont, socket} - initialize Pax and continue mounting
+        {:skip, socket} - continue mounting without initializing Pax
+        {:halt, socket} - stop mounting, after redirecting the socket
+    """
   end
 
   defp init(module, socket) do

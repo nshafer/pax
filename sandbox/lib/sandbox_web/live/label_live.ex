@@ -33,7 +33,7 @@ defmodule SandboxWeb.LabelLive do
   end
 
   # def pax_init(_params, _session, socket) do
-  #   {:halt, socket}
+  #   {:skip, socket}
   # end
 
   def pax_adapter(_socket) do

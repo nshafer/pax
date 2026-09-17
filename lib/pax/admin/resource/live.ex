@@ -44,7 +44,7 @@ defmodule Pax.Admin.Resource.Live do
     # if Phoenix.LiveView.connected?(socket) do
     # resource.mod.init(params, session, socket)
     # else
-    #   {:halt, socket}
+    #   {:skip, socket}
     # end
   end
 

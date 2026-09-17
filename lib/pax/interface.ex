@@ -98,11 +98,22 @@ defmodule Pax.Interface do
   @type object :: %{atom() => any()}
 
   # Common callbacks
+
+  @doc """
+  Called when the LiveView mounts, before Pax is initialized. Returns one of:
+
+  * `{:cont, socket}` - initialize Pax and continue mounting.
+  * `{:skip, socket}` - continue mounting without initializing Pax, so there is no `@pax` assign.
+  * `{:halt, socket}` - stop mounting. The socket must be redirected first, such as with `push_navigate/2`.
+  """
   @callback pax_init(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: {:cont, Phoenix.LiveView.Socket.t()} | {:halt, Phoenix.LiveView.Socket.t()}
+            ) ::
+              {:cont, Phoenix.LiveView.Socket.t()}
+              | {:skip, Phoenix.LiveView.Socket.t()}
+              | {:halt, Phoenix.LiveView.Socket.t()}
   @callback pax_adapter(socket :: Phoenix.LiveView.Socket.t()) ::
               nil | module() | {module(), keyword()} | {module(), module(), keyword()}
   @callback pax_plugins(socket :: Phoenix.LiveView.Socket.t()) :: [Pax.Plugin.pluginspec()]
