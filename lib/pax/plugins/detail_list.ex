@@ -47,7 +47,7 @@ defmodule Pax.Plugins.DetailList do
   def render(%{placement: placement} = opts, placement, assigns),
     do: detail_list(opts, assigns)
 
-  def render(%{placement: placement} = opts, section, assigns) do
+  def render(%{placement: placement} = opts, section, assigns) when is_list(placement) do
     if Enum.member?(placement, section) do
       detail_list(opts, assigns)
     else

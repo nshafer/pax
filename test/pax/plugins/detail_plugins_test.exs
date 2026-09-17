@@ -65,12 +65,8 @@ defmodule Pax.Plugins.DetailListTest do
 
     test "can be placed in one section" do
       plugin = plugin(DetailList, [], placement: :show_footer_primary)
-      assert count(render_plugin(plugin, :show_footer_primary, @pax), ".pax-detail-list-item") == 3
-    end
 
-    @tag :known_bug
-    test "renders nothing in other sections when placed in one section" do
-      plugin = plugin(DetailList, [], placement: :show_footer_primary)
+      assert count(render_plugin(plugin, :show_footer_primary, @pax), ".pax-detail-list-item") == 3
       assert render_plugin(plugin, :show_body, @pax) == ""
     end
   end
