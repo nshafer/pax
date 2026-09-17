@@ -744,11 +744,11 @@ defmodule Pax.ConfigTest do
       end
     end
 
-    @tag :known_bug
     test "fetch!/3 accepts a list of keys" do
-      config = Config.validate!(%{foo: %{bar: :string}}, %{foo: %{bar: "baz"}})
-      # apply/3, since the type checker already knows a list of keys fails the guard
-      assert apply(Config, :fetch!, [config, [:foo, :bar]]) == "baz"
+      config = Config.validate!(%{foo: %{bar: :string, qux: :string}}, %{foo: %{bar: "baz"}})
+
+      assert Config.fetch!(config, [:foo, :bar]) == "baz"
+      assert_raise KeyError, fn -> Config.fetch!(config, [:foo, :qux]) end
     end
   end
 end

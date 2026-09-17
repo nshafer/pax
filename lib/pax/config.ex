@@ -479,10 +479,10 @@ defmodule Pax.Config do
   for the given key.
   """
   @spec fetch!(config :: map(), key_or_keys :: atom | nonempty_list(atom), args :: list()) :: any()
-  def fetch!(config, key, args \\ []) when is_atom(key) and is_map(config) do
-    case fetch(config, key, args) do
+  def fetch!(config, key_or_keys, args \\ []) when (is_atom(key_or_keys) or is_list(key_or_keys)) and is_map(config) do
+    case fetch(config, key_or_keys, args) do
       {:ok, value} -> value
-      :error -> raise KeyError, term: config, key: key
+      :error -> raise KeyError, term: config, key: key_or_keys
     end
   end
 
