@@ -26,6 +26,18 @@ def deps do
 end
 ```
 
+### Endpoint
+
+Add the following to your "lib/myapp_web/endpoint.ex", after any `socket` lines, and before `plug Plug.Parsers`. The
+best place is right after any existing `plug Plug.Static` lines.
+
+```elixir
+plug Pax.Assets
+```
+
+This serves Pax's assets under "/pax", including the CSS, JavaScript and fonts that `Pax.Admin` needs, so it is
+required even if you bundle the `Pax.Interface` assets into your own assets as described below.
+
 ### Static assets
 
 Pax ships with a small set of static assets for `Pax.Interface`s:
@@ -167,16 +179,9 @@ Use this if you don't have a build system, or can't bundle the Pax assets with i
 separately, they are not in a cascade layer, so any layered styles in your own CSS, such as all of Tailwind 4, will not
 be able to override them.
 
-Add the following to your "lib/myapp_web/endpoint.ex", after any `socket` lines, and before `plug Plug.Parsers`. The
-best place is right after any existing `plug Plug.Static` lines.
-
-```elixir
-plug Pax.Assets
-```
-
 Add the Pax assets to "lib/myapp_web/components/layouts/root.html.heex", in the `<head>`, and before your own CSS and
-JavaScript, so your CSS can override the Pax styles. As with Option A, your JavaScript must assign your LiveSocket to
-`window.liveSocket`:
+JavaScript, so your CSS can override the Pax styles. They are served by the `plug Pax.Assets` you added to your
+endpoint above. As with Option A, your JavaScript must assign your LiveSocket to `window.liveSocket`:
 
 ```heex
 <head>
