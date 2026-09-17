@@ -362,6 +362,8 @@ defmodule Pax.AdminTest do
     test "the admin module's path functions" do
       assert PaxTest.Admin.resource_index_path(:books) == "/admin/r/books"
       assert PaxTest.Admin.resource_index_path(:library, :authors) == "/admin/library/r/authors"
+      assert PaxTest.Admin.resource_new_path(:books) == "/admin/r/books/new"
+      assert PaxTest.Admin.resource_new_path(:library, :authors) == "/admin/library/r/authors/new"
       assert PaxTest.Admin.resource_show_path(:books, [1]) == "/admin/r/books/1"
       assert PaxTest.Admin.resource_show_path(:library, :authors, [1]) == "/admin/library/r/authors/1"
       assert PaxTest.Admin.resource_edit_path(:books, [1]) == "/admin/r/books/edit/1"

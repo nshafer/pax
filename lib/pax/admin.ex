@@ -98,6 +98,9 @@ defmodule Pax.Admin do
       def resource_index_path(section \\ nil, resource),
         do: Pax.Admin.resource_index_path(__MODULE__, section, resource)
 
+      def resource_new_path(section \\ nil, resource),
+        do: Pax.Admin.resource_new_path(__MODULE__, section, resource)
+
       def resource_show_path(section \\ nil, resource, object_ids),
         do: Pax.Admin.resource_show_path(__MODULE__, section, resource, object_ids)
 
