@@ -16,7 +16,7 @@ defmodule Pax.Admin do
   alias Pax.Admin.Resource
   alias Pax.Admin
 
-  defstruct [:admin_mod, :config, :resources, :active, :resource]
+  defstruct [:admin_mod, :config, :title, :resources, :active, :resource]
 
   @doc """
   Renders the dashboard page, replacing the default dashboard.
@@ -29,11 +29,16 @@ defmodule Pax.Admin do
   """
   @callback render_resource(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
 
+  @doc """
+  Returns the admin's config at runtime, instead of the `config/1` macro. See `Pax.Admin.Config` for the keys.
+
+  It is called when every page in the admin mounts, for example the dashboard and every resource page, before Pax is initialized.
+  """
   @callback config(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
               session :: map(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: nil | map()
+            ) :: keyword() | map()
 
   @callback resources(
               params :: Phoenix.LiveView.unsigned_params() | :not_mounted_at_router,
@@ -121,43 +126,58 @@ defmodule Pax.Admin do
     end
   end
 
+  @doc """
+  Sets the admin's config, as a keyword list or map. See `Pax.Admin.Config` for the keys.
+
+  The config is kept unevaluated and compiled into a function, so values can be anonymous functions. It is validated
+  when an admin page mounts.
+
+  ## Example
+
+      config title: "My Admin"
+  """
   defmacro config(opts) do
     quote do
-      Module.put_attribute(__MODULE__, :pax_config, Pax.Admin.__config__(unquote(opts)))
+      Pax.Admin.__config__(__MODULE__, unquote(Macro.escape(opts)))
     end
   end
 
-  def __config__(%Config{} = config), do: config
-  def __config__(nil), do: %Config{}
+  def __config__(admin_mod, quoted_opts) do
+    if Module.get_attribute(admin_mod, :pax_config) != nil do
+      raise "config can only be set once"
+    end
 
-  def __config__(opts) when is_list(opts) do
-    struct!(Config, opts)
-  rescue
-    error -> raise "invalid config: #{inspect(opts)}: #{Exception.message(error)}"
+    Module.put_attribute(admin_mod, :pax_config, quoted_opts)
   end
 
-  def __config__(conf) when is_map(conf), do: Keyword.new(conf)
-  def __config__(arg), do: raise("invalid config: #{inspect(arg)}")
-
+  @doc """
+  Returns the validated config for an admin, from its `c:config/3` callback or its `config/1` macro.
+  """
   def config_for(admin_mod, params, session, socket) do
-    if Code.ensure_loaded?(admin_mod) and function_exported?(admin_mod, :config, 3) do
-      # TODO: only pass socket
-      # TODO: use Pax.Config for the Admin config
-      admin_mod.config(params, session, socket)
-      |> merge_config()
-    else
-      admin_mod.__pax__(:config)
-      |> merge_config()
+    {config_data, source} =
+      if Code.ensure_loaded?(admin_mod) and function_exported?(admin_mod, :config, 3) do
+        {admin_mod.config(params, session, socket), "returned from #{inspect(admin_mod)}.config/3"}
+      else
+        {admin_mod.__pax__(:config), "given to config in #{inspect(admin_mod)}"}
+      end
+
+    if not (is_list(config_data) or is_map(config_data)) do
+      raise ArgumentError, "invalid config #{source}, must be a keyword list or map: #{inspect(config_data)}"
     end
-  rescue
-    error -> raise "invalid config in #{admin_mod}: #{Exception.message(error)}"
+
+    Pax.Config.validate!(Config.config_spec(), config_data)
   end
 
-  defp merge_config(%Config{} = conf), do: conf
-  defp merge_config(nil), do: %Config{}
-  defp merge_config(opts) when is_list(opts), do: struct!(Config, opts)
-  defp merge_config(conf) when is_map(conf), do: Keyword.new(conf) |> merge_config()
-  defp merge_config(arg), do: raise("invalid config: #{inspect(arg)}")
+  @doc false
+  # Assigns the admin's validated config, and the values resolved from it. Run this after the rest of the admin's
+  # assigns, so config functions can use them.
+  def assign_config(socket, admin_mod, params, session) do
+    config = config_for(admin_mod, params, session, socket)
+
+    socket
+    |> assign_admin(config: config)
+    |> assign_admin(title: Pax.Config.get(config, :title, [socket]))
+  end
 
   defmacro section(name, opts \\ [], do: body) when is_atom(name) and is_list(opts) do
     quote do
@@ -399,11 +419,13 @@ defmodule Pax.Admin do
   #   │
   #   └─ lib/sandbox_web/admin.ex:1: SandboxWeb.Admin.__pax__/1
 
+  # TODO: raise if an admin both defines a callback and uses the equivalent macros, since the callback silently wins:
+  #       `config/1` with the `config` macro, and `resources/3` with the `section` and `resource` macros.
   defmacro __before_compile__(env) do
     quote do
       def __pax__(:router), do: @pax_router
       def __pax__(:path), do: @pax_router.__pax__(:paths) |> Map.get(__MODULE__)
-      def __pax__(:config), do: @pax_config
+      def __pax__(:config), do: unquote(Module.get_attribute(env.module, :pax_config) || [])
 
       @pax_resources_sorted Module.delete_attribute(__MODULE__, :pax_resources) |> Enum.reverse()
       def __pax__(:resources), do: @pax_resources_sorted

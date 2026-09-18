@@ -33,10 +33,10 @@ defmodule Pax.Admin.Resource.Live do
     socket =
       socket
       |> assign_admin(admin_mod: admin_mod)
-      |> assign_admin(config: Pax.Admin.config_for(admin_mod, params, session, socket))
       |> assign_admin(active: :resource)
       |> assign_admin(resources: resources)
       |> assign_admin(resource: resource)
+      |> Pax.Admin.assign_config(admin_mod, params, session)
 
     resource.mod.init(params, session, socket)
 

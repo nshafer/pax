@@ -2,7 +2,6 @@ defmodule Pax.AdminTest do
   use ExUnit.Case, async: true
 
   alias Pax.Admin
-  alias Pax.Admin.Config
   alias Pax.Admin.Resource
   alias Pax.Admin.Section
   alias PaxTest.Owner
@@ -22,10 +21,10 @@ defmodule Pax.AdminTest do
     test "exposes the router, path, config and resources" do
       assert PaxTest.Admin.__pax__(:router) == PaxTest.Router
       assert PaxTest.Admin.__pax__(:path) == "/admin"
-      assert PaxTest.Admin.__pax__(:config) == %Config{title: "Test Admin"}
+      assert PaxTest.Admin.__pax__(:config) == [title: "Test Admin"]
 
       assert PaxTest.CustomAdmin.__pax__(:path) == "/nested/custom"
-      assert PaxTest.CustomAdmin.__pax__(:config) == nil
+      assert PaxTest.CustomAdmin.__pax__(:config) == []
     end
 
     test "collects resources in order with their sections" do
@@ -146,57 +145,135 @@ defmodule Pax.AdminTest do
       end)
 
       module = Module.concat([name])
-      assert module.__pax__(:config) == %Config{title: "Compiled"}
+      assert module.__pax__(:config) == [title: "Compiled"]
 
       assert [%Resource{section: nil}, %Resource{section: %Section{name: :library}}, %Resource{name: :authors}] =
                module.__pax__(:resources)
     end
   end
 
-  describe "__config__/1" do
-    test "accepts a config struct, nil, keyword list or map" do
-      assert Admin.__config__(%Config{title: "A"}) == %Config{title: "A"}
-      assert Admin.__config__(nil) == %Config{}
-      assert Admin.__config__(title: "A") == %Config{title: "A"}
-      assert Admin.__config__(%{title: "A"}) == [title: "A"]
+  describe "config/1 macro" do
+    test "stores the config unevaluated, so values can be functions" do
+      name = unique_name()
+
+      ExUnit.CaptureIO.capture_io(:stderr, fn ->
+        compile_admin(name, ~S"""
+        config title: fn socket -> "Admin for #{socket.assigns.user}" end
+        """)
+      end)
+
+      config = Admin.config_for(Module.concat([name]), %{}, %{}, nil)
+      assert Pax.Config.get(config, :title, [%{assigns: %{user: "ursula"}}]) == "Admin for ursula"
     end
 
-    test "raises on invalid config" do
-      assert_raise RuntimeError, ~r/invalid config: \[made_up: 1\]: .*made_up/, fn -> Admin.__config__(made_up: 1) end
-      assert_raise RuntimeError, "invalid config: 123", fn -> Admin.__config__(123) end
+    test "accepts a map" do
+      name = unique_name()
+      ExUnit.CaptureIO.capture_io(:stderr, fn -> compile_admin(name, ~S(config %{title: "Mapped"})) end)
+
+      assert Module.concat([name]).__pax__(:config) == %{title: "Mapped"}
+    end
+
+    test "can only be used once" do
+      assert_raise RuntimeError, "config can only be set once", fn ->
+        compile_admin(unique_name(), """
+        config title: "One"
+        config title: "Two"
+        """)
+      end
     end
   end
 
   describe "config_for/4" do
-    test "uses the config/3 callback" do
-      assert Admin.config_for(PaxTest.RuntimeAdmin, %{}, %{}, nil) == %Config{title: "Runtime Admin"}
-
-      for {returned, expected} <- [
-            {nil, %Config{}},
-            {%Config{title: "Struct"}, %Config{title: "Struct"}},
-            {[title: "List"], %Config{title: "List"}}
-          ] do
-        Owner.put(:runtime_admin_config, fn _, _, _ -> returned end)
-        assert Admin.config_for(PaxTest.RuntimeAdmin, %{}, %{}, nil) == expected
-      end
+    test "validates the config from the macro" do
+      assert Admin.config_for(PaxTest.Admin, %{}, %{}, nil) == %{title: {:string, "Test Admin"}}
+      assert Admin.config_for(PaxTest.CustomAdmin, %{}, %{}, nil) == %{}
     end
 
-    test "uses the config from the macros" do
-      assert Admin.config_for(PaxTest.Admin, %{}, %{}, nil) == %Config{title: "Test Admin"}
-      assert Admin.config_for(PaxTest.CustomAdmin, %{}, %{}, nil) == %Config{}
+    test "validates the config from the config/3 callback, as a keyword list or map" do
+      assert Admin.config_for(PaxTest.RuntimeAdmin, %{}, %{}, nil) == %{title: {:string, "Runtime Admin"}}
+
+      Owner.put(:runtime_admin_config, fn _params, _session, _socket -> [title: "List"] end)
+      assert Admin.config_for(PaxTest.RuntimeAdmin, %{}, %{}, nil) == %{title: {:string, "List"}}
     end
 
-    test "raises on invalid config" do
-      Owner.put(:runtime_admin_config, fn _, _, _ -> "title" end)
+    test "passes the params, session and socket to the callback" do
+      Owner.put(:runtime_admin_config, fn params, session, socket ->
+        [title: "#{params["page"]} #{session["user"]} #{socket.assigns.title}"]
+      end)
 
-      assert_raise RuntimeError, ~r/invalid config in Elixir.PaxTest.RuntimeAdmin: invalid config: "title"/, fn ->
+      params = %{"page" => "2"}
+      session = %{"user" => "ursula"}
+      socket = %{assigns: %{title: "Admin"}}
+
+      assert Admin.config_for(PaxTest.RuntimeAdmin, params, session, socket) == %{title: {:string, "2 ursula Admin"}}
+    end
+
+    test "raises on unknown keys and wrong types" do
+      Owner.put(:runtime_admin_config, fn _params, _session, _socket -> %{made_up: true} end)
+
+      assert_raise Pax.ConfigError, "invalid key :made_up in config", fn ->
         Admin.config_for(PaxTest.RuntimeAdmin, %{}, %{}, nil)
       end
 
-      Owner.put(:runtime_admin_config, fn _, _, _ -> %{made_up: true} end)
+      Owner.put(:runtime_admin_config, fn _params, _session, _socket -> [title: :atom] end)
+      assert_raise Pax.Config.TypeError, fn -> Admin.config_for(PaxTest.RuntimeAdmin, %{}, %{}, nil) end
+    end
 
-      assert_raise RuntimeError, ~r/invalid config in Elixir.PaxTest.RuntimeAdmin/, fn ->
-        Admin.config_for(PaxTest.RuntimeAdmin, %{}, %{}, nil)
+    test "raises when the config isn't a keyword list or map" do
+      Owner.put(:runtime_admin_config, fn _params, _session, _socket -> nil end)
+
+      assert_raise ArgumentError,
+                   "invalid config returned from PaxTest.RuntimeAdmin.config/3, must be a keyword list or map: nil",
+                   fn -> Admin.config_for(PaxTest.RuntimeAdmin, %{}, %{}, nil) end
+
+      name = unique_name()
+      ExUnit.CaptureIO.capture_io(:stderr, fn -> compile_admin(name, ~S(config "title")) end)
+
+      assert_raise ArgumentError,
+                   ~r/invalid config given to config in PaxTest.CompiledAdmin\d+, must be a keyword/,
+                   fn ->
+                     Admin.config_for(Module.concat([name]), %{}, %{}, nil)
+                   end
+    end
+
+    test "has a valid config spec" do
+      assert {:ok, _} = Pax.Config.validate(Pax.Admin.Config.config_spec(), %{}, validate_config_spec: true)
+    end
+  end
+
+  describe "assign_config/4" do
+    defp socket(admin_assigns) do
+      Admin.assign_admin(%Phoenix.LiveView.Socket{}, admin_assigns)
+    end
+
+    defp assign_config(socket, admin_mod) do
+      Admin.assign_config(socket, admin_mod, %{}, %{})
+    end
+
+    test "assigns the config and resolves the title" do
+      socket = socket(admin_mod: PaxTest.Admin) |> assign_config(PaxTest.Admin)
+
+      assert socket.assigns.pax_admin.config == %{title: {:string, "Test Admin"}}
+      assert socket.assigns.pax_admin.title == "Test Admin"
+
+      assert (socket(admin_mod: PaxTest.CustomAdmin) |> assign_config(PaxTest.CustomAdmin)).assigns.pax_admin.title ==
+               nil
+    end
+
+    test "resolves functions with the socket and the admin's other assigns" do
+      Owner.put(:runtime_admin_config, fn _params, _session, _socket ->
+        [title: fn socket -> "#{length(socket.assigns.pax_admin.resources)} resources" end]
+      end)
+
+      socket = socket(resources: [:a, :b]) |> assign_config(PaxTest.RuntimeAdmin)
+      assert socket.assigns.pax_admin.title == "2 resources"
+    end
+
+    test "raises when a function returns the wrong type" do
+      Owner.put(:runtime_admin_config, fn _params, _session, _socket -> [title: fn _socket -> :atom end] end)
+
+      assert_raise Pax.Config.TypeError, ~r/invalid type returned from function for title/, fn ->
+        socket([]) |> assign_config(PaxTest.RuntimeAdmin)
       end
     end
   end
@@ -399,16 +476,16 @@ defmodule Pax.AdminTest do
   describe "assign_admin/3" do
     test "assigns into the admin struct on a socket" do
       socket =
-        %Phoenix.LiveView.Socket{} |> Admin.assign_admin(:active, :dashboard) |> Admin.assign_admin(config: %Config{})
+        %Phoenix.LiveView.Socket{} |> Admin.assign_admin(:active, :dashboard) |> Admin.assign_admin(title: "A")
 
-      assert socket.assigns.pax_admin == %Admin{active: :dashboard, config: %Config{}}
+      assert socket.assigns.pax_admin == %Admin{active: :dashboard, title: "A"}
     end
 
     test "assigns into the admin struct in an assigns map" do
       assigns = %{__changed__: %{}, pax: %Pax.Interface{}, pax_admin: %Admin{active: :resource}}
-      assigns = Admin.assign_admin(assigns, :config, %Config{})
+      assigns = Admin.assign_admin(assigns, :title, "A")
 
-      assert assigns.pax_admin == %Admin{active: :resource, config: %Config{}}
+      assert assigns.pax_admin == %Admin{active: :resource, title: "A"}
     end
   end
 end

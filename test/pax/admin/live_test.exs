@@ -64,6 +64,18 @@ defmodule Pax.Admin.LiveTest do
       assert attr(html(session), "#admin_menu_section_archive a", "href") == ["/runtime-admin/archive/r/books"]
     end
 
+    test "resolves a title function when the page mounts", %{conn: conn} do
+      Owner.put(:runtime_admin_config, fn _params, _session, _socket ->
+        [title: fn socket -> "Runtime Admin with #{length(socket.assigns.pax_admin.resources)} resources" end]
+      end)
+
+      conn
+      |> visit("/runtime-admin")
+      |> assert_has(".admin-title", text: "Runtime Admin with 3 resources")
+      |> visit("/runtime-admin/r/books")
+      |> assert_has(".admin-title", text: "Runtime Admin with 3 resources")
+    end
+
     test "uses the default title and a custom dashboard", %{conn: conn} do
       conn
       |> visit("/nested/custom")

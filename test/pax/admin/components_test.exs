@@ -12,7 +12,7 @@ defmodule Pax.Admin.ComponentsTest do
 
   defp admin(opts \\ []) do
     struct!(
-      %Pax.Admin{admin_mod: PaxTest.Admin, config: %Pax.Admin.Config{}, resources: @resources, active: :dashboard},
+      %Pax.Admin{admin_mod: PaxTest.Admin, config: %{}, resources: @resources, active: :dashboard},
       opts
     )
   end
@@ -38,7 +38,7 @@ defmodule Pax.Admin.ComponentsTest do
 
   describe "admin_title/1" do
     test "uses the config title or a default" do
-      assigns = %{with_title: admin(config: %Pax.Admin.Config{title: "Mine"}), without_title: admin()}
+      assigns = %{with_title: admin(title: "Mine"), without_title: admin()}
 
       html = ~H"""
       <.admin_title pax_admin={@with_title} />

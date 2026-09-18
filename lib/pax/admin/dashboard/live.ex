@@ -30,9 +30,9 @@ defmodule Pax.Admin.Dashboard.Live do
       socket
       |> assign(page_title: "Dashboard")
       |> assign_admin(admin_mod: admin_mod)
-      |> assign_admin(config: Pax.Admin.config_for(admin_mod, params, session, socket))
       |> assign_admin(active: :dashboard)
       |> assign_admin(resources: resources)
+      |> Pax.Admin.assign_config(admin_mod, params, session)
 
     {:ok, socket}
   end
