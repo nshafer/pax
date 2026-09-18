@@ -36,8 +36,15 @@ defmodule Pax.Plugins.IndexTableTest do
     Map.get(criteria, :order_by)
   end
 
-  test "has a valid config spec" do
+  test "has a valid config spec and documented options" do
     assert {:ok, _} = Pax.Config.validate(IndexTable.config_spec(), %{}, validate_config_spec: true)
+
+    assert_raise ArgumentError, ~r/^Invalid options for plugin .*IndexTable: unknown options \[:nope\]/, fn ->
+      PaxTest.PluginHelpers.plugin(IndexTable, nope: true)
+    end
+
+    assert {:docs_v1, _, _, _, %{"en" => moduledoc}, _, _} = Code.fetch_docs(IndexTable)
+    assert moduledoc =~ "## Options"
   end
 
   describe "rendering" do
@@ -102,6 +109,23 @@ defmodule Pax.Plugins.IndexTableTest do
     test "only renders on the index" do
       pax = %Pax.Interface{action: :show, fields: [Pax.Field.init(nil, {:title, :string})]}
       assert render_plugin(plugin(IndexTable), :index_body, pax) == ""
+    end
+
+    test "takes the fields as an option, which the config overrides" do
+      fields = [Pax.Field.init(nil, {:title, :string}), Pax.Field.init(nil, {:rank, :integer})]
+      pax = %Pax.Interface{action: :index, fields: fields, objects: [], path: %URI{path: "/"}}
+
+      html = render_plugin(plugin(IndexTable, fields: [:rank]), :index_body, pax)
+      assert texts(html, "th") == ["Rank"]
+
+      html = render_plugin(plugin(IndexTable, [fields: [:rank]], fields: [:title]), :index_body, pax)
+      assert texts(html, "th") == ["Title"]
+
+      assert_raise ArgumentError,
+                   ~r/^Invalid options for plugin Pax.Plugins.IndexTable: invalid list in :fields option/,
+                   fn ->
+                     plugin(IndexTable, fields: ["title"])
+                   end
     end
 
     test "raises on invalid field names" do

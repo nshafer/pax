@@ -1,23 +1,43 @@
 defmodule Pax.Plugins.Pagination do
+  @opts_schema NimbleOptions.new!(
+                 objects_per_page: [
+                   type: :pos_integer,
+                   default: 10,
+                   doc: "The number of objects to show on each page."
+                 ],
+                 count_placement: [
+                   type: :atom,
+                   default: :index_footer_primary,
+                   doc: "The section to render the page number and total count in."
+                 ],
+                 pager_placement: [
+                   type: :atom,
+                   default: :index_footer_secondary,
+                   doc: "The section to render the page links and page select in."
+                 ]
+               )
+
+  @moduledoc """
+  Paginates the index page of a Pax.Interface, by setting the `:limit` and `:offset` criteria from the `page` param.
+
+  ## Options
+
+  #{NimbleOptions.docs(@opts_schema)}
+  """
+
   use Pax.Interface.Plugin
   use Phoenix.Component
   import Pax.Components
   import Pax.Interface
   import Pax.Util.URI
 
-  @default_objects_per_page 10
-  @default_count_placement :index_footer_primary
-  @default_pager_placement :index_footer_secondary
-
   # Plugin callbacks
 
   @impl true
   def init(_callback_module, opts) do
-    %{
-      objects_per_page: Keyword.get(opts, :objects_per_page, @default_objects_per_page),
-      count_placement: Keyword.get(opts, :count_placement, @default_count_placement),
-      pager_placement: Keyword.get(opts, :pager_placement, @default_pager_placement)
-    }
+    opts
+    |> Pax.Options.validate!(@opts_schema, "plugin #{inspect(__MODULE__)}")
+    |> Map.new()
   end
 
   @impl true

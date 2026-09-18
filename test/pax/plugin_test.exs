@@ -9,7 +9,11 @@ defmodule Pax.PluginTest do
     use Pax.Interface.Plugin
     use Phoenix.Component
 
-    def init(_callback_module, opts), do: %{greeting: Keyword.get(opts, :greeting, "Hello")}
+    def init(_callback_module, opts) do
+      opts = Pax.Options.validate!(opts, [greeting: [type: :string, default: "Hello"]], "plugin #{inspect(__MODULE__)}")
+      %{greeting: opts[:greeting]}
+    end
+
     def config_key, do: :hello
 
     def render(opts, :greet, assigns) do
@@ -75,6 +79,19 @@ defmodule Pax.PluginTest do
       assert_raise ArgumentError, ~r/Invalid config key returned from Pax.PluginTest.BadConfigKeyPlugin/, fn ->
         Plugin.init(:callback, BadConfigKeyPlugin)
       end
+    end
+
+    test "passes the options to the plugin as given, for the plugin to validate" do
+      Plugin.init(PaxTest.InterfaceLive, {PaxTest.SpyPlugin, halt: [:handle_info]})
+      assert_received {:spy, :init, PaxTest.InterfaceLive, [halt: [:handle_info]]}
+
+      # A plugin that doesn't validate its options ignores any it doesn't read
+      assert Plugin.init(:callback, {PaxTest.BarePlugin, whatever: 1}).opts == %{}
+
+      # The built-in plugins validate theirs with Pax.Options
+      assert_raise ArgumentError,
+                   "Invalid options for plugin Pax.PluginTest.HelloPlugin: unknown options [:greting], valid options are: [:greeting]",
+                   fn -> Plugin.init(:callback, {HelloPlugin, greting: "Hi"}) end
     end
 
     test "raises when init doesn't return a map" do

@@ -33,7 +33,7 @@ defmodule Pax.Interface.LiveTest do
       {:ok, view, _html} = live(conn, "/interface?page=2")
 
       assert_receive {:pax_init, %{"page" => "2"}, %{}}
-      assert_receive {:spy, :init, PaxTest.InterfaceLive, []}
+      assert_receive {:spy, :init, PaxTest.InterfaceLive, [halt: []]}
       assert has_element?(view, ".pax-index")
     end
 

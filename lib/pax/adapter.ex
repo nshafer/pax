@@ -27,7 +27,12 @@ defmodule Pax.Adapter do
   @typedoc "Unsigned params from a Phoenix.LiveView handle_params/3"
   @type unsigned_params :: Phoenix.LiveView.unsigned_params()
 
-  @doc "The adapter initialization function, must return a map of initialized adapter state."
+  @doc """
+  The adapter initialization function, must return a map of initialized adapter state.
+
+  The `opts` are passed through as the developer gave them in `{MyAdapter, opts}`. Validate them with
+  `Pax.Options.validate!/3` if you want them checked, which is what `Pax.Adapters.EctoSchema` does.
+  """
   @callback init(callback_module, opts :: []) :: opts()
 
   @doc "A function that returns a valid Pax.Config spec for configuration keys and types accepted by the adapter."

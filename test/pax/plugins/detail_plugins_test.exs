@@ -17,8 +17,15 @@ defmodule Pax.Plugins.DetailListTest do
 
   @pax %Pax.Interface{action: :show, object: @author, fields: @fields}
 
-  test "has a valid config spec" do
+  test "has a valid config spec and documented options" do
     assert {:ok, _} = Pax.Config.validate(DetailList.config_spec(), %{}, validate_config_spec: true)
+
+    assert_raise ArgumentError, ~r/^Invalid options for plugin .*DetailList: unknown options \[:nope\]/, fn ->
+      PaxTest.PluginHelpers.plugin(DetailList, nope: true)
+    end
+
+    assert {:docs_v1, _, _, _, %{"en" => moduledoc}, _, _} = Code.fetch_docs(DetailList)
+    assert moduledoc =~ "## Options"
   end
 
   describe "render/3" do
@@ -40,6 +47,14 @@ defmodule Pax.Plugins.DetailListTest do
         assert attr(html, ".pax-detail-list-field-input input", "name") == ["detail[name]", "detail[born]"]
         assert texts(html, ".pax-detail-list-field-text") == ["1"]
       end
+    end
+
+    test "takes the fields as an option, which the config overrides" do
+      html = render_plugin(plugin(DetailList, fields: [:born]), :show_body, @pax)
+      assert texts(html, ".pax-detail-list-item-label") == ["Born"]
+
+      html = render_plugin(plugin(DetailList, [fields: [:born]], fields: [:name]), :show_body, @pax)
+      assert texts(html, ".pax-detail-list-item-label") == ["Name"]
     end
 
     test "renders only the configured fields, in order" do
@@ -108,8 +123,15 @@ defmodule Pax.Plugins.DetailFieldsetsTest do
     end)
   end
 
-  test "has a valid config spec" do
+  test "has a valid config spec and documented options" do
     assert {:ok, _} = Pax.Config.validate(DetailFieldsets.config_spec(), %{}, validate_config_spec: true)
+
+    assert_raise ArgumentError, ~r/^Invalid options for plugin .*DetailFieldsets: unknown options \[:nope\]/, fn ->
+      PaxTest.PluginHelpers.plugin(DetailFieldsets, nope: true)
+    end
+
+    assert {:docs_v1, _, _, _, %{"en" => moduledoc}, _, _} = Code.fetch_docs(DetailFieldsets)
+    assert moduledoc =~ "## Options"
   end
 
   describe "render/3" do
@@ -119,6 +141,14 @@ defmodule Pax.Plugins.DetailFieldsetsTest do
       assert fieldsets(html) == [{"", [["Name"], ["Born"], ["Active"], ["Id"]]}]
       assert texts(html, ".pax-detail-fieldsets-field-text") == ["Ursula", "1929", "True", "1"]
       assert classes(html, ".pax-detail-fieldsets-fieldgroup") |> hd() =~ "pax-detail-fieldsets-fieldgroup-count-1"
+    end
+
+    test "takes the fieldsets as an option, which the config overrides" do
+      html = render_plugin(plugin(DetailFieldsets, fieldsets: [default: [:born]]), :show_body, @pax)
+      assert fieldsets(html) == [{"", [["Born"]]}]
+
+      plugin = plugin(DetailFieldsets, [fieldsets: [default: [:born]]], fieldsets: [default: [:name]])
+      assert fieldsets(render_plugin(plugin, :show_body, @pax)) == [{"", [["Name"]]}]
     end
 
     test "renders the configured fieldsets and groups" do

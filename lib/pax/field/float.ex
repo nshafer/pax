@@ -1,13 +1,28 @@
 defmodule Pax.Field.Float do
+  @opts_schema NimbleOptions.new!(
+                 round: [
+                   type: {:or, [:integer, nil]},
+                   default: nil,
+                   doc: "The number of decimal places to round the value to when rendering."
+                 ]
+               )
+
+  @moduledoc """
+  A field type for float values, edited with a numeric text input.
+
+  ## Options
+
+  #{NimbleOptions.docs(@opts_schema)}
+  """
+
   use Phoenix.Component
   @behaviour Pax.Field.Type
 
   @impl Pax.Field.Type
   def init(opts) do
     # TODO: add formatting options: human, scientific, etc
-    %{
-      round: Keyword.get(opts, :round, nil)
-    }
+    opts = Pax.Options.validate!(opts, @opts_schema, "field type #{inspect(__MODULE__)}")
+    %{round: opts[:round]}
   end
 
   @impl Pax.Field.Type

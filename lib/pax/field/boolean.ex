@@ -1,13 +1,25 @@
 defmodule Pax.Field.Boolean do
+  @opts_schema NimbleOptions.new!(
+                 true: [type: :string, default: "True", doc: "The text shown for true values."],
+                 false: [type: :string, default: "False", doc: "The text shown for false and nil values."]
+               )
+
+  @moduledoc """
+  A field type for boolean values, rendered as text and edited with a checkbox.
+
+  ## Options
+
+  #{NimbleOptions.docs(@opts_schema)}
+  """
+
   use Phoenix.Component
   @behaviour Pax.Field.Type
 
   @impl Pax.Field.Type
   def init(opts) do
-    %{
-      true: Keyword.get(opts, true, "True"),
-      false: Keyword.get(opts, false, "False")
-    }
+    opts
+    |> Pax.Options.validate!(@opts_schema, "field type #{inspect(__MODULE__)}")
+    |> Map.new()
   end
 
   @impl Pax.Field.Type

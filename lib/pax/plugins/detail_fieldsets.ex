@@ -1,4 +1,40 @@
 defmodule Pax.Plugins.DetailFieldsets do
+  @opts_schema NimbleOptions.new!(
+                 placement: [
+                   type: {:or, [:atom, {:list, :atom}]},
+                   default: [:show_body, :edit_body, :new_body],
+                   doc: "The section, or list of sections, to render the fieldsets in."
+                 ],
+                 fieldsets: [
+                   type: {:list, :any},
+                   doc: """
+                   A structure defining the fieldsets, fieldgroups, and their contained fields. This determines which
+                   fields to include, their organization, and the order to display them. The structure should be a
+                   list of tuples of the form `{name, fieldgroups}` where `name` is an atom or string and
+                   `fieldgroups` is a list of fieldgroups.
+
+                   Each fieldgroup can be either:
+                   - A list of field names (as atoms), which will be displayed together horizontally
+                   - A single field name (as atom), which will be displayed on its own
+
+                   If a field name is included that isn't available in the fields for that action, it will be skipped.
+                   If this option is not provided, all fields will be placed in the `:default` fieldset, with each
+                   field in its own fieldgroup.
+
+                   Example:
+
+                       [
+                         default: [:name, :email],
+                         details: [
+                           [:address, :city],
+                           :phone,
+                           [:created_at, :updated_at]
+                         ]
+                       ]
+                   """
+                 ]
+               )
+
   @moduledoc """
   Renders fieldsets for the detail view of a Pax.Interface. Fieldsets are a way to organize a detail page, by breaking
   it into sections, and allowing fields to be grouped together on the same horizontal line.
@@ -7,31 +43,9 @@ defmodule Pax.Plugins.DetailFieldsets do
   rendered at the top of the page with no header. All other fieldsets will be rendered with a header above their
   fields.
 
-  ## Options:
-  - `:placement` - A list of sections where the fieldsets should be rendered. The default is
-    `[:show_body, :edit_body, :new_body]`.
-  - `:fieldsets` - A structure defining the fieldsets, fieldgroups, and their contained fields. This determines which
-    fields to include, their organization, and the order to display them. The structure should be a list of tuples of
-    the form `{name, fieldgroups}` where `name` is an atom or string and `fieldgroups` is a list of fieldgroups.
+  ## Options
 
-    Each fieldgroup can be either:
-    - A list of field names (as atoms), which will be displayed together horizontally
-    - A single field name (as atom), which will be displayed on its own
-
-    If a field name is included that isn't available in the fields for that action, it will be skipped. If this option
-    is not provided, all fields will be placed in the `:default` fieldset, with each field in its own fieldgroup.
-
-    Example:
-    ```
-    [
-      default: [:name, :email],
-      details: [
-        [:address, :city],
-        :phone,
-        [:created_at, :updated_at]
-      ]
-    ]
-    ```
+  #{NimbleOptions.docs(@opts_schema)}
   """
 
   use Phoenix.Component
@@ -39,12 +53,13 @@ defmodule Pax.Plugins.DetailFieldsets do
   import Pax.Field.Components
   import Pax.Components
 
-  @default_placement [:show_body, :edit_body, :new_body]
-
   @impl true
   def init(_callback_module, opts) do
+    opts = Pax.Options.validate!(opts, @opts_schema, "plugin #{inspect(__MODULE__)}")
+
     %{
-      placement: Keyword.get(opts, :placement, @default_placement)
+      placement: opts[:placement],
+      fieldsets: opts[:fieldsets]
     }
   end
 
@@ -63,7 +78,7 @@ defmodule Pax.Plugins.DetailFieldsets do
   def merge_config(opts, config, socket) do
     %{
       placement: Pax.Config.get(config, :placement, [socket], opts.placement),
-      fieldsets: Pax.Config.get(config, :fieldsets, [socket], nil)
+      fieldsets: Pax.Config.get(config, :fieldsets, [socket], opts.fieldsets)
     }
   end
 

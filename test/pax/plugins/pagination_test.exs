@@ -30,8 +30,15 @@ defmodule Pax.Plugins.PaginationTest do
   defp pager_links(session), do: attr(html(session), "a.pax-pagination-link", "href")
   defp pager_classes(session), do: classes(html(session), "a.pax-pagination-link")
 
-  test "has a valid config spec" do
+  test "has a valid config spec and documented options" do
     assert {:ok, _} = Pax.Config.validate(Pagination.config_spec(), %{}, validate_config_spec: true)
+
+    assert_raise ArgumentError, ~r/^Invalid options for plugin .*Pagination: unknown options \[:nope\]/, fn ->
+      PaxTest.PluginHelpers.plugin(Pagination, nope: true)
+    end
+
+    assert {:docs_v1, _, _, _, %{"en" => moduledoc}, _, _} = Code.fetch_docs(Pagination)
+    assert moduledoc =~ "## Options"
   end
 
   describe "pages" do
@@ -90,6 +97,14 @@ defmodule Pax.Plugins.PaginationTest do
         visit(conn, "/interface?page=#{page}")
         assert received_criteria() == %{limit: 10, offset: 0}
       end
+    end
+
+    test "requires a positive number of objects per page" do
+      assert_raise ArgumentError,
+                   ~r/^Invalid options for plugin Pax.Plugins.Pagination: invalid value for :objects_per_page/,
+                   fn ->
+                     PaxTest.PluginHelpers.plugin(Pagination, objects_per_page: 0)
+                   end
     end
 
     test "can change the objects per page", %{conn: conn} do

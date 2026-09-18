@@ -1,18 +1,35 @@
 defmodule Pax.Plugins.Breadcrumbs do
+  @opts_schema NimbleOptions.new!(
+                 placement: [
+                   type: {:or, [:atom, {:list, :atom}]},
+                   default: [:show_header_primary, :edit_header_primary, :new_header_primary, :delete_header_primary],
+                   doc: "The section, or list of sections, to render the breadcrumbs in."
+                 ],
+                 truncate_length: [
+                   type: :pos_integer,
+                   default: 25,
+                   doc: "The length to truncate the index link to."
+                 ]
+               )
+
+  @moduledoc """
+  Renders breadcrumbs linking back to the index page of a Pax.Interface.
+
+  ## Options
+
+  #{NimbleOptions.docs(@opts_schema)}
+  """
+
   use Pax.Interface.Plugin
   use Phoenix.Component
   import Pax.Components
   import Pax.Util.String
 
-  @default_placement [:show_header_primary, :edit_header_primary, :new_header_primary, :delete_header_primary]
-  @default_truncate_length 25
-
   @impl true
   def init(_callback_module, opts) do
-    %{
-      placement: Keyword.get(opts, :placement, @default_placement),
-      truncate_length: Keyword.get(opts, :truncate_length, @default_truncate_length)
-    }
+    opts
+    |> Pax.Options.validate!(@opts_schema, "plugin #{inspect(__MODULE__)}")
+    |> Map.new()
   end
 
   @impl true

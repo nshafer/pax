@@ -1,12 +1,26 @@
 defmodule Pax.Plugins.IndexTable do
+  @opts_schema NimbleOptions.new!(
+                 placement: [
+                   type: :atom,
+                   default: :index_body,
+                   doc: "The section to render the index table in."
+                 ],
+                 fields: [
+                   type: {:list, :atom},
+                   doc: """
+                   A list of field names to include in the table, in the order to include them. If not provided, all
+                   fields will be displayed in their original order. Any field name that isn't available in the fields
+                   for that action is skipped.
+                   """
+                 ]
+               )
+
   @moduledoc """
   Renders a table for the index view of a Pax.Interface.
 
-  ## Options:
-  - `:placement` - The section to render the index table to. Default: `:index_body`.
-  - `:fields` - A list of field names (as atoms) to include in the table and the order to include them.
-    If not provided, all fields will be displayed in their original order. If any field name in the list
-    is not available in the fields for that action, that field will be skipped. Field names must be atoms.
+  ## Options
+
+  #{NimbleOptions.docs(@opts_schema)}
   """
   use Pax.Interface.Plugin
   use Phoenix.Component
@@ -16,11 +30,14 @@ defmodule Pax.Plugins.IndexTable do
   import Pax.Util.URI
   require Logger
 
-  @default_placement :index_body
-
   @impl true
   def init(_callback_module, opts) do
-    %{placement: Keyword.get(opts, :placement, @default_placement)}
+    opts = Pax.Options.validate!(opts, @opts_schema, "plugin #{inspect(__MODULE__)}")
+
+    %{
+      placement: opts[:placement],
+      field_list: opts[:fields]
+    }
   end
 
   @impl true
@@ -38,7 +55,7 @@ defmodule Pax.Plugins.IndexTable do
   def merge_config(opts, config, socket) do
     %{
       placement: Pax.Config.get(config, :placement, [socket], opts.placement),
-      field_list: Pax.Config.get(config, :fields, [socket], nil)
+      field_list: Pax.Config.get(config, :fields, [socket], opts.field_list)
     }
   end
 

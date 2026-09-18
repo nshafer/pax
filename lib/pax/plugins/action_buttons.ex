@@ -1,25 +1,52 @@
 defmodule Pax.Plugins.ActionButtons do
+  @placement_type {:or, [:atom, {:list, :atom}]}
+
+  @opts_schema NimbleOptions.new!(
+                 new_button_placement: [
+                   type: @placement_type,
+                   default: :index_header_secondary,
+                   doc: "The section, or list of sections, to render the New button in."
+                 ],
+                 edit_button_placement: [
+                   type: @placement_type,
+                   default: :show_header_secondary,
+                   doc: "The section, or list of sections, to render the Edit button in."
+                 ],
+                 edit_cancel_button_placement: [
+                   type: @placement_type,
+                   default: [:edit_header_secondary, :new_header_secondary],
+                   doc: "The section, or list of sections, to render the Cancel button in."
+                 ],
+                 edit_save_button_placement: [
+                   type: @placement_type,
+                   default: [:edit_header_secondary, :new_header_secondary],
+                   doc: "The section, or list of sections, to render the Save button in."
+                 ],
+                 truncate_length: [
+                   type: :pos_integer,
+                   default: 25,
+                   doc: "The length to truncate the object name to in the New button."
+                 ]
+               )
+
+  @moduledoc """
+  Renders the New, Edit, Cancel and Save buttons of a Pax.Interface.
+
+  ## Options
+
+  #{NimbleOptions.docs(@opts_schema)}
+  """
+
   use Pax.Interface.Plugin
   use Phoenix.Component
   import Pax.Components
   import Pax.Util.String
 
-  @default_new_button_placement :index_header_secondary
-  @default_edit_button_placement :show_header_secondary
-  @default_edit_cancel_button_placement [:edit_header_secondary, :new_header_secondary]
-  @default_edit_save_button_placement [:edit_header_secondary, :new_header_secondary]
-  @default_truncate_length 25
-
   @impl true
   def init(_callback_module, opts) do
-    %{
-      new_button_placement: Keyword.get(opts, :new_button_placement, @default_new_button_placement),
-      edit_button_placement: Keyword.get(opts, :edit_button_placement, @default_edit_button_placement),
-      edit_cancel_button_placement:
-        Keyword.get(opts, :edit_cancel_button_placement, @default_edit_cancel_button_placement),
-      edit_save_button_placement: Keyword.get(opts, :edit_save_button_placement, @default_edit_save_button_placement),
-      truncate_length: Keyword.get(opts, :truncate_length, @default_truncate_length)
-    }
+    opts
+    |> Pax.Options.validate!(@opts_schema, "plugin #{inspect(__MODULE__)}")
+    |> Map.new()
   end
 
   @impl true

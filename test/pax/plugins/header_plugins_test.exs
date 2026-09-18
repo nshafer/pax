@@ -7,8 +7,15 @@ defmodule Pax.Plugins.TitleTest do
 
   @pax %Pax.Interface{singular_name: "Book", plural_name: "Books", object_name: "Dune"}
 
-  test "has a valid config spec" do
+  test "has a valid config spec and documented options" do
     assert {:ok, _} = Pax.Config.validate(Title.config_spec(), %{}, validate_config_spec: true)
+
+    assert_raise ArgumentError, ~r/^Invalid options for plugin .*Title: unknown options \[:nope\]/, fn ->
+      PaxTest.PluginHelpers.plugin(Title, nope: true)
+    end
+
+    assert {:docs_v1, _, _, _, %{"en" => moduledoc}, _, _} = Code.fetch_docs(Title)
+    assert moduledoc =~ "## Options"
   end
 
   describe "render/3" do
@@ -63,8 +70,15 @@ defmodule Pax.Plugins.BreadcrumbsTest do
 
   @pax %Pax.Interface{action: :show, plural_name: "Books", object_name: "Dune", index_path: "/books?page=2"}
 
-  test "has a valid config spec" do
+  test "has a valid config spec and documented options" do
     assert {:ok, _} = Pax.Config.validate(Breadcrumbs.config_spec(), %{}, validate_config_spec: true)
+
+    assert_raise ArgumentError, ~r/^Invalid options for plugin .*Breadcrumbs: unknown options \[:nope\]/, fn ->
+      PaxTest.PluginHelpers.plugin(Breadcrumbs, nope: true)
+    end
+
+    assert {:docs_v1, _, _, _, %{"en" => moduledoc}, _, _} = Code.fetch_docs(Breadcrumbs)
+    assert moduledoc =~ "## Options"
   end
 
   describe "render/3" do
@@ -123,8 +137,15 @@ defmodule Pax.Plugins.ActionButtonsTest do
     edit_path: "/books/1/edit"
   }
 
-  test "has a valid config spec" do
+  test "has a valid config spec and documented options" do
     assert {:ok, _} = Pax.Config.validate(ActionButtons.config_spec(), %{}, validate_config_spec: true)
+
+    assert_raise ArgumentError, ~r/^Invalid options for plugin .*ActionButtons: unknown options \[:nope\]/, fn ->
+      PaxTest.PluginHelpers.plugin(ActionButtons, nope: true)
+    end
+
+    assert {:docs_v1, _, _, _, %{"en" => moduledoc}, _, _} = Code.fetch_docs(ActionButtons)
+    assert moduledoc =~ "## Options"
   end
 
   describe "new button" do

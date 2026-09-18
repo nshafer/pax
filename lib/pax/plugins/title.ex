@@ -1,24 +1,41 @@
 defmodule Pax.Plugins.Title do
+  @opts_schema NimbleOptions.new!(
+                 placement: [
+                   type: {:or, [:atom, {:list, :atom}]},
+                   default: [
+                     :index_header_primary,
+                     :show_header_primary,
+                     :edit_header_primary,
+                     :new_header_primary,
+                     :delete_header_primary
+                   ],
+                   doc: "The section, or list of sections, to render the title in."
+                 ],
+                 truncate_length: [
+                   type: :pos_integer,
+                   default: 50,
+                   doc: "The length to truncate the title to."
+                 ]
+               )
+
+  @moduledoc """
+  Renders the title of each page of a Pax.Interface.
+
+  ## Options
+
+  #{NimbleOptions.docs(@opts_schema)}
+  """
+
   use Pax.Interface.Plugin
   use Phoenix.Component
   import Pax.Components
   import Pax.Util.String
 
-  @default_placement [
-    :index_header_primary,
-    :show_header_primary,
-    :edit_header_primary,
-    :new_header_primary,
-    :delete_header_primary
-  ]
-  @default_truncate_length 50
-
   @impl true
   def init(_callback_module, opts) do
-    %{
-      placement: Keyword.get(opts, :placement, @default_placement),
-      truncate_length: Keyword.get(opts, :truncate_length, @default_truncate_length)
-    }
+    opts
+    |> Pax.Options.validate!(@opts_schema, "plugin #{inspect(__MODULE__)}")
+    |> Map.new()
   end
 
   @impl true

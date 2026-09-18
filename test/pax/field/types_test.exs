@@ -11,19 +11,32 @@ defmodule Pax.Field.TypesTest do
     form[name]
   end
 
+  defp init_opts(type, opts), do: type.init(opts)
+
   defp input(type, name, value, opts \\ []) do
     field = Field.init(nil, {name, type, opts})
     field.type.input(field.opts, field, form_field(name, %{name => value}))
   end
 
+  test "the built-in types document and validate their options" do
+    for type <- [Field.Boolean, Field.Date, Field.Datetime, Field.Float, Field.Integer, Field.String, Field.Time] do
+      assert {:docs_v1, _, _, _, %{"en" => moduledoc}, _, _} = Code.fetch_docs(type)
+      assert moduledoc =~ "## Options"
+
+      assert_raise ArgumentError, ~r/^Invalid options for field type #{inspect(type)}: unknown options \[:nope\]/, fn ->
+        type.init(nope: true)
+      end
+    end
+  end
+
   describe "Pax.Field.Boolean" do
     test "renders true and false with configurable text" do
-      opts = Field.Boolean.init([])
+      opts = init_opts(Field.Boolean, [])
       assert Field.Boolean.render(opts, true) == "True"
       assert Field.Boolean.render(opts, false) == "False"
       assert Field.Boolean.render(opts, nil) == "False"
 
-      opts = Field.Boolean.init(true: "Yes", false: "No")
+      opts = init_opts(Field.Boolean, true: "Yes", false: "No")
       assert Field.Boolean.render(opts, true) == "Yes"
       assert Field.Boolean.render(opts, false) == "No"
     end
@@ -44,9 +57,9 @@ defmodule Pax.Field.TypesTest do
 
   describe "Pax.Field.Date" do
     test "renders with a configurable format" do
-      assert Field.Date.render(Field.Date.init([]), ~D[2024-02-03]) == "Sat, February 03, 2024"
-      assert Field.Date.render(Field.Date.init(format: "%Y/%m/%d"), ~D[2024-02-03]) == "2024/02/03"
-      assert Field.Date.render(Field.Date.init([]), nil) == nil
+      assert Field.Date.render(init_opts(Field.Date, []), ~D[2024-02-03]) == "Sat, February 03, 2024"
+      assert Field.Date.render(init_opts(Field.Date, format: "%Y/%m/%d"), ~D[2024-02-03]) == "2024/02/03"
+      assert Field.Date.render(init_opts(Field.Date, []), nil) == nil
     end
 
     test "renders a date input" do
@@ -58,18 +71,18 @@ defmodule Pax.Field.TypesTest do
 
   describe "Pax.Field.Datetime" do
     test "renders the date and time separately by default" do
-      html = Field.Datetime.render(Field.Datetime.init([]), ~N[2024-02-03 14:05:00])
+      html = Field.Datetime.render(init_opts(Field.Datetime, []), ~N[2024-02-03 14:05:00])
       assert texts(html, "span") == ["Sat, February 03, 2024", "02:05 PM"]
-      assert Field.Datetime.render(Field.Datetime.init([]), nil) == nil
+      assert Field.Datetime.render(init_opts(Field.Datetime, []), nil) == nil
     end
 
     test "renders with a single format" do
-      opts = Field.Datetime.init(format: "%Y-%m-%d %H:%M")
+      opts = init_opts(Field.Datetime, format: "%Y-%m-%d %H:%M")
       assert Field.Datetime.render(opts, ~U[2024-02-03 14:05:00Z]) == "2024-02-03 14:05"
     end
 
     test "renders with separate date and time formats" do
-      opts = Field.Datetime.init(date_format: "%Y-%m-%d", time_format: "%H:%M")
+      opts = init_opts(Field.Datetime, date_format: "%Y-%m-%d", time_format: "%H:%M")
       html = Field.Datetime.render(opts, ~N[2024-02-03 14:05:00])
       assert texts(html, "span") == ["2024-02-03", "14:05"]
     end
@@ -83,9 +96,9 @@ defmodule Pax.Field.TypesTest do
 
   describe "Pax.Field.Float" do
     test "renders with optional rounding" do
-      assert Field.Float.render(Field.Float.init([]), 1.23456) == "1.23456"
-      assert Field.Float.render(Field.Float.init(round: 2), 1.23456) == "1.23"
-      assert Field.Float.render(Field.Float.init([]), nil) == nil
+      assert Field.Float.render(init_opts(Field.Float, []), 1.23456) == "1.23456"
+      assert Field.Float.render(init_opts(Field.Float, round: 2), 1.23456) == "1.23"
+      assert Field.Float.render(init_opts(Field.Float, []), nil) == nil
     end
 
     test "renders a numeric text input" do
@@ -99,8 +112,8 @@ defmodule Pax.Field.TypesTest do
 
   describe "Pax.Field.Integer" do
     test "renders the integer" do
-      assert Field.Integer.render(Field.Integer.init([]), 42) == "42"
-      assert Field.Integer.render(Field.Integer.init([]), nil) == nil
+      assert Field.Integer.render(init_opts(Field.Integer, []), 42) == "42"
+      assert Field.Integer.render(init_opts(Field.Integer, []), nil) == nil
     end
 
     test "renders a numeric text input" do
@@ -113,10 +126,10 @@ defmodule Pax.Field.TypesTest do
 
   describe "Pax.Field.String" do
     test "renders with optional truncation" do
-      assert Field.String.render(Field.String.init([]), "hello world") == "hello world"
-      assert Field.String.render(Field.String.init([]), :atom) == "atom"
-      assert Field.String.render(Field.String.init(truncate: 5), "hello world") == "hell…"
-      assert Field.String.render(Field.String.init([]), nil) == nil
+      assert Field.String.render(init_opts(Field.String, []), "hello world") == "hello world"
+      assert Field.String.render(init_opts(Field.String, []), :atom) == "atom"
+      assert Field.String.render(init_opts(Field.String, truncate: 5), "hello world") == "hell…"
+      assert Field.String.render(init_opts(Field.String, []), nil) == nil
     end
 
     test "renders a text input" do
@@ -130,9 +143,9 @@ defmodule Pax.Field.TypesTest do
 
   describe "Pax.Field.Time" do
     test "renders with a configurable format" do
-      assert Field.Time.render(Field.Time.init([]), ~T[14:05:00]) == "02:05 PM"
-      assert Field.Time.render(Field.Time.init(format: "%H:%M"), ~T[14:05:00]) == "14:05"
-      assert Field.Time.render(Field.Time.init([]), nil) == nil
+      assert Field.Time.render(init_opts(Field.Time, []), ~T[14:05:00]) == "02:05 PM"
+      assert Field.Time.render(init_opts(Field.Time, format: "%H:%M"), ~T[14:05:00]) == "14:05"
+      assert Field.Time.render(init_opts(Field.Time, []), nil) == nil
     end
 
     test "renders a time input" do

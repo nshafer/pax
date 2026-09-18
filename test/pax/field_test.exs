@@ -7,13 +7,22 @@ defmodule Pax.FieldTest do
 
   defmodule ImmutableType do
     @behaviour Pax.Field.Type
-    def init(opts), do: %{locked: Keyword.get(opts, :locked, true)}
+    def init(opts) do
+      opts = Pax.Options.validate!(opts, [locked: [type: :boolean, default: true]], "field type #{inspect(__MODULE__)}")
+      %{locked: opts[:locked]}
+    end
+
     def render(_opts, value), do: value
     def input(_opts, _field, _form_field), do: "input"
     def immutable?(opts), do: opts.locked
   end
 
   defmodule NotAType do
+  end
+
+  defmodule PassThroughType do
+    def init(opts), do: Map.new(opts)
+    def render(_opts, value), do: value
   end
 
   def link_for(book), do: "/books/#{book.id}"
@@ -58,10 +67,44 @@ defmodule Pax.FieldTest do
       assert %Field{type: ImmutableType, opts: %{locked: true}} = Field.init(nil, {:a, ImmutableType})
     end
 
-    test "merges the global opts over the type's opts, dropping unknown opts" do
-      field = Field.init(nil, {:title, :string, truncate: 10, label: "Title", required: false, unknown: true})
-
+    test "merges the global opts with the type's validated opts" do
+      field = Field.init(nil, {:title, :string, truncate: 10, label: "Title", required: false})
       assert field.opts == %{truncate: 10, label: "Title", required: false}
+
+      assert Field.init(nil, {:done_at, :time}).opts == %{format: "%I:%M %p"}
+    end
+
+    test "raises on options that are neither global nor the type's" do
+      message = "Invalid options for field type Pax.Field.Float: unknown options [:title], valid options are: [:round]"
+      assert_raise ArgumentError, message, fn -> Field.init(nil, {:rating, :float, title: "Rating"}) end
+
+      assert_raise ArgumentError,
+                   ~r/^Invalid options for field type Pax.Field.Integer: unknown options \[:limit\]/,
+                   fn -> Field.init(adapter(), {:rank, limit: 1}) end
+
+      assert_raise ArgumentError,
+                   ~r/^Invalid options for field type Pax.FieldTest.ImmutableType: unknown options \[:lock\]/,
+                   fn -> Field.init(nil, {:a, ImmutableType, lock: true}) end
+    end
+
+    test "passes the type's options to it as given, for the type to validate" do
+      assert Field.init(nil, {:a, PassThroughType, whatever: 1}).opts == %{whatever: 1}
+    end
+
+    test "raises on options with the wrong type" do
+      assert_raise ArgumentError,
+                   ~r/^Invalid options for field type Pax.Field.String: expected :truncate option to match at least one given type/,
+                   fn ->
+                     Field.init(nil, {:title, :string, truncate: "10"})
+                   end
+
+      assert_raise ArgumentError, ~r/^Invalid options for field :title: invalid value for :label/, fn ->
+        Field.init(nil, {:title, :string, label: :title})
+      end
+
+      assert_raise ArgumentError, "Invalid options for field :title, expected a keyword list, got: [:label]", fn ->
+        Field.init(nil, {:title, :string, [:label]})
+      end
     end
 
     test "raises on invalid fieldspecs" do
@@ -75,11 +118,17 @@ defmodule Pax.FieldTest do
     end
 
     test "raises on invalid types" do
-      assert_raise ArgumentError, "Invalid field type: :decimal.", fn -> Field.init(nil, {:a, :decimal}) end
+      assert_raise ArgumentError,
+                   ~r/^Invalid field type: :decimal. Field types must implement the Pax.Field.Type/,
+                   fn ->
+                     Field.init(nil, {:a, :decimal})
+                   end
 
-      assert_raise ArgumentError, "Invalid field type: Pax.FieldTest.NotAType.", fn ->
+      assert_raise ArgumentError, ~r/^Invalid field type: Pax.FieldTest.NotAType\./, fn ->
         Field.init(nil, {:a, NotAType})
       end
+
+      assert_raise ArgumentError, ~r/including init\/1\./, fn -> Field.init(nil, {:a, NotAType}) end
     end
 
     test "raises on field names starting with reserved characters" do
@@ -96,7 +145,7 @@ defmodule Pax.FieldTest do
     end
 
     test "raises on invalid link opts" do
-      assert_raise RuntimeError, "Invalid link option for field title: 123", fn ->
+      assert_raise ArgumentError, ~r/^Invalid options for field :title: expected :link option to match/, fn ->
         Field.init(nil, {:title, :string, link: 123})
       end
     end
@@ -107,7 +156,7 @@ defmodule Pax.FieldTest do
       refute Map.has_key?(Field.init(nil, {:title, :string, sort: false}).opts, :sort)
       refute Map.has_key?(Field.init(nil, {:title, :string}).opts, :sort)
 
-      assert_raise ArgumentError, ~r/Invalid sort option for field title: "title"/, fn ->
+      assert_raise ArgumentError, ~r/invalid value for :sort option: expected atom, got: "title"/, fn ->
         Field.init(nil, {:title, :string, sort: "title"})
       end
     end
@@ -121,13 +170,17 @@ defmodule Pax.FieldTest do
         assert Field.init(nil, {:title, :string, sort_desc: dir}).opts.sort_desc == dir
       end
 
-      assert_raise ArgumentError, ~r/Invalid sort_asc option for field title: :desc/, fn ->
-        Field.init(nil, {:title, :string, sort_asc: :desc})
-      end
+      assert_raise ArgumentError,
+                   ~r/invalid value for :sort_asc option: expected one of \[:asc, :asc_nulls_first, :asc_nulls_last\], got: :desc/,
+                   fn ->
+                     Field.init(nil, {:title, :string, sort_asc: :desc})
+                   end
 
-      assert_raise ArgumentError, ~r/Invalid sort_desc option for field title: :asc/, fn ->
-        Field.init(nil, {:title, :string, sort_desc: :asc})
-      end
+      assert_raise ArgumentError,
+                   ~r/invalid value for :sort_desc option: expected one of \[:desc, :desc_nulls_first, :desc_nulls_last\], got: :asc/,
+                   fn ->
+                     Field.init(nil, {:title, :string, sort_desc: :asc})
+                   end
     end
   end
 
@@ -169,8 +222,13 @@ defmodule Pax.FieldTest do
     end
 
     test "raises when the link function is not a fn/1 or exported" do
+      assert_raise ArgumentError, ~r/invalid value for :link option: expected function of arity 1/, fn ->
+        Field.init(nil, {:title, :string, link: fn _, _ -> "/" end})
+      end
+
+      # Links set after init, with set_link/2, are checked when resolved
       assert_raise ArgumentError, ~r/Invalid function arity.*Must be a fn\/1/, fn ->
-        Field.link(Field.init(nil, {:title, :string, link: fn _, _ -> "/" end}), book())
+        Field.init(nil, {:title, :string}) |> Field.set_link(fn _, _ -> "/" end) |> Field.link(book())
       end
 
       assert_raise UndefinedFunctionError, ~r/Pax.FieldTest.missing\/1 is undefined or private/, fn ->

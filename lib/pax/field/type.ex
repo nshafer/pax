@@ -1,7 +1,11 @@
 defmodule Pax.Field.Type do
   @moduledoc """
   A field type is a module that implements the Pax.Field.Type behaviour. It is responsible for rendering a Pax.Field
-  and other related behavior
+  and other related behavior.
+
+  `init/1` receives the type's own options, as the developer gave them, without the options every field accepts (see
+  `Pax.Field`). Validate them with `Pax.Options.validate!/3` if you want them checked, which is what the built-in types
+  do.
   """
 
   @callback init(opts :: keyword()) :: map()

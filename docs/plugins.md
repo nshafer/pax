@@ -46,8 +46,7 @@ Each adapter could create a plugin interface.
 
 There are a few behaviours for Plugins:
 
-- `Pax.Plugin` - The main behaviour for any plugin to be included in the `plugins` list. Mainly just
-    a `type/0` and an `init/1` callback.
+- `Pax.Plugin` - The main behaviour for any plugin to be included in the `plugins` list.
 - `Pax.Interface.Plugin` - Plugins that work with the main Interface (Index, Detail (Show, Edit), Delete).
 - `Pax.Admin.Plugin` - Plugins that work with the Admin interface specifically.
 
@@ -55,6 +54,17 @@ Each behaviour defines callbacks and default implementations that return nil by 
 by the user, and on init each plugin's init is called with any options given by the user, and the returned map is stored
 in the `:pax` map in the assigns. Then everywhere that interfaces with plugins will just call the proper callback, and
 if the return is not nil, do something with the answer.
+
+### Options and config
+
+A plugin can be customized in two ways, which are validated differently:
+
+- **Options**, given in the plugins list as `{MyPlugin, opts}`, are passed directly to the plugin's `init/2` callback. 
+- **Config**, given in the plugin's section of `pax_config/1`, can be resolved per socket, so values may be functions of
+  the socket. It is declared with a `Pax.Config` spec returned from `config_spec/0.
+  
+Both options and config are then passed to `merge_config/3`, and the result of that is later passed to the plugin's
+`render/3` callback.
 
 ### Component callbacks
 

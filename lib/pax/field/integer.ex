@@ -1,12 +1,24 @@
 defmodule Pax.Field.Integer do
+  @opts_schema NimbleOptions.new!([])
+
+  @moduledoc """
+  A field type for integer values, edited with a numeric text input. It takes no options.
+
+  ## Options
+
+  #{NimbleOptions.docs(@opts_schema)}
+  """
+
   use Phoenix.Component
   @behaviour Pax.Field.Type
 
   @impl Pax.Field.Type
-  def init(_opts) do
+  def init(opts) do
     # TODO: add formatting options: human, scientific, etc
     # TODO: add base option
-    %{}
+    opts
+    |> Pax.Options.validate!(@opts_schema, "field type #{inspect(__MODULE__)}")
+    |> Map.new()
   end
 
   @impl Pax.Field.Type

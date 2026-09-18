@@ -1,4 +1,67 @@
 defmodule Pax.Field do
+  @global_opts_schema NimbleOptions.new!(
+                        label: [type: :string, doc: "The label, introspected from the field name by default."],
+                        link: [
+                          type: {:or, [{:in, [true]}, :string, {:struct, URI}, {:fun, 1}, {:tuple, [:atom, :atom]}]},
+                          doc: """
+                          Link the field. `true` links to the show path, or else the edit path. A string or `URI`
+                          links there. A function, or a `{module, function}` tuple, is called with the object to get
+                          the link.
+                          """
+                        ],
+                        value: [
+                          type: :any,
+                          doc: """
+                          The value to render, instead of the object's value for the field. Another field name, a
+                          function of the object (or the field name and object), a `{module, function}` tuple, or a
+                          static value. Fields with a value are immutable.
+                          """
+                        ],
+                        immutable: [type: :boolean, doc: "Render the field as text, even in forms."],
+                        required: [type: :boolean, doc: "Require the field in forms. Fields are required by default."],
+                        only: [
+                          type: {:or, [:atom, {:list, :atom}]},
+                          doc: "The action, or list of actions, to include the field in."
+                        ],
+                        except: [
+                          type: {:or, [:atom, {:list, :atom}]},
+                          doc: "The action, or list of actions, to leave the field out of."
+                        ],
+                        sort: [
+                          type: :atom,
+                          doc:
+                            "Make the field sortable. `true` sorts by the field itself, or give a field name to sort by."
+                        ],
+                        sort_asc: [
+                          type: {:in, [:asc, :asc_nulls_first, :asc_nulls_last]},
+                          doc: "The ascending direction to sort in. Defaults to `:asc`."
+                        ],
+                        sort_desc: [
+                          type: {:in, [:desc, :desc_nulls_first, :desc_nulls_last]},
+                          doc: "The descending direction to sort in. Defaults to `:desc`."
+                        ]
+                      )
+
+  @global_opts Keyword.keys(@global_opts_schema.schema)
+
+  @moduledoc """
+  A field of the objects shown by a Pax.Interface. Fields are given as a list of fieldspecs, such as in the `:fields`
+  config, in one of these forms:
+
+    * `:name` - the type is introspected from the adapter.
+    * `{:name, opts}` - the type is introspected from the adapter.
+    * `{:name, :type}` or `{:name, :type, opts}` - `:type` is a built-in type: `:boolean`, `:date`, `:datetime`,
+      `:float`, `:integer`, `:string` or `:time`.
+    * `{:name, MyType}` or `{:name, MyType, opts}` - `MyType` implements `Pax.Field.Type`.
+
+  ## Options
+
+  Every field accepts these options. Each type also accepts its own, documented in the type's module, such as
+  `Pax.Field.String`.
+
+  #{NimbleOptions.docs(@global_opts_schema)}
+  """
+
   alias Pax.Field
 
   defstruct name: nil, type: nil, opts: []
@@ -13,8 +76,6 @@ defmodule Pax.Field do
           atom()
           | {atom(), atom() | module()}
           | {atom(), atom() | module(), keyword()}
-
-  @global_opts [:label, :link, :value, :immutable, :required, :only, :except, :sort, :sort_asc, :sort_desc]
 
   @doc false
   @spec init(Pax.Adapter.t(), fieldspec()) :: t()
@@ -64,7 +125,7 @@ defmodule Pax.Field do
     Examples:
     - {:name, :string}
     - {:age, :integer, required: true}
-    - {:is_active, :boolean, default: true}
+    - {:is_active, :boolean, required: false}
     """
   end
 
@@ -104,8 +165,16 @@ defmodule Pax.Field do
   defp do_init(name, type, opts) do
     if Code.ensure_loaded?(type) and function_exported?(type, :init, 1) do
       validate_field_name!(name)
-      global = init_global_opts(opts, name, type)
-      opts = type.init(opts)
+
+      if not Keyword.keyword?(opts) do
+        raise ArgumentError,
+              "Invalid options for field #{inspect(name)}, expected a keyword list, got: #{inspect(opts)}"
+      end
+
+      # The options every field accepts are validated here. The rest are the type's own, and are passed to it as given.
+      {global_opts, type_opts} = Keyword.split(opts, @global_opts)
+      global = init_global_opts(global_opts, name)
+      opts = type.init(type_opts)
 
       %Field{
         name: name,
@@ -113,7 +182,9 @@ defmodule Pax.Field do
         opts: Map.merge(opts, global)
       }
     else
-      raise ArgumentError, "Invalid field type: #{inspect(type)}."
+      raise ArgumentError,
+            "Invalid field type: #{inspect(type)}. Field types must implement the Pax.Field.Type behaviour, " <>
+              "including init/1."
     end
   end
 
@@ -127,54 +198,20 @@ defmodule Pax.Field do
     end
   end
 
-  defp init_global_opts(opts, name, _type) do
-    Keyword.take(opts, @global_opts)
+  defp init_global_opts(opts, name) do
+    opts
+    |> Pax.Options.validate!(@global_opts_schema, "field #{inspect(name)}")
     |> Map.new()
-    |> validate_link_opt(name)
     |> resolve_sort_opt(name)
-    |> validate_sort_asc_opt(name)
-    |> validate_sort_desc_opt(name)
   end
 
-  defp validate_link_opt(opts, name) do
-    case Map.get(opts, :link) do
-      true -> opts
-      nil -> opts
-      {mod, fun} when is_atom(mod) and is_atom(fun) -> opts
-      fun when is_function(fun) -> opts
-      link when is_binary(link) -> opts
-      %URI{} -> opts
-      _ -> raise "Invalid link option for field #{name}: #{inspect(opts[:link])}"
-    end
-  end
-
+  # `sort: true` sorts by the field itself, and `sort: false` is the same as not sorting
   defp resolve_sort_opt(opts, name) do
     case Map.get(opts, :sort) do
       nil -> opts
       true -> Map.put(opts, :sort, name)
       false -> Map.delete(opts, :sort)
-      field when is_atom(field) -> Map.put(opts, :sort, field)
-      _ -> raise ArgumentError, "Invalid sort option for field #{name}: #{inspect(opts[:sort])}"
-    end
-  end
-
-  defp validate_sort_asc_opt(opts, name) do
-    case Map.get(opts, :sort_asc) do
-      :asc -> opts
-      :asc_nulls_first -> opts
-      :asc_nulls_last -> opts
-      nil -> opts
-      _ -> raise ArgumentError, "Invalid sort_asc option for field #{name}: #{inspect(opts[:sort_asc])}"
-    end
-  end
-
-  defp validate_sort_desc_opt(opts, name) do
-    case Map.get(opts, :sort_desc) do
-      :desc -> opts
-      :desc_nulls_first -> opts
-      :desc_nulls_last -> opts
-      nil -> opts
-      _ -> raise ArgumentError, "Invalid sort_desc option for field #{name}: #{inspect(opts[:sort_desc])}"
+      field -> Map.put(opts, :sort, field)
     end
   end
 

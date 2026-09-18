@@ -1,12 +1,28 @@
 defmodule Pax.Field.Date do
+  @opts_schema NimbleOptions.new!(
+                 format: [
+                   type: :string,
+                   default: "%a, %B %d, %Y",
+                   doc: "The `Calendar.strftime/2` format to render the date with."
+                 ]
+               )
+
+  @moduledoc """
+  A field type for `Date` values, edited with a date input.
+
+  ## Options
+
+  #{NimbleOptions.docs(@opts_schema)}
+  """
+
   use Phoenix.Component
   @behaviour Pax.Field.Type
 
   @impl Pax.Field.Type
   def init(opts) do
-    %{
-      format: Keyword.get(opts, :format, "%a, %B %d, %Y")
-    }
+    opts
+    |> Pax.Options.validate!(@opts_schema, "field type #{inspect(__MODULE__)}")
+    |> Map.new()
   end
 
   @impl Pax.Field.Type

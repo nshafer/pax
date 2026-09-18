@@ -1,4 +1,28 @@
 defmodule Pax.Adapters.EctoSchema do
+  @opts_schema NimbleOptions.new!(
+                 repo: [
+                   type: :atom,
+                   doc: "The Ecto repo to query. Required, here or in the adapter config."
+                 ],
+                 schema: [
+                   type: :atom,
+                   doc: "The Ecto schema of the objects. Required, here or in the adapter config."
+                 ]
+               )
+
+  @moduledoc """
+  A Pax.Adapter for Ecto schemas. It introspects fields, names and primary keys from the schema, and queries the repo
+  using the criteria.
+
+      def pax_adapter(_socket) do
+        {Pax.Adapters.EctoSchema, repo: MyApp.Repo, schema: MyApp.MySchema}
+      end
+
+  ## Options
+
+  #{NimbleOptions.docs(@opts_schema)}
+  """
+
   @behaviour Pax.Adapter
   import Ecto.Query
 
@@ -39,9 +63,11 @@ defmodule Pax.Adapters.EctoSchema do
 
   @impl Pax.Adapter
   def init(_callback_module, opts) do
+    opts = Pax.Options.validate!(opts, @opts_schema, "adapter #{inspect(__MODULE__)}")
+
     %{
-      repo: Keyword.get(opts, :repo),
-      schema: Keyword.get(opts, :schema)
+      repo: opts[:repo],
+      schema: opts[:schema]
     }
   end
 

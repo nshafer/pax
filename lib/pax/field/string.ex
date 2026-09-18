@@ -1,12 +1,28 @@
 defmodule Pax.Field.String do
+  @opts_schema NimbleOptions.new!(
+                 truncate: [
+                   type: {:or, [:pos_integer, nil]},
+                   default: nil,
+                   doc: "The length to truncate the value to when rendering."
+                 ]
+               )
+
+  @moduledoc """
+  A field type for string values, edited with a text input.
+
+  ## Options
+
+  #{NimbleOptions.docs(@opts_schema)}
+  """
+
   use Phoenix.Component
   @behaviour Pax.Field.Type
 
   @impl Pax.Field.Type
   def init(opts) do
-    %{
-      truncate: Keyword.get(opts, :truncate, nil)
-    }
+    opts
+    |> Pax.Options.validate!(@opts_schema, "field type #{inspect(__MODULE__)}")
+    |> Map.new()
   end
 
   @impl Pax.Field.Type

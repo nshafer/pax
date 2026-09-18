@@ -1,26 +1,40 @@
 defmodule Pax.Plugins.DetailList do
+  @opts_schema NimbleOptions.new!(
+                 placement: [
+                   type: {:or, [:atom, {:list, :atom}]},
+                   default: [:show_body, :edit_body, :new_body],
+                   doc: "The section, or list of sections, to render the detail list in."
+                 ],
+                 fields: [
+                   type: {:list, :atom},
+                   doc: """
+                   A list of field names to include in the list, in the order to include them. If not provided, all
+                   fields will be displayed in their original order. Any field name that isn't available in the fields
+                   for that action is skipped.
+                   """
+                 ]
+               )
+
   @moduledoc """
   Renders a list of fields for the detail view of a Pax.Interface. The display is of a simple two column list, with the
   field name on the left and the field value on the right.
 
-  ## Options:
-  - `:placement` - A list of sections where the detail list should be rendered. The default is
-    `[:show_body, :edit_body, :new_body]`.
-  - `:fields` - A list of field names (as atoms) to include in the list and the order to include them.
-    If not provided, all fields will be displayed in their original order. If any field name in the list
-    is not available in the fields for that action, that field will be skipped. Field names must be atoms.
+  ## Options
+
+  #{NimbleOptions.docs(@opts_schema)}
   """
 
   use Pax.Interface.Plugin
   use Phoenix.Component
   import Pax.Field.Components
 
-  @default_placement [:show_body, :edit_body, :new_body]
-
   @impl true
   def init(_callback_module, opts) do
+    opts = Pax.Options.validate!(opts, @opts_schema, "plugin #{inspect(__MODULE__)}")
+
     %{
-      placement: Keyword.get(opts, :placement, @default_placement)
+      placement: opts[:placement],
+      field_list: opts[:fields]
     }
   end
 
@@ -39,7 +53,7 @@ defmodule Pax.Plugins.DetailList do
   def merge_config(opts, config, socket) do
     %{
       placement: Pax.Config.get(config, :placement, [socket], opts.placement),
-      field_list: Pax.Config.get(config, :fields, [socket], nil)
+      field_list: Pax.Config.get(config, :fields, [socket], opts.field_list)
     }
   end
 

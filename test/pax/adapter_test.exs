@@ -35,6 +35,10 @@ defmodule Pax.AdapterTest do
     assert %Adapter{opts: %{opts: []}} = Adapter.init(FakeAdapter, :callback)
   end
 
+  test "init/3 passes the options to the adapter as given, for the adapter to validate" do
+    assert %Adapter{opts: %{opts: [id_field: [:id]]}} = Adapter.init(FakeAdapter, :callback, id_field: [:id])
+  end
+
   test "adapter?/1" do
     assert Adapter.adapter?(adapter())
     refute Adapter.adapter?(nil)
@@ -116,9 +120,23 @@ defmodule Pax.Adapters.EctoSchemaTest do
     end
   end
 
-  describe "config_spec/1" do
-    test "is a valid spec" do
+  describe "config_spec/1 and options" do
+    test "are a valid config spec and documented options" do
       assert {:ok, _} = Pax.Config.validate(EctoSchema.config_spec(%{}), %{}, validate_config_spec: true)
+      assert {:docs_v1, _, _, _, %{"en" => moduledoc}, _, _} = Code.fetch_docs(EctoSchema)
+      assert moduledoc =~ "## Options"
+    end
+
+    test "rejects invalid options" do
+      assert_raise ArgumentError,
+                   ~r/^Invalid options for adapter Pax.Adapters.EctoSchema: unknown options \[:repos\]/,
+                   fn ->
+                     Pax.Adapter.init(EctoSchema, nil, repos: Repo)
+                   end
+
+      assert_raise ArgumentError, ~r/invalid value for :schema option: expected atom, got: "Book"/, fn ->
+        Pax.Adapter.init(EctoSchema, nil, repo: Repo, schema: "Book")
+      end
     end
   end
 

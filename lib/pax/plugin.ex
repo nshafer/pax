@@ -21,6 +21,9 @@ defmodule Pax.Plugin do
   @doc """
   The plugin initialization function, must return a map of initialized plugin state, which is passed to all other
   callback functions in the plugin.
+
+  The `opts` are passed through as the developer gave them in `{MyPlugin, opts}`. Validate them with
+  `Pax.Options.validate!/3` if you want them checked, which is what the built-in plugins do.
   """
   @callback init(callback_module :: module(), opts :: keyword()) :: map()
 

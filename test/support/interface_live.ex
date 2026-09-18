@@ -81,8 +81,9 @@ defmodule PaxTest.SpyPlugin do
 
   @impl true
   def init(callback_module, opts) do
+    opts = Pax.Options.validate!(opts, [halt: [type: {:list, :atom}, default: []]], "plugin #{inspect(__MODULE__)}")
     Owner.notify({:spy, :init, callback_module, opts})
-    %{halt: Keyword.get(opts, :halt, [])}
+    %{halt: opts[:halt]}
   end
 
   @impl true
