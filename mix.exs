@@ -64,6 +64,7 @@ defmodule Pax.MixProject do
       {:phoenix_live_view, "~> 1.0"},
       {:ecto, "~> 3.10"},
       {:gettext, "~> 0.26 or ~> 1.0"},
+      {:nimble_options, "~> 1.1"},
       {:jason, "~> 1.2", only: [:dev, :test]},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:esbuild, "~> 0.9", only: :dev},
