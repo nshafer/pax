@@ -11,7 +11,25 @@ defmodule Sandbox.MixProject do
       aliases: aliases(),
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader]
+      listeners: [Phoenix.CodeReloader],
+      usage_rules: usage_rules()
+    ]
+  end
+
+  defp usage_rules do
+    [
+      file: "AGENTS.md",
+      usage_rules: [
+        :usage_rules,
+        "phoenix:all",
+        # Ash: main rules inlined, the long sub-rules linked.
+        {:ash, sub_rules: []},
+        {:ash, sub_rules: :all, main: false, link: :markdown},
+        {:ash_phoenix, sub_rules: []},
+        {:ash_phoenix, sub_rules: :all, main: false, link: :markdown}
+        # Pax itself, once lib/../usage-rules.md exists:
+        # :pax
+      ]
     ]
   end
 
@@ -62,7 +80,10 @@ defmodule Sandbox.MixProject do
       {:dns_cluster, "~> 0.3.0"},
       {:bandit, "~> 1.5"},
       {:pax, path: "../"},
-      {:tidewave, "~> 0.9.0"}
+      {:ash, "~> 3.0"},
+      {:ash_phoenix, "~> 2.0"},
+      {:tidewave, "~> 0.9.0"},
+      {:usage_rules, "~> 1.2", only: [:dev], runtime: false}
     ]
   end
 
