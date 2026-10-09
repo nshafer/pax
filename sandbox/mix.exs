@@ -82,6 +82,8 @@ defmodule Sandbox.MixProject do
       {:pax, path: "../"},
       {:ash, "~> 3.0"},
       {:ash_phoenix, "~> 2.0"},
+      {:ash_postgres, "~> 2.13"},
+      {:simple_sat, "~> 0.1"},
       {:tidewave, "~> 0.9.0"},
       {:usage_rules, "~> 1.2", only: [:dev], runtime: false}
     ]

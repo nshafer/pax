@@ -15,6 +15,13 @@ defmodule SandboxWeb.Admin do
   resource :artists, SandboxWeb.Admin.ArtistResource
   resource :albums, SandboxWeb.Admin.AlbumResource
 
+  # The same three tables through Pax.Adapters.Ash, so the two adapters can be compared over the same rows.
+  section :ash do
+    resource :labels, SandboxWeb.Admin.AshLabelResource
+    resource :artists, SandboxWeb.Admin.AshArtistResource
+    resource :albums, SandboxWeb.Admin.AshAlbumResource
+  end
+
   # # link "More info", "https://somewhere.com/asdf"
 
   # section :library do

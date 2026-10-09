@@ -20,7 +20,7 @@ defmodule SandboxWeb.Router do
 
     get "/", PageController, :home
 
-    live_session :default do
+    live_session :default, on_mount: {SandboxWeb.CurrentUser, :current_user} do
       live "/labels", LabelLive, :index
       live "/labels/new", LabelLive, :new
       live "/labels/:id", LabelLive, :show
@@ -40,7 +40,7 @@ defmodule SandboxWeb.Router do
       live "/albums/:uuid/delete", AlbumLive, :delete
     end
 
-    pax_admin "/admin", Admin
+    pax_admin "/admin", Admin, on_mount: {SandboxWeb.CurrentUser, :current_user}
   end
 
   # Other scopes may use custom stacks.

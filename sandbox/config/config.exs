@@ -9,7 +9,11 @@ import Config
 
 config :sandbox,
   ecto_repos: [Sandbox.Repo],
+  ash_domains: [Sandbox.Catalog],
   generators: [timestamp_type: :utc_datetime]
+
+# Ash 3.33 requires an explicit choice here for any resource with a string attribute.
+config :ash, default_string_length_count: :codepoints
 
 # Configure the endpoint
 config :sandbox, SandboxWeb.Endpoint,

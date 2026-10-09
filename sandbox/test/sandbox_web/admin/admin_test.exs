@@ -16,7 +16,7 @@ defmodule SandboxWeb.AdminTest do
       |> assert_has(".admin-menu a[href='/admin/r/labels']", text: "Labels")
       |> assert_has(".admin-menu a[href='/admin/r/artists']", text: "Artists")
       |> assert_has(".admin-menu a[href='/admin/r/albums']", text: "Albums")
-      |> click_link(".admin-menu a", "Labels")
+      |> click_link(".admin-menu a[href='/admin/r/labels']", "Labels")
       |> assert_path(~p"/admin/r/labels")
     end
 
