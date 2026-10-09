@@ -62,9 +62,9 @@ defmodule Pax.MixProject do
     [
       {:phoenix, "~> 1.8"},
       {:phoenix_html, "~> 4.1"},
-      {:phoenix_ecto, "~> 4.5"},
+      {:phoenix_ecto, "~> 4.5", optional: true},
       {:phoenix_live_view, "~> 1.0"},
-      {:ecto, "~> 3.10"},
+      {:ecto, "~> 3.10", optional: true},
       {:ash, "~> 3.0", optional: true},
       {:ash_phoenix, "~> 2.0", optional: true},
       {:gettext, "~> 0.26 or ~> 1.0"},
