@@ -16,6 +16,7 @@ defmodule Pax.Config do
   Config type                 | Elixir type     | Example
   :-------------------------- | :-------------- | :--------------------------------------------------------------
   `nil`                       | `nil`           | `nil`
+  `:any`                      | `term()`        | any term at all, for a value Pax only passes along
   `:atom`                     | `atom()`        | `:foo`
   `:string`                   | `binary()`      | `"foo"`
   `:boolean`                  | `boolean()`     | `true`, `false`
@@ -120,6 +121,7 @@ defmodule Pax.Config do
 
   @valid_spec_types ~w(
     nil
+    any
     atom string
     boolean
     integer float
@@ -326,6 +328,7 @@ defmodule Pax.Config do
   end
 
   defp type_match?(value, nil), do: value == nil
+  defp type_match?(_value, :any), do: true
   defp type_match?(value, :atom), do: is_atom(value)
   defp type_match?(value, :string), do: is_binary(value)
   defp type_match?(value, :boolean), do: is_boolean(value)

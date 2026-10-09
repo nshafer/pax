@@ -11,6 +11,8 @@ defmodule Pax.ConfigTest do
   describe "validate/2 (config specs)" do
     test "accepts all possible config specs" do
       assert {:ok, %{}} = Config.validate(%{foo: nil}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: :any}, %{}, validate_config_spec: true)
+      assert {:ok, %{}} = Config.validate(%{foo: {:function, 1, :any}}, %{}, validate_config_spec: true)
       assert {:ok, %{}} = Config.validate(%{foo: :atom}, %{}, validate_config_spec: true)
       assert {:ok, %{}} = Config.validate(%{foo: :string}, %{}, validate_config_spec: true)
       assert {:ok, %{}} = Config.validate(%{foo: :boolean}, %{}, validate_config_spec: true)
@@ -183,6 +185,10 @@ defmodule Pax.ConfigTest do
     test "accepts basic types with data" do
       assert {:ok, config} = Config.validate(%{foo: nil}, %{foo: nil})
       assert config[:foo] == {nil, nil}
+      assert {:ok, config} = Config.validate(%{foo: :any}, %{foo: %TestStruct{field: "value"}})
+      assert config[:foo] == {:any, %TestStruct{field: "value"}}
+      assert {:ok, config} = Config.validate(%{foo: :any}, %{foo: nil})
+      assert config[:foo] == {:any, nil}
       assert {:ok, config} = Config.validate(%{foo: :atom}, %{foo: :foo})
       assert config[:foo] == {:atom, :foo}
       assert {:ok, config} = Config.validate(%{foo: :string}, %{foo: "bar"})
@@ -491,6 +497,10 @@ defmodule Pax.ConfigTest do
       assert Config.fetch(config, :foo) == {:ok, nil}
       assert Config.fetch!(config, :foo) == nil
       assert Config.get(config, :foo) == nil
+      assert {:ok, config} = Config.validate(%{foo: :any}, %{foo: %TestStruct{field: "value"}})
+      assert config[:foo] == {:any, %TestStruct{field: "value"}}
+      assert {:ok, config} = Config.validate(%{foo: :any}, %{foo: nil})
+      assert config[:foo] == {:any, nil}
       assert {:ok, config} = Config.validate(%{foo: :atom}, %{foo: :foo})
       assert Config.fetch(config, :foo) == {:ok, :foo}
       assert Config.fetch!(config, :foo) == :foo
@@ -614,6 +624,10 @@ defmodule Pax.ConfigTest do
     end
 
     test "handles fetching key that does not exist" do
+      assert {:ok, config} = Config.validate(%{foo: :any}, %{foo: %TestStruct{field: "value"}})
+      assert config[:foo] == {:any, %TestStruct{field: "value"}}
+      assert {:ok, config} = Config.validate(%{foo: :any}, %{foo: nil})
+      assert config[:foo] == {:any, nil}
       assert {:ok, config} = Config.validate(%{foo: :atom}, %{foo: :foo})
       assert :error = Config.fetch(config, :bar)
       assert Config.get(config, :bar, :default) == :default
