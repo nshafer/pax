@@ -74,7 +74,9 @@ defmodule Pax.MixProject do
       {:phoenix_copy, "~> 0.1", only: :dev},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_test, "~> 0.12.1", only: :test, runtime: false},
-      {:ecto_sql, "~> 3.10", only: [:dev, :test]}
+      {:ecto_sql, "~> 3.10", only: [:dev, :test]},
+      # Ash policies need a SAT solver. Pure Elixir, so no NIF to build.
+      {:simple_sat, "~> 0.1", only: [:dev, :test]}
       # {:postgrex, ">= 0.0.0", only: :test},
     ]
   end

@@ -13,3 +13,7 @@ config :logger, level: :warning
 
 # Initialize plugs at runtime, so the test endpoint can compile before the test router
 config :phoenix, :plug_init_mode, :runtime
+
+# Ash is an optional dependency, compiled here so Pax.Adapters.Ash can be built and tested. Ash 3.33 requires
+# this to be set explicitly whenever a resource has a string attribute.
+config :ash, default_string_length_count: :codepoints
