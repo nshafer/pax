@@ -30,7 +30,9 @@ defmodule Pax.Adapter do
   `Phoenix.LiveView` scope - declares the key in its own `c:config_spec/1` and resolves it per call:
 
       def config_spec(_opts) do
-        %{actor: [:any, {:function, 1, :any}]}
+        # The function form must come first: `:any` matches a function too, so it would win and the function
+        # would be stored as a literal instead of being called with the socket.
+        %{actor: [{:function, 1, :any}, :any]}
       end
 
       defp actor(socket) do

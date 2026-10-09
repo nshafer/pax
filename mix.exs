@@ -50,7 +50,9 @@ defmodule Pax.MixProject do
   # watch task
   defp test_coverage do
     [
-      ignore_modules: [~r/^PaxTest\./, Pax.Debug, Pax.Token, Mix.Tasks.Watch],
+      # Not anchored, so protocol implementations derived for test support modules are excluded too, such as
+      # the Inspect impls Ash generates for PaxTest.Catalog resources.
+      ignore_modules: [~r/PaxTest\./, Pax.Debug, Pax.Token, Mix.Tasks.Watch],
       summary: [threshold: 100]
     ]
   end

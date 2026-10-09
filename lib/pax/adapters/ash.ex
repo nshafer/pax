@@ -90,8 +90,8 @@ if Code.ensure_loaded?(Ash) and Code.ensure_loaded?(AshPhoenix.Form) do
         read_action: [:atom, {:function, 1, :atom}],
         create_action: [:atom, {:function, 1, :atom}],
         update_action: [:atom, {:function, 1, :atom}],
-        actor: [:any, {:function, 1, :any}],
-        tenant: [:any, {:function, 1, :any}]
+        actor: [{:function, 1, :any}, :any],
+        tenant: [{:function, 1, :any}, :any]
       }
     end
 
