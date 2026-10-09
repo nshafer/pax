@@ -32,16 +32,20 @@ defmodule SandboxWeb.AlbumLive do
     Library.get_album!(lookup, criteria)
   end
 
-  def change_object(object, params, _socket) do
-    Library.change_album(object, params)
+  def change_object(object, _socket) do
+    Library.change_album(object)
   end
 
-  def create_object(_object, changeset, _socket) do
-    Library.create_album(changeset.params)
+  def validate_object(object, _form_data, params, _socket) do
+    Library.change_album(object, params) |> Map.put(:action, :validate)
   end
 
-  def update_object(object, changeset, _socket) do
-    Library.update_album(object, changeset.params)
+  def create_object(_object, _form_data, params, _socket) do
+    Library.create_album(params)
+  end
+
+  def update_object(object, _form_data, params, _socket) do
+    Library.update_album(object, params)
   end
 
   def pax_plugins(_socket) do

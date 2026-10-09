@@ -85,6 +85,14 @@ defmodule Pax.Adapter do
   @typedoc "Unsigned params from a Phoenix.LiveView handle_params/3"
   @type unsigned_params :: Phoenix.LiveView.unsigned_params()
 
+  @typedoc """
+  A data-layer-owned value that a form is built from, which must implement `Phoenix.HTML.FormData`.
+
+  Pax treats it as opaque: it builds a form from it, keeps it in `@pax.form_data`, and hands it back to the
+  adapter. `Pax.Adapters.EctoSchema` uses an `Ecto.Changeset`; an Ash adapter uses an `AshPhoenix.Form`.
+  """
+  @type form_data :: term()
+
   @doc """
   The adapter initialization function, must return a map of initialized adapter state.
 
@@ -122,14 +130,36 @@ defmodule Pax.Adapter do
 
   @callback object_name(opts(), Interface.object()) :: String.t() | nil
 
-  @callback change_object(opts(), Interface.object(), unsigned_params(), fields :: [Pax.Field.t()]) ::
-              Ecto.Changeset.t()
+  @doc """
+  Builds the form data for a new or edit page, for the given object.
 
-  @callback create_object(opts(), Interface.object(), Ecto.Changeset.t()) ::
-              {:ok, map()} | {:error, Ecto.Changeset.t()}
+  Pax keeps the returned value in `@pax.form_data` and hands it back to `c:validate_object/5`,
+  `c:create_object/5` and `c:update_object/5`, so a stateful form type survives a whole edit. It must be named
+  with `form_name/0`, or the events Pax sends will not match it.
+  """
+  @callback change_object(opts(), Interface.object(), socket()) :: form_data()
 
-  @callback update_object(opts(), Interface.object(), Ecto.Changeset.t()) ::
-              {:ok, map()} | {:error, Ecto.Changeset.t()}
+  @doc """
+  Applies the submitted params to the form data, for rendering with any resulting errors.
+
+  This is where a data layer marks its form as validated, if it needs to. An adapter whose form data carries
+  state should apply the params to the value it was handed; one whose form data is a pure function of its inputs,
+  such as an `Ecto.Changeset`, should ignore it and rebuild from `object`.
+  """
+  @callback validate_object(opts(), Interface.object(), form_data(), unsigned_params(), socket()) :: form_data()
+
+  @doc """
+  Persists a new object from the submitted params.
+
+  The form data is the value Pax is holding, which may carry state from an earlier validate or a failed submit.
+  Rebuild from `object` rather than mutating it unless the data layer requires otherwise.
+  """
+  @callback create_object(opts(), Interface.object(), form_data(), unsigned_params(), socket()) ::
+              {:ok, Interface.object()} | {:error, form_data()}
+
+  @doc "Persists changes to an existing object from the submitted params. See `c:create_object/5`."
+  @callback update_object(opts(), Interface.object(), form_data(), unsigned_params(), socket()) ::
+              {:ok, Interface.object()} | {:error, form_data()}
 
   @spec init(module(), opts :: []) :: t()
   def init(adapter_module, callback_module, opts \\ []) do
@@ -219,21 +249,30 @@ defmodule Pax.Adapter do
     adapter.module.object_name(adapter.opts, object)
   end
 
-  @spec change_object(t(), Interface.object(), unsigned_params(), fields :: [Pax.Field.t()]) :: Ecto.Changeset.t()
-  def change_object(%Pax.Adapter{} = adapter, object, params, fields) do
-    adapter.module.change_object(adapter.opts, object, params, fields)
+  @doc "The name Pax builds detail forms under, which form data must use so that form events match."
+  @spec form_name() :: atom()
+  def form_name(), do: :detail
+
+  @spec change_object(t(), Interface.object(), socket()) :: form_data()
+  def change_object(%Pax.Adapter{} = adapter, object, socket) do
+    adapter.module.change_object(adapter.opts, object, socket)
   end
 
-  @spec update_object(t(), Interface.object(), Ecto.Changeset.t()) ::
-          {:ok, any()} | {:error, Ecto.Changeset.t()}
-  def create_object(%Pax.Adapter{} = adapter, object, changeset) do
-    adapter.module.create_object(adapter.opts, object, changeset)
+  @spec validate_object(t(), Interface.object(), form_data(), unsigned_params(), socket()) :: form_data()
+  def validate_object(%Pax.Adapter{} = adapter, object, form_data, params, socket) do
+    adapter.module.validate_object(adapter.opts, object, form_data, params, socket)
   end
 
-  @spec update_object(t(), Interface.object(), Ecto.Changeset.t()) ::
-          {:ok, any()} | {:error, Ecto.Changeset.t()}
-  def update_object(%Pax.Adapter{} = adapter, object, changeset) do
-    adapter.module.update_object(adapter.opts, object, changeset)
+  @spec create_object(t(), Interface.object(), form_data(), unsigned_params(), socket()) ::
+          {:ok, Interface.object()} | {:error, form_data()}
+  def create_object(%Pax.Adapter{} = adapter, object, form_data, params, socket) do
+    adapter.module.create_object(adapter.opts, object, form_data, params, socket)
+  end
+
+  @spec update_object(t(), Interface.object(), form_data(), unsigned_params(), socket()) ::
+          {:ok, Interface.object()} | {:error, form_data()}
+  def update_object(%Pax.Adapter{} = adapter, object, form_data, params, socket) do
+    adapter.module.update_object(adapter.opts, object, form_data, params, socket)
   end
 
   defp default_object_ids(adapter, object) do

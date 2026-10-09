@@ -255,9 +255,10 @@ defmodule Pax.Admin.Resource.LiveTest do
           list_objects: [%{}, socket],
           new_object: [socket],
           get_object: [%{}, %{}, socket],
-          change_object: [%{}, %{}, socket],
-          create_object: [%{}, nil, socket],
-          update_object: [%{}, nil, socket]
+          change_object: [%{}, socket],
+          validate_object: [%{}, nil, %{}, socket],
+          create_object: [%{}, nil, %{}, socket],
+          update_object: [%{}, nil, %{}, socket]
         ] do
       assert apply(DefaultResource, fun, args) == :not_implemented
     end

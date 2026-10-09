@@ -189,7 +189,8 @@ defmodule Pax.Interface.LiveTest do
         pax_plugins: [PaxTest.SpyPlugin],
         pax_config: [fields: [{:name, :string}]],
         get_object: fn _, _, _ -> %PaxTest.Author{id: 1, name: "Ursula"} end,
-        change_object: fn object, params, _ -> PaxTest.Author.changeset(object, params) end
+        change_object: fn object, _ -> PaxTest.Author.changeset(object, %{}) end,
+        validate_object: fn object, _, params, _ -> PaxTest.Author.changeset(object, params) end
       )
 
       {:ok, view, _html} = live(conn, "/interface/1/edit")

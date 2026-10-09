@@ -82,28 +82,36 @@ defmodule Pax.Admin.Resource do
               Pax.Interface.object()
   @callback change_object(
               object :: Pax.Interface.object(),
+              socket :: Phoenix.LiveView.Socket.t()
+            ) :: Pax.Adapter.form_data()
+  @callback validate_object(
+              object :: Pax.Interface.object(),
+              form_data :: Pax.Adapter.form_data(),
               params :: Phoenix.LiveView.unsigned_params(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: Ecto.Changeset.t()
+            ) :: Pax.Adapter.form_data()
   @callback create_object(
               object :: Pax.Interface.object(),
-              changeset :: Ecto.Changeset.t(),
+              form_data :: Pax.Adapter.form_data(),
+              params :: Phoenix.LiveView.unsigned_params(),
               socket :: Phoenix.LiveView.Socket.t()
             ) ::
-              {:ok, Pax.Interface.object()} | {:error, Ecto.Changeset.t()}
+              {:ok, Pax.Interface.object()} | {:error, Pax.Adapter.form_data()}
   @callback update_object(
               object :: Pax.Interface.object(),
-              changeset :: Ecto.Changeset.t(),
+              form_data :: Pax.Adapter.form_data(),
+              params :: Phoenix.LiveView.unsigned_params(),
               socket :: Phoenix.LiveView.Socket.t()
             ) ::
-              {:ok, Pax.Interface.object()} | {:error, Ecto.Changeset.t()}
+              {:ok, Pax.Interface.object()} | {:error, Pax.Adapter.form_data()}
 
   @optional_callbacks [
     new_object: 1,
     get_object: 3,
-    change_object: 3,
-    create_object: 3,
-    update_object: 3
+    change_object: 2,
+    validate_object: 4,
+    create_object: 4,
+    update_object: 4
   ]
 
   defmacro __using__(_opts) do
@@ -141,11 +149,17 @@ defmodule Pax.Admin.Resource do
 
       def new_object(_socket), do: :not_implemented
       def get_object(_lookup, _criteria, _socket), do: :not_implemented
-      def change_object(_object, _params, _socket), do: :not_implemented
-      def create_object(_object, _changeset, _socket), do: :not_implemented
-      def update_object(_object, _changeset, _socket), do: :not_implemented
+      def change_object(_object, _socket), do: :not_implemented
+      def validate_object(_object, _form_data, _params, _socket), do: :not_implemented
+      def create_object(_object, _form_data, _params, _socket), do: :not_implemented
+      def update_object(_object, _form_data, _params, _socket), do: :not_implemented
 
-      defoverridable new_object: 1, get_object: 3, change_object: 3, create_object: 3, update_object: 3
+      defoverridable new_object: 1,
+                     get_object: 3,
+                     change_object: 2,
+                     validate_object: 4,
+                     create_object: 4,
+                     update_object: 4
     end
   end
 end

@@ -32,14 +32,16 @@ defmodule PaxTest.InterfaceLive do
   def new_object(socket), do: Owner.call(:new_object, [socket], :not_implemented)
   def get_object(lookup, criteria, socket), do: Owner.call(:get_object, [lookup, criteria, socket], :not_implemented)
 
-  def change_object(object, params, socket),
-    do: Owner.call(:change_object, [object, params, socket], :not_implemented)
+  def change_object(object, socket), do: Owner.call(:change_object, [object, socket], :not_implemented)
 
-  def create_object(object, changeset, socket),
-    do: Owner.call(:create_object, [object, changeset, socket], :not_implemented)
+  def validate_object(object, form_data, params, socket),
+    do: Owner.call(:validate_object, [object, form_data, params, socket], :not_implemented)
 
-  def update_object(object, changeset, socket),
-    do: Owner.call(:update_object, [object, changeset, socket], :not_implemented)
+  def create_object(object, form_data, params, socket),
+    do: Owner.call(:create_object, [object, form_data, params, socket], :not_implemented)
+
+  def update_object(object, form_data, params, socket),
+    do: Owner.call(:update_object, [object, form_data, params, socket], :not_implemented)
 
   def handle_params(params, uri, socket) do
     Owner.notify({:user_handle_params, params, uri})

@@ -319,8 +319,8 @@ defmodule Pax.FieldTest do
     end
   end
 
-  describe "mutable_fields/1 and validate_required/2" do
-    test "only mutable, required fields are validated" do
+  describe "mutable_fields/1 and required_field_names/1" do
+    test "only mutable, required fields are listed" do
       fields = [
         Field.init(nil, {:title, :string}),
         Field.init(nil, {:rank, :integer, required: false}),
@@ -328,9 +328,7 @@ defmodule Pax.FieldTest do
       ]
 
       assert Enum.map(Field.mutable_fields(fields), & &1.name) == [:title, :rank]
-
-      changeset = Ecto.Changeset.cast(%Book{}, %{}, [:title, :rank, :rating]) |> Field.validate_required(fields)
-      assert Keyword.keys(changeset.errors) == [:title]
+      assert Field.required_field_names(fields) == [:title]
     end
   end
 

@@ -253,22 +253,42 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def change_object(_opts, object, params, fields) do
+  def change_object(_opts, object, socket) do
+    cast_fields(object, %{}, socket)
+  end
+
+  # An Ecto.Changeset is a pure function of its data, params and cast list, so the form data Pax hands back is
+  # ignored and the changeset is rebuilt from the object every time. That is not just simpler, it is required:
+  # casting onto an existing changeset accumulates its errors, so they would never clear, and Repo.insert/2
+  # refuses a changeset already marked with action: :validate.
+  @impl Pax.Adapter
+  def validate_object(_opts, object, _form_data, params, socket) do
+    object
+    |> cast_fields(params, socket)
+    |> Map.put(:action, :validate)
+  end
+
+  @impl Pax.Adapter
+  def create_object(%{repo: repo}, object, _form_data, params, socket) do
+    object
+    |> cast_fields(params, socket)
+    |> repo.insert()
+  end
+
+  @impl Pax.Adapter
+  def update_object(%{repo: repo}, object, _form_data, params, socket) do
+    object
+    |> cast_fields(params, socket)
+    |> repo.update()
+  end
+
+  defp cast_fields(object, params, socket) do
+    %{fields: fields} = socket.assigns.pax
     mutable_fields = Pax.Field.mutable_fields(fields)
     mutable_field_names = Enum.map(mutable_fields, fn %Pax.Field{name: name} -> name end)
 
     object
     |> Ecto.Changeset.cast(params, mutable_field_names)
-    |> Pax.Field.validate_required(mutable_fields)
-  end
-
-  @impl Pax.Adapter
-  def create_object(%{repo: repo}, _object, changeset) do
-    repo.insert(changeset)
-  end
-
-  @impl Pax.Adapter
-  def update_object(%{repo: repo}, _object, changeset) do
-    repo.update(changeset)
+    |> Ecto.Changeset.validate_required(Pax.Field.required_field_names(mutable_fields))
   end
 end

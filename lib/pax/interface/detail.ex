@@ -11,28 +11,36 @@ defmodule Pax.Interface.Detail do
               Pax.Interface.object()
   @callback change_object(
               object :: Pax.Interface.object(),
+              socket :: Phoenix.LiveView.Socket.t()
+            ) :: Pax.Adapter.form_data()
+  @callback validate_object(
+              object :: Pax.Interface.object(),
+              form_data :: Pax.Adapter.form_data(),
               params :: Phoenix.LiveView.unsigned_params(),
               socket :: Phoenix.LiveView.Socket.t()
-            ) :: Ecto.Changeset.t()
+            ) :: Pax.Adapter.form_data()
   @callback create_object(
               object :: Pax.Interface.object(),
-              changeset :: Ecto.Changeset.t(),
+              form_data :: Pax.Adapter.form_data(),
+              params :: Phoenix.LiveView.unsigned_params(),
               socket :: Phoenix.LiveView.Socket.t()
             ) ::
-              {:ok, Pax.Interface.object()} | {:error, Ecto.Changeset.t()}
+              {:ok, Pax.Interface.object()} | {:error, Pax.Adapter.form_data()}
   @callback update_object(
               object :: Pax.Interface.object(),
-              changeset :: Ecto.Changeset.t(),
+              form_data :: Pax.Adapter.form_data(),
+              params :: Phoenix.LiveView.unsigned_params(),
               socket :: Phoenix.LiveView.Socket.t()
             ) ::
-              {:ok, Pax.Interface.object()} | {:error, Ecto.Changeset.t()}
+              {:ok, Pax.Interface.object()} | {:error, Pax.Adapter.form_data()}
 
   @optional_callbacks [
     new_object: 1,
     get_object: 3,
-    change_object: 3,
-    create_object: 3,
-    update_object: 3
+    change_object: 2,
+    validate_object: 4,
+    create_object: 4,
+    update_object: 4
   ]
 
   defmacro __using__(_opts) do
@@ -41,11 +49,17 @@ defmodule Pax.Interface.Detail do
 
       def new_object(_socket), do: :not_implemented
       def get_object(_lookup, _criteria, _socket), do: :not_implemented
-      def change_object(_object, _params, _socket), do: :not_implemented
-      def create_object(_object, _changeset, _socket), do: :not_implemented
-      def update_object(_object, _changeset, _socket), do: :not_implemented
+      def change_object(_object, _socket), do: :not_implemented
+      def validate_object(_object, _form_data, _params, _socket), do: :not_implemented
+      def create_object(_object, _form_data, _params, _socket), do: :not_implemented
+      def update_object(_object, _form_data, _params, _socket), do: :not_implemented
 
-      defoverridable new_object: 1, get_object: 3, change_object: 3, create_object: 3, update_object: 3
+      defoverridable new_object: 1,
+                     get_object: 3,
+                     change_object: 2,
+                     validate_object: 4,
+                     create_object: 4,
+                     update_object: 4
     end
   end
 
@@ -66,20 +80,16 @@ defmodule Pax.Interface.Detail do
 
   def handle_event("pax_validate", %{"detail" => params}, socket) do
     # IO.puts("#{inspect(__MODULE__)}.handle_event(:pax_validate, #{inspect(params)})")
-    %{module: module, adapter: adapter, object: object} = socket.assigns.pax
+    %{object: object, form_data: form_data} = socket.assigns.pax
 
-    changeset =
-      change_object(module, adapter, object, params, socket)
-      |> Map.put(:action, :validate)
-
-    {:halt, assign_pax_form(socket, changeset)}
+    {:halt, assign_pax_form(socket, validate_object(object, form_data, params, socket))}
   end
 
   def handle_event("pax_save", %{"detail" => params}, socket) do
     # IO.puts("#{inspect(__MODULE__)}.handle_event(:pax_save, #{inspect(params)})")
-    %{module: module, adapter: adapter, action: action, object: object} = socket.assigns.pax
-    changeset = change_object(module, adapter, object, params, socket)
-    save_object(module, adapter, action, object, changeset, socket)
+    %{action: action, object: object, form_data: form_data} = socket.assigns.pax
+
+    save_object(action, object, form_data, params, socket)
   end
 
   # Catch-all for all other events that we don't care about
@@ -107,44 +117,62 @@ defmodule Pax.Interface.Detail do
   end
 
   defp maybe_assign_form(socket) do
-    %{module: module, adapter: adapter, action: action, object: object} = socket.assigns.pax
+    %{action: action, object: object} = socket.assigns.pax
 
     if action in [:edit, :new] do
-      changeset = change_object(module, adapter, object, %{}, socket)
-      assign_pax_form(socket, changeset)
+      assign_pax_form(socket, change_object(object, socket))
     else
-      assign_pax(socket, :form, nil)
+      assign_pax(socket, form: nil, form_data: nil)
     end
   end
 
-  defp assign_pax_form(socket, changeset) do
-    assign_pax(socket, :form, to_form(changeset, as: :detail))
+  # The only writer of :form and :form_data, so the two cannot drift apart.
+  defp assign_pax_form(socket, form_data) do
+    assign_pax(socket, form_data: form_data, form: to_form(form_data, as: Pax.Adapter.form_name()))
   end
 
-  defp change_object(module, adapter, object, params, socket) do
-    case module.change_object(object, params, socket) do
-      :not_implemented -> adapter_change_object(adapter, object, params, socket)
-      %Ecto.Changeset{} = changeset -> changeset
-      other -> raise "change_object/3 must return an Ecto.Changeset, got: #{inspect(other)}"
+  defp change_object(object, socket) do
+    %{module: module, adapter: adapter} = socket.assigns.pax
+
+    case module.change_object(object, socket) do
+      :not_implemented -> adapter_change_object(adapter, object, socket)
+      form_data -> check_form_data!(form_data, "change_object/2")
     end
   end
 
-  defp adapter_change_object(nil, _object, _params, _socket) do
+  defp adapter_change_object(nil, _object, _socket) do
     raise "Could not change the object. You must either define " <>
-            "a `change_object/3` callback, or configure a Pax.Adapter."
+            "a `change_object/2` callback, or configure a Pax.Adapter."
   end
 
-  defp adapter_change_object(adapter, object, params, socket) do
-    %{fields: fields} = socket.assigns.pax
+  defp adapter_change_object(adapter, object, socket) do
+    adapter
+    |> Pax.Adapter.change_object(object, socket)
+    |> check_form_data!("#{inspect(adapter.module)}.change_object/3")
+  end
 
-    case Pax.Adapter.change_object(adapter, object, params, fields) do
-      %Ecto.Changeset{} = changeset -> changeset
-      other -> raise "#{inspect(adapter.module)}.change_object/4 must return an Ecto.Changeset, got: #{inspect(other)}"
+  defp validate_object(object, form_data, params, socket) do
+    %{module: module, adapter: adapter} = socket.assigns.pax
+
+    case module.validate_object(object, form_data, params, socket) do
+      :not_implemented -> adapter_validate_object(adapter, object, form_data, params, socket)
+      new_form_data -> check_form_data!(new_form_data, "validate_object/4")
     end
   end
 
-  defp save_object(module, adapter, :new, object, changeset, socket) do
-    case create_object(module, adapter, object, changeset, socket) do
+  defp adapter_validate_object(nil, _object, _form_data, _params, _socket) do
+    raise "Could not validate the object. You must either define " <>
+            "a `validate_object/4` callback, or configure a Pax.Adapter."
+  end
+
+  defp adapter_validate_object(adapter, object, form_data, params, socket) do
+    adapter
+    |> Pax.Adapter.validate_object(object, form_data, params, socket)
+    |> check_form_data!("#{inspect(adapter.module)}.validate_object/5")
+  end
+
+  defp save_object(:new, object, form_data, params, socket) do
+    case create_object(object, form_data, params, socket) do
       {:ok, object} ->
         {
           :halt,
@@ -153,14 +181,14 @@ defmodule Pax.Interface.Detail do
           |> maybe_redir_after_save(object)
         }
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        Logger.debug("Create error: #{inspect(changeset)}")
-        {:halt, assign_pax_form(socket, changeset)}
+      {:error, form_data} ->
+        Logger.debug("Create error: #{inspect(form_data)}")
+        {:halt, assign_pax_form(socket, form_data)}
     end
   end
 
-  defp save_object(module, adapter, :edit, object, changeset, socket) do
-    case update_object(module, adapter, object, changeset, socket) do
+  defp save_object(:edit, object, form_data, params, socket) do
+    case update_object(object, form_data, params, socket) do
       {:ok, object} ->
         {
           :halt,
@@ -169,64 +197,79 @@ defmodule Pax.Interface.Detail do
           |> maybe_redir_after_save(object)
         }
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        Logger.debug("Update error: #{inspect(changeset)}")
-        {:halt, assign_pax_form(socket, changeset)}
+      {:error, form_data} ->
+        Logger.debug("Update error: #{inspect(form_data)}")
+        {:halt, assign_pax_form(socket, form_data)}
     end
   end
 
-  defp create_object(module, adapter, object, changeset, socket) do
-    case module.create_object(object, changeset, socket) do
-      :not_implemented -> adapter_create_object(adapter, object, changeset)
-      {:ok, object} when is_map(object) -> {:ok, object}
-      {:error, %Ecto.Changeset{} = changeset} -> {:error, changeset}
-      other -> raise "create_object/3 must return {:ok, object} or {:error, changeset}, got: #{inspect(other)}"
+  defp create_object(object, form_data, params, socket) do
+    %{module: module, adapter: adapter} = socket.assigns.pax
+
+    case module.create_object(object, form_data, params, socket) do
+      :not_implemented -> adapter_create_object(adapter, object, form_data, params, socket)
+      result -> check_save_result!(result, "create_object/4")
     end
   end
 
-  defp adapter_create_object(nil, _object, _changeset) do
+  defp adapter_create_object(nil, _object, _form_data, _params, _socket) do
     raise "Could not create the object. You must either define " <>
-            "a `create_object/3` callback, or configure a Pax.Adapter."
+            "a `create_object/4` callback, or configure a Pax.Adapter."
   end
 
-  defp adapter_create_object(adapter, object, changeset) do
+  defp adapter_create_object(adapter, object, form_data, params, socket) do
     adapter
-    |> Pax.Adapter.create_object(object, changeset)
-    |> check_adapter_save_result!(adapter, "create_object/3")
+    |> Pax.Adapter.create_object(object, form_data, params, socket)
+    |> check_save_result!("#{inspect(adapter.module)}.create_object/5")
   end
 
-  defp update_object(module, adapter, object, changeset, socket) do
-    case module.update_object(object, changeset, socket) do
-      :not_implemented -> adapter_update_object(adapter, object, changeset)
-      {:ok, object} when is_map(object) -> {:ok, object}
-      {:error, %Ecto.Changeset{} = changeset} -> {:error, changeset}
-      other -> raise "update_object/3 must return {:ok, object} or {:error, changeset}, got: #{inspect(other)}"
+  defp update_object(object, form_data, params, socket) do
+    %{module: module, adapter: adapter} = socket.assigns.pax
+
+    case module.update_object(object, form_data, params, socket) do
+      :not_implemented -> adapter_update_object(adapter, object, form_data, params, socket)
+      result -> check_save_result!(result, "update_object/4")
     end
   end
 
-  defp adapter_update_object(nil, _object, _changeset) do
+  defp adapter_update_object(nil, _object, _form_data, _params, _socket) do
     raise "Could not update the object. You must either define " <>
-            "a `update_object/3` callback, or configure a Pax.Adapter."
+            "a `update_object/4` callback, or configure a Pax.Adapter."
   end
 
-  defp adapter_update_object(adapter, object, changeset) do
+  defp adapter_update_object(adapter, object, form_data, params, socket) do
     adapter
-    |> Pax.Adapter.update_object(object, changeset)
-    |> check_adapter_save_result!(adapter, "update_object/3")
+    |> Pax.Adapter.update_object(object, form_data, params, socket)
+    |> check_save_result!("#{inspect(adapter.module)}.update_object/5")
   end
 
-  defp check_adapter_save_result!(result, adapter, function) do
+  # Pax only needs to build a form from the value, so Phoenix.HTML.FormData is the whole requirement. Checking
+  # for a struct from one data layer would reject every other one.
+  defp check_form_data!(form_data, function) do
+    if Phoenix.HTML.FormData.impl_for(form_data) do
+      form_data
+    else
+      raise "#{function} must return a value that implements Phoenix.HTML.FormData, got: #{inspect(form_data)}"
+    end
+  end
+
+  defp check_save_result!(result, function) do
     case result do
       {:ok, object} when is_map(object) ->
         {:ok, object}
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:error, changeset}
+      {:error, form_data} = error ->
+        if Phoenix.HTML.FormData.impl_for(form_data),
+          do: error,
+          else: raise_save_result!(result, function)
 
       other ->
-        raise "#{inspect(adapter.module)}.#{function} must return {:ok, object} or {:error, changeset}, " <>
-                "got: #{inspect(other)}"
+        raise_save_result!(other, function)
     end
+  end
+
+  defp raise_save_result!(result, function) do
+    raise "#{function} must return {:ok, object} or {:error, form_data}, got: #{inspect(result)}"
   end
 
   defp maybe_redir_after_save(socket, object) do

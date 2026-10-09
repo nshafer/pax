@@ -138,18 +138,23 @@ defmodule PaxTest.Admin.AuthorResource do
     Enum.find(authors(), &(to_string(&1.id) == id)) || raise "author #{id} not found"
   end
 
-  def change_object(author, params, _socket), do: Author.changeset(author, params)
+  # The shape a callback module with no adapter wants: one changeset function behind all three write callbacks.
+  def change_object(author, _socket), do: Author.changeset(author, %{})
 
-  def create_object(_author, changeset, _socket) do
-    with {:ok, author} <- Ecto.Changeset.apply_action(changeset, :insert) do
+  def validate_object(author, _form_data, params, _socket) do
+    Author.changeset(author, params) |> Map.put(:action, :validate)
+  end
+
+  def create_object(author, _form_data, params, _socket) do
+    with {:ok, author} <- Author.changeset(author, params) |> Ecto.Changeset.apply_action(:insert) do
       author = %{author | id: 99}
       Owner.notify({:author_resource, :created, author})
       {:ok, author}
     end
   end
 
-  def update_object(_author, changeset, _socket) do
-    with {:ok, author} <- Ecto.Changeset.apply_action(changeset, :update) do
+  def update_object(author, _form_data, params, _socket) do
+    with {:ok, author} <- Author.changeset(author, params) |> Ecto.Changeset.apply_action(:update) do
       Owner.notify({:author_resource, :updated, author})
       {:ok, author}
     end

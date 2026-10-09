@@ -20,6 +20,8 @@ defmodule Pax.Interface do
   * `object_count` - The number of objects in the `:objects` list
   * `path` - The path of the URL of the current page, as a `%URI{}` with only `path` and `query` fields set.
   * `form` - The form to use for the current object in `:new` or `:edit` actions
+  * `form_data` - The data-layer value `form` was built from, kept between validating and saving. Only
+    Pax writes these two, and always together.
   * `singular_name` - The singular name of the object
   * `plural_name` - The plural name of the object
   * `object_name` - The name of the object being displayed
@@ -85,6 +87,7 @@ defmodule Pax.Interface do
             object_count: 0,
             path: nil,
             form: nil,
+            form_data: nil,
             singular_name: nil,
             plural_name: nil,
             object_name: nil,

@@ -56,24 +56,32 @@ defmodule PaxTest.FakeAdapter do
     Map.get(opts, :object)
   end
 
-  def change_object(opts, object, params, fields) do
-    Owner.notify({__MODULE__, :change_object, object, params, Enum.map(fields, & &1.name)})
-
-    result(opts, :change_object, fn ->
-      types = Map.new(fields, &{&1.name, :string})
-      Ecto.Changeset.cast({object, types}, params, Map.keys(types))
-    end)
+  def change_object(opts, object, socket) do
+    Owner.notify({__MODULE__, :change_object, object, field_names(socket)})
+    result(opts, :change_object, fn -> cast(object, %{}, socket) end)
   end
 
-  def create_object(opts, _object, changeset) do
-    Owner.notify({__MODULE__, :create_object, changeset})
-    result(opts, :create_object, fn -> Ecto.Changeset.apply_action(changeset, :insert) end)
+  def validate_object(opts, object, form_data, params, socket) do
+    Owner.notify({__MODULE__, :validate_object, object, form_data, params})
+    result(opts, :validate_object, fn -> cast(object, params, socket) |> Map.put(:action, :validate) end)
   end
 
-  def update_object(opts, _object, changeset) do
-    Owner.notify({__MODULE__, :update_object, changeset})
-    result(opts, :update_object, fn -> Ecto.Changeset.apply_action(changeset, :update) end)
+  def create_object(opts, object, form_data, params, socket) do
+    Owner.notify({__MODULE__, :create_object, object, form_data, params})
+    result(opts, :create_object, fn -> cast(object, params, socket) |> Ecto.Changeset.apply_action(:insert) end)
   end
+
+  def update_object(opts, object, form_data, params, socket) do
+    Owner.notify({__MODULE__, :update_object, object, form_data, params})
+    result(opts, :update_object, fn -> cast(object, params, socket) |> Ecto.Changeset.apply_action(:update) end)
+  end
+
+  defp cast(object, params, socket) do
+    types = Map.new(socket.assigns.pax.fields, &{&1.name, :string})
+    Ecto.Changeset.cast({object, types}, params, Map.keys(types))
+  end
+
+  defp field_names(socket), do: Enum.map(socket.assigns.pax.fields, & &1.name)
 
   # Resolves a config value per call from the socket, the way a real adapter resolves an actor or tenant.
   defp per_call_config(socket) do

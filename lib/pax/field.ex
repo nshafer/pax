@@ -385,13 +385,16 @@ defmodule Pax.Field do
     Enum.reject(fields, &immutable?/1)
   end
 
-  def validate_required(changeset, fields) do
-    required_field_names =
-      fields
-      |> Enum.filter(fn field -> not immutable?(field) and required?(field) end)
-      |> Enum.map(fn %Field{name: name} -> name end)
+  @doc """
+  The names of the fields a form must require: the mutable fields that are not `required: false`.
 
-    Ecto.Changeset.validate_required(changeset, required_field_names)
+  Pax owns which fields a form requires, because that is field metadata. Enforcing it is the data layer's job,
+  so an adapter feeds this list to whatever its form type uses, such as `Ecto.Changeset.validate_required/2`.
+  """
+  def required_field_names(fields) do
+    fields
+    |> Enum.filter(fn field -> not immutable?(field) and required?(field) end)
+    |> Enum.map(fn %Field{name: name} -> name end)
   end
 
   def label_for(%Field{name: name}, nil), do: name

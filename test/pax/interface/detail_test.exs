@@ -35,14 +35,19 @@ defmodule Pax.Interface.DetailTest do
             Owner.notify({:get_object, lookup, criteria})
             @author
           end,
-          change_object: fn object, params, _socket -> Author.changeset(object, params) end,
-          create_object: fn object, changeset, _socket ->
-            Owner.notify({:create_object, object, changeset})
-            with {:ok, author} <- Ecto.Changeset.apply_action(changeset, :insert), do: {:ok, %{author | id: 2}}
+          change_object: fn object, _socket -> Author.changeset(object, %{}) end,
+          validate_object: fn object, _form_data, params, _socket ->
+            Author.changeset(object, params) |> Map.put(:action, :validate)
           end,
-          update_object: fn object, changeset, _socket ->
-            Owner.notify({:update_object, object, changeset})
-            Ecto.Changeset.apply_action(changeset, :update)
+          create_object: fn object, form_data, params, _socket ->
+            Owner.notify({:create_object, object, form_data, params})
+
+            with {:ok, author} <- Author.changeset(object, params) |> Ecto.Changeset.apply_action(:insert),
+                 do: {:ok, %{author | id: 2}}
+          end,
+          update_object: fn object, form_data, params, _socket ->
+            Owner.notify({:update_object, object, form_data, params})
+            Author.changeset(object, params) |> Ecto.Changeset.apply_action(:update)
           end
         ],
         opts
@@ -104,7 +109,7 @@ defmodule Pax.Interface.DetailTest do
       |> assert_path("/interface/1")
       |> assert_has("#flash-info", text: "Updated successfully.")
 
-      assert_received {:update_object, @author, %Ecto.Changeset{changes: %{name: "Ursula K. Le Guin", born: 1930}}}
+      assert_received {:update_object, @author, %Ecto.Changeset{}, %{"name" => "Ursula K. Le Guin", "born" => "1930"}}
     end
 
     test "shows errors when saving fails", %{conn: conn} do
@@ -159,7 +164,7 @@ defmodule Pax.Interface.DetailTest do
       |> assert_path("/interface/2")
       |> assert_has("#flash-info", text: "Created successfully.")
 
-      assert_received {:create_object, %Author{id: nil}, %Ecto.Changeset{changes: %{name: "Octavia"}}}
+      assert_received {:create_object, %Author{id: nil}, %Ecto.Changeset{}, %{"name" => "Octavia"}}
     end
 
     test "shows errors when creating fails", %{conn: conn} do
@@ -188,8 +193,9 @@ defmodule Pax.Interface.DetailTest do
       |> assert_path("/interface/1")
 
       assert_received {FakeAdapter, :get_object, %{id: "1"}, %{}}
-      assert_received {FakeAdapter, :change_object, %{name: "Ursula"}, %{"name" => "Changed"}, [:name]}
-      assert_received {FakeAdapter, :update_object, %Ecto.Changeset{changes: %{name: "Changed"}}}
+      assert_received {FakeAdapter, :change_object, %{name: "Ursula"}, [:name]}
+      assert_received {FakeAdapter, :validate_object, %{name: "Ursula"}, %Ecto.Changeset{}, %{"name" => "Changed"}}
+      assert_received {FakeAdapter, :update_object, %{name: "Ursula"}, %Ecto.Changeset{}, %{"name" => "Changed"}}
 
       interface(pax_adapter: {FakeAdapter, new_object: %{id: 5, name: nil}, object: %{id: 5, name: "New"}})
 
@@ -200,7 +206,7 @@ defmodule Pax.Interface.DetailTest do
       |> assert_path("/interface/5")
 
       assert_received {FakeAdapter, :new_object}
-      assert_received {FakeAdapter, :create_object, %Ecto.Changeset{changes: %{name: "New"}}}
+      assert_received {FakeAdapter, :create_object, %{id: 5, name: nil}, %Ecto.Changeset{}, %{"name" => "New"}}
     end
   end
 
@@ -217,6 +223,7 @@ defmodule Pax.Interface.DetailTest do
         config: config,
         action: action,
         object: %Author{id: 1, name: "Ursula"},
+        form_data: Author.changeset(%Author{id: 1, name: "Ursula"}, %{}),
         fields: [Pax.Field.init(nil, {:name, :string})]
       }
 
@@ -226,20 +233,37 @@ defmodule Pax.Interface.DetailTest do
     defp save(socket), do: Detail.handle_event("pax_save", %{"detail" => %{"name" => "Changed"}}, socket)
     defp validate(socket), do: Detail.handle_event("pax_validate", %{"detail" => %{"name" => ""}}, socket)
 
-    test "raise without change_object/3 or an adapter" do
+    test "raise without validate_object/4 or an adapter" do
       assert_raise RuntimeError,
-                   ~r/You must either define a `change_object\/3` callback, or configure a Pax.Adapter/,
+                   ~r/You must either define a `validate_object\/4` callback, or configure a Pax.Adapter/,
                    fn ->
                      validate(socket(:edit))
                    end
     end
 
-    test "raise when change_object/3 doesn't return a changeset" do
-      interface(change_object: fn _, _, _ -> %{} end)
+    test "raise without change_object/2 or an adapter" do
+      interface(get_object: fn _lookup, _criteria, _socket -> %Author{id: 1, name: "Ursula"} end)
 
-      assert_raise RuntimeError, "change_object/3 must return an Ecto.Changeset, got: %{}", fn ->
-        save(socket(:edit))
-      end
+      assert_raise RuntimeError,
+                   ~r/You must either define a `change_object\/2` callback, or configure a Pax.Adapter/,
+                   fn ->
+                     Detail.handle_params(%{"id" => "1"}, "/interface/1/edit", socket(:edit))
+                   end
+    end
+
+    test "raise when a write callback returns something that is not form data" do
+      interface(validate_object: fn _, _, _, _ -> :changeset end)
+
+      assert_raise RuntimeError,
+                   "validate_object/4 must return a value that implements Phoenix.HTML.FormData, got: :changeset",
+                   fn -> validate(socket(:edit)) end
+    end
+
+    test "a plain map is form data, since Phoenix.HTML.FormData is implemented for it" do
+      interface(validate_object: fn _, _, params, _ -> params end)
+
+      assert {:halt, socket} = validate(socket(:edit))
+      assert %Phoenix.HTML.Form{source: %{"name" => ""}} = socket.assigns.pax.form
     end
 
     test "show the adapter's errors when saving fails" do
@@ -248,6 +272,7 @@ defmodule Pax.Interface.DetailTest do
 
       assert {:halt, socket} = save(socket(:edit, adapter: adapter))
       assert socket.assigns.pax.form.source == changeset
+      assert socket.assigns.pax.form_data == changeset
       assert socket.redirected == nil
     end
 
@@ -255,49 +280,53 @@ defmodule Pax.Interface.DetailTest do
       adapter = fn results -> Pax.Adapter.init(FakeAdapter, PaxTest.InterfaceLive, results: results) end
 
       assert_raise RuntimeError,
-                   "PaxTest.FakeAdapter.change_object/4 must return an Ecto.Changeset, got: :changeset",
+                   "PaxTest.FakeAdapter.validate_object/5 must return a value that implements " <>
+                     "Phoenix.HTML.FormData, got: :changeset",
                    fn ->
-                     validate(socket(:edit, adapter: adapter.(%{change_object: :changeset})))
+                     validate(socket(:edit, adapter: adapter.(%{validate_object: :changeset})))
                    end
 
       assert_raise RuntimeError,
-                   "PaxTest.FakeAdapter.create_object/3 must return {:ok, object} or {:error, changeset}, got: :ok",
+                   "PaxTest.FakeAdapter.create_object/5 must return {:ok, object} or {:error, form_data}, got: :ok",
                    fn -> save(socket(:new, adapter: adapter.(%{create_object: :ok}))) end
 
       assert_raise RuntimeError,
-                   "PaxTest.FakeAdapter.update_object/3 must return {:ok, object} or {:error, changeset}, got: {:ok, nil}",
+                   "PaxTest.FakeAdapter.update_object/5 must return {:ok, object} or {:error, form_data}, " <>
+                     "got: {:ok, nil}",
                    fn -> save(socket(:edit, adapter: adapter.(%{update_object: {:ok, nil}}))) end
-    end
-
-    test "raise without create_object/3 or update_object/3 or an adapter" do
-      interface(change_object: fn object, params, _ -> Author.changeset(object, params) end)
 
       assert_raise RuntimeError,
-                   ~r/You must either define a `create_object\/3` callback, or configure a Pax.Adapter/,
+                   "PaxTest.FakeAdapter.update_object/5 must return {:ok, object} or {:error, form_data}, " <>
+                     "got: {:error, :nope}",
+                   fn -> save(socket(:edit, adapter: adapter.(%{update_object: {:error, :nope}}))) end
+    end
+
+    test "raise without create_object/4 or update_object/4 or an adapter" do
+      assert_raise RuntimeError,
+                   ~r/You must either define a `create_object\/4` callback, or configure a Pax.Adapter/,
                    fn ->
                      save(socket(:new))
                    end
 
       assert_raise RuntimeError,
-                   ~r/You must either define a `update_object\/3` callback, or configure a Pax.Adapter/,
+                   ~r/You must either define a `update_object\/4` callback, or configure a Pax.Adapter/,
                    fn ->
                      save(socket(:edit))
                    end
     end
 
-    test "raise when create_object/3 or update_object/3 return something unexpected" do
+    test "raise when create_object/4 or update_object/4 return something unexpected" do
       interface(
-        change_object: fn object, params, _ -> Author.changeset(object, params) end,
-        create_object: fn _, _, _ -> :ok end,
-        update_object: fn _, _, _ -> {:ok, "not a map"} end
+        create_object: fn _, _, _, _ -> :ok end,
+        update_object: fn _, _, _, _ -> {:ok, "not a map"} end
       )
 
-      assert_raise RuntimeError, "create_object/3 must return {:ok, object} or {:error, changeset}, got: :ok", fn ->
+      assert_raise RuntimeError, "create_object/4 must return {:ok, object} or {:error, form_data}, got: :ok", fn ->
         save(socket(:new))
       end
 
       assert_raise RuntimeError,
-                   ~r/update_object\/3 must return {:ok, object} or {:error, changeset}, got: {:ok, "not a map"}/,
+                   ~r/update_object\/4 must return {:ok, object} or {:error, form_data}, got: {:ok, "not a map"}/,
                    fn ->
                      save(socket(:edit))
                    end
@@ -305,15 +334,18 @@ defmodule Pax.Interface.DetailTest do
 
     test "raise when there's nowhere to go after saving" do
       interface(
-        change_object: fn object, params, _ -> Author.changeset(object, params) end,
-        update_object: fn _, changeset, _ -> Ecto.Changeset.apply_action(changeset, :update) end
+        update_object: fn object, _, params, _ ->
+          Author.changeset(object, params) |> Ecto.Changeset.apply_action(:update)
+        end
       )
 
       assert_raise RuntimeError, "Could not determine path to redirect after save", fn -> save(socket(:edit)) end
     end
 
     test "validation marks the changeset for display" do
-      interface(change_object: fn object, params, _ -> Author.changeset(object, params) end)
+      interface(
+        validate_object: fn object, _, params, _ -> Author.changeset(object, params) |> Map.put(:action, :validate) end
+      )
 
       assert {:halt, socket} = validate(socket(:edit))
       assert %Phoenix.HTML.Form{source: %Ecto.Changeset{action: :validate}} = socket.assigns.pax.form

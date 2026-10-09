@@ -456,9 +456,10 @@ defmodule Pax.Admin do
         defdelegate list_objects(criteria, socket), to: Pax.Admin.Resource.Live
         defdelegate new_object(socket), to: Pax.Admin.Resource.Live
         defdelegate get_object(lookup, criteria, socket), to: Pax.Admin.Resource.Live
-        defdelegate change_object(object, params, socket), to: Pax.Admin.Resource.Live
-        defdelegate create_object(object, changeset, socket), to: Pax.Admin.Resource.Live
-        defdelegate update_object(object, changeset, socket), to: Pax.Admin.Resource.Live
+        defdelegate change_object(object, socket), to: Pax.Admin.Resource.Live
+        defdelegate validate_object(object, form_data, params, socket), to: Pax.Admin.Resource.Live
+        defdelegate create_object(object, form_data, params, socket), to: Pax.Admin.Resource.Live
+        defdelegate update_object(object, form_data, params, socket), to: Pax.Admin.Resource.Live
       end
     end
   end

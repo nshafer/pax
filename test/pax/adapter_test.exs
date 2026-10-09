@@ -21,9 +21,10 @@ defmodule Pax.AdapterTest do
     def id_fields(%{opts: opts}), do: Keyword.get(opts, :id_fields)
     def object_ids(%{opts: opts}, object), do: Keyword.get(opts, :object_ids, fn _ -> nil end).(object)
     def object_name(_opts, object), do: "Thing #{object.id}"
-    def change_object(_opts, object, params, fields), do: {:change, object, params, fields}
-    def create_object(_opts, object, changeset), do: {:create, object, changeset}
-    def update_object(_opts, object, changeset), do: {:update, object, changeset}
+    def change_object(_opts, object, socket), do: {:change, object, socket}
+    def validate_object(_opts, object, form_data, params, socket), do: {:validate, object, form_data, params, socket}
+    def create_object(_opts, object, form_data, params, socket), do: {:create, object, form_data, params, socket}
+    def update_object(_opts, object, form_data, params, socket), do: {:update, object, form_data, params, socket}
   end
 
   defp adapter(opts \\ []), do: Adapter.init(FakeAdapter, :callback, opts)
@@ -64,9 +65,10 @@ defmodule Pax.AdapterTest do
     assert Adapter.new_object(adapter(), :socket) == {:new, :socket}
     assert Adapter.get_object(adapter(), %{id: 1}, %{}, :socket) == {:get, %{id: 1}, %{}, :socket}
     assert Adapter.object_name(adapter(), %{id: 1}) == "Thing 1"
-    assert Adapter.change_object(adapter(), :obj, %{}, []) == {:change, :obj, %{}, []}
-    assert Adapter.create_object(adapter(), :obj, :cs) == {:create, :obj, :cs}
-    assert Adapter.update_object(adapter(), :obj, :cs) == {:update, :obj, :cs}
+    assert Adapter.change_object(adapter(), :obj, :socket) == {:change, :obj, :socket}
+    assert Adapter.validate_object(adapter(), :obj, :fd, %{}, :socket) == {:validate, :obj, :fd, %{}, :socket}
+    assert Adapter.create_object(adapter(), :obj, :fd, %{}, :socket) == {:create, :obj, :fd, %{}, :socket}
+    assert Adapter.update_object(adapter(), :obj, :fd, %{}, :socket) == {:update, :obj, :fd, %{}, :socket}
   end
 
   test "id_fields/1 returns the adapter's id fields" do
@@ -333,31 +335,68 @@ defmodule Pax.Adapters.EctoSchemaTest do
     end
   end
 
-  describe "change_object/4" do
+  describe "change_object/3, validate_object/5" do
     test "casts only mutable fields and requires required ones" do
-      fields = [
-        Pax.Field.init(nil, {:title, :string}),
-        Pax.Field.init(nil, {:rank, :integer, required: false}),
-        Pax.Field.init(nil, {:rating, :float, immutable: true})
-      ]
-
+      socket = socket_with_fields()
       params = %{"title" => "", "rank" => "3", "rating" => "5.0"}
-      changeset = EctoSchema.change_object(@opts, %Book{}, params, fields)
+
+      changeset = EctoSchema.validate_object(@opts, %Book{}, nil, params, socket)
 
       assert changeset.changes == %{rank: 3}
       assert changeset.errors == [title: {"can't be blank", [validation: :required]}]
     end
+
+    test "change_object/3 builds an empty changeset, validate_object/5 marks it for display" do
+      socket = socket_with_fields()
+
+      assert EctoSchema.change_object(@opts, %Book{}, socket).action == nil
+      assert EctoSchema.validate_object(@opts, %Book{}, nil, %{}, socket).action == :validate
+    end
+
+    test "the form data it is handed is ignored, so errors do not accumulate" do
+      socket = socket_with_fields()
+      invalid = EctoSchema.validate_object(@opts, %Book{}, nil, %{"title" => ""}, socket)
+      assert invalid.errors != []
+
+      # Handing the invalid changeset back must not carry its errors into the next validate.
+      assert EctoSchema.validate_object(@opts, %Book{}, invalid, %{"title" => "Dune"}, socket).errors == []
+    end
   end
 
-  describe "create_object/3 and update_object/3" do
-    test "insert and update with the repo" do
-      changeset = Ecto.Changeset.change(%Book{}, title: "Dune")
+  describe "create_object/5 and update_object/5" do
+    test "insert and update with the repo, from the params" do
+      socket = socket_with_fields()
+      params = %{"title" => "Dune"}
 
-      assert {:ok, %Book{title: "Dune"}} = EctoSchema.create_object(@opts, %Book{}, changeset)
-      assert_received {Repo, :insert, [^changeset]}
+      assert {:ok, %Book{title: "Dune"}} = EctoSchema.create_object(@opts, %Book{}, nil, params, socket)
+      assert_received {Repo, :insert, [changeset]}
+      assert changeset.changes == %{title: "Dune"}
 
-      assert {:ok, %Book{title: "Dune"}} = EctoSchema.update_object(@opts, %Book{}, changeset)
-      assert_received {Repo, :update, [^changeset]}
+      assert {:ok, %Book{title: "Dune"}} = EctoSchema.update_object(@opts, %Book{}, nil, params, socket)
+      assert_received {Repo, :update, [changeset]}
+      assert changeset.changes == %{title: "Dune"}
     end
+
+    test "never hands the repo a changeset marked for validation" do
+      socket = socket_with_fields()
+      validated = EctoSchema.validate_object(@opts, %Book{}, nil, %{"title" => "Dune"}, socket)
+      assert validated.action == :validate
+
+      # Repo.insert/2 raises on a changeset whose action is already set, so the adapter must rebuild.
+      assert {:ok, %Book{}} = EctoSchema.create_object(@opts, %Book{}, validated, %{"title" => "Dune"}, socket)
+      assert_received {Repo, :insert, [changeset]}
+      assert changeset.action == nil
+    end
+  end
+
+  # The adapter reads the fields for the current action off the socket, as every data callback may.
+  defp socket_with_fields do
+    fields = [
+      Pax.Field.init(nil, {:title, :string}),
+      Pax.Field.init(nil, {:rank, :integer, required: false}),
+      Pax.Field.init(nil, {:rating, :float, immutable: true})
+    ]
+
+    %{assigns: %{pax: %Pax.Interface{fields: fields}}}
   end
 end

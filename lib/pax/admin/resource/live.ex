@@ -195,18 +195,23 @@ defmodule Pax.Admin.Resource.Live do
     resource.mod.get_object(lookup, criteria, socket)
   end
 
-  def change_object(object, params, socket) do
+  def change_object(object, socket) do
     %{resource: resource} = socket.assigns.pax_admin
-    resource.mod.change_object(object, params, socket)
+    resource.mod.change_object(object, socket)
   end
 
-  def create_object(object, changeset, socket) do
+  def validate_object(object, form_data, params, socket) do
     %{resource: resource} = socket.assigns.pax_admin
-    resource.mod.create_object(object, changeset, socket)
+    resource.mod.validate_object(object, form_data, params, socket)
   end
 
-  def update_object(object, changeset, socket) do
+  def create_object(object, form_data, params, socket) do
     %{resource: resource} = socket.assigns.pax_admin
-    resource.mod.update_object(object, changeset, socket)
+    resource.mod.create_object(object, form_data, params, socket)
+  end
+
+  def update_object(object, form_data, params, socket) do
+    %{resource: resource} = socket.assigns.pax_admin
+    resource.mod.update_object(object, form_data, params, socket)
   end
 end
