@@ -1,4 +1,62 @@
 defmodule Pax.Adapter do
+  @moduledoc """
+  The behaviour for adapters, which load and persist objects for a `Pax.Interface`.
+
+  An adapter is configured with `pax_adapter/1` (or `adapter/1` in a `Pax.Admin.Resource`):
+
+      def pax_adapter(_socket) do
+        {Pax.Adapters.EctoSchema, repo: MyApp.Repo, schema: MyApp.MySchema}
+      end
+
+  Pax calls the callback module first for every data operation, and falls back to the adapter when the module
+  returns `:not_implemented`. With neither, it raises.
+
+  ## The socket, and what is on it
+
+  Every data callback receives the socket as its last argument. `socket.assigns.pax` is a `%Pax.Interface{}`, so
+  an adapter can read anything the interface has already worked out for this request, including:
+
+    * `fields` - the `Pax.Field` structs for the current action, which is how an adapter knows what to cast
+    * `object` - the object being shown or edited
+    * `action` - `:index`, `:show`, `:new`, `:edit` or `:delete`
+    * `criteria` - the map the data layer is being asked to apply
+    * `config` - the validated `Pax.Config` map
+
+  See `Pax.Interface` for the full list. Because these are read per call, they are always current.
+
+  ## Per-call values from the host
+
+  An adapter that needs a value only the host can supply - an actor to authorize with, a tenant to scope to, a
+  `Phoenix.LiveView` scope - declares the key in its own `c:config_spec/1` and resolves it per call:
+
+      def config_spec(_opts) do
+        %{actor: [:any, {:function, 1, :any}]}
+      end
+
+      defp actor(socket) do
+        %{config: config} = socket.assigns.pax
+        Pax.Config.get(config, [:adapter, :actor], [socket], nil)
+      end
+
+  The host then writes it once, as a literal or as a function of the socket:
+
+      def pax_config(_socket) do
+        [adapter: [actor: & &1.assigns.current_user]]
+      end
+
+  Resolve such values per call, **not** in `c:merge_config/3`. That runs once while the interface is built, so a
+  value captured there freezes at mount - which is wrong for anything that can change inside one socket, such as
+  a current user re-read on resume or an operator switching tenant. Use `c:merge_config/3` only for configuration
+  of the resource itself, such as the repo and schema in `Pax.Adapters.EctoSchema`.
+
+  ## Options versus config
+
+  The `opts` given in `{MyAdapter, opts}` are fixed when the adapter is initialized, and Pax passes them to
+  `c:init/2` unchanged - validating them is the adapter's own business, which every built-in adapter does with
+  `Pax.Options.validate!/3`. Configuration that must be resolved per socket goes through `Pax.Config` instead,
+  under the `:adapter` key, as above.
+  """
+
   alias Pax.Interface
 
   @type adapter_module :: module
@@ -50,9 +108,9 @@ defmodule Pax.Adapter do
 
   @callback plural_name(opts()) :: String.t()
 
-  @callback count_objects(opts(), criteria()) :: integer()
+  @callback count_objects(opts(), criteria(), socket()) :: integer()
 
-  @callback list_objects(opts(), criteria()) :: [Interface.object()]
+  @callback list_objects(opts(), criteria(), socket()) :: [Interface.object()]
 
   @callback new_object(opts(), socket()) :: Interface.object()
 
@@ -135,14 +193,14 @@ defmodule Pax.Adapter do
     adapter.module.plural_name(adapter.opts)
   end
 
-  @spec count_objects(t(), criteria()) :: integer()
-  def count_objects(%Pax.Adapter{} = adapter, criteria) do
-    adapter.module.count_objects(adapter.opts, criteria)
+  @spec count_objects(t(), criteria(), socket()) :: integer()
+  def count_objects(%Pax.Adapter{} = adapter, criteria, socket) do
+    adapter.module.count_objects(adapter.opts, criteria, socket)
   end
 
-  @spec list_objects(t(), criteria()) :: [Interface.object()]
-  def list_objects(%Pax.Adapter{} = adapter, criteria) do
-    adapter.module.list_objects(adapter.opts, criteria)
+  @spec list_objects(t(), criteria(), socket()) :: [Interface.object()]
+  def list_objects(%Pax.Adapter{} = adapter, criteria, socket) do
+    adapter.module.list_objects(adapter.opts, criteria, socket)
   end
 
   @spec new_object(t(), socket()) :: Interface.object()

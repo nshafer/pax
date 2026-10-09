@@ -14,8 +14,8 @@ defmodule Pax.AdapterTest do
     def field_type(_opts, :bad), do: {:error, "bad field"}
     def singular_name(_opts), do: "Thing"
     def plural_name(_opts), do: "Things"
-    def count_objects(_opts, criteria), do: {:count, criteria}
-    def list_objects(_opts, criteria), do: {:list, criteria}
+    def count_objects(_opts, criteria, socket), do: {:count, criteria, socket}
+    def list_objects(_opts, criteria, socket), do: {:list, criteria, socket}
     def new_object(_opts, socket), do: {:new, socket}
     def get_object(_opts, lookup, criteria, socket), do: {:get, lookup, criteria, socket}
     def id_fields(%{opts: opts}), do: Keyword.get(opts, :id_fields)
@@ -59,8 +59,8 @@ defmodule Pax.AdapterTest do
     assert Adapter.default_fields(adapter()) == [:a, :b]
     assert Adapter.singular_name(adapter()) == "Thing"
     assert Adapter.plural_name(adapter()) == "Things"
-    assert Adapter.count_objects(adapter(), %{limit: 1}) == {:count, %{limit: 1}}
-    assert Adapter.list_objects(adapter(), %{limit: 1}) == {:list, %{limit: 1}}
+    assert Adapter.count_objects(adapter(), %{limit: 1}, :socket) == {:count, %{limit: 1}, :socket}
+    assert Adapter.list_objects(adapter(), %{limit: 1}, :socket) == {:list, %{limit: 1}, :socket}
     assert Adapter.new_object(adapter(), :socket) == {:new, :socket}
     assert Adapter.get_object(adapter(), %{id: 1}, %{}, :socket) == {:get, %{id: 1}, %{}, :socket}
     assert Adapter.object_name(adapter(), %{id: 1}) == "Thing 1"
@@ -267,44 +267,44 @@ defmodule Pax.Adapters.EctoSchemaTest do
     end
   end
 
-  describe "count_objects/2" do
+  describe "count_objects/3" do
     test "counts with the repo" do
       Repo.stub(:aggregate, fn _query, :count -> 42 end)
 
-      assert EctoSchema.count_objects(@opts, %{limit: 10, offset: 10}) == 42
+      assert EctoSchema.count_objects(@opts, %{limit: 10, offset: 10}, nil) == 42
       assert_received {Repo, :aggregate, [query, :count]}
       assert query_string(query) == "from b0 in PaxTest.Book"
     end
 
-    test "applies the where criteria, like list_objects/2" do
-      EctoSchema.count_objects(@opts, %{where: [title: "Dune"]})
+    test "applies the where criteria, like list_objects/3" do
+      EctoSchema.count_objects(@opts, %{where: [title: "Dune"]}, nil)
       assert received_query(:aggregate) == ~s(from b0 in PaxTest.Book, where: b0.title == ^"Dune")
     end
   end
 
-  describe "list_objects/2" do
+  describe "list_objects/3" do
     test "lists with the repo" do
       Repo.stub(:all, fn _query -> [%Book{id: 1}] end)
 
-      assert EctoSchema.list_objects(@opts, %{}) == [%Book{id: 1}]
+      assert EctoSchema.list_objects(@opts, %{}, nil) == [%Book{id: 1}]
       assert received_query(:all) == "from b0 in PaxTest.Book"
     end
 
     test "applies the where, order_by, limit and offset criteria" do
       criteria = %{where: [title: "Dune"], order_by: [asc: :title, desc: :rank], limit: 10, offset: 20}
-      EctoSchema.list_objects(@opts, criteria)
+      EctoSchema.list_objects(@opts, criteria, nil)
 
       assert received_query(:all) ==
                ~s(from b0 in PaxTest.Book, where: b0.title == ^"Dune", order_by: [asc: b0.title, desc: b0.rank], limit: ^10, offset: ^20)
     end
 
     test "applies a limit without an offset" do
-      EctoSchema.list_objects(@opts, %{order_by: :title, limit: 5})
+      EctoSchema.list_objects(@opts, %{order_by: :title, limit: 5}, nil)
       assert received_query(:all) == "from b0 in PaxTest.Book, order_by: [asc: b0.title], limit: ^5"
     end
 
     test "ignores an offset without a limit" do
-      EctoSchema.list_objects(@opts, %{offset: 5})
+      EctoSchema.list_objects(@opts, %{offset: 5}, nil)
       assert received_query(:all) == "from b0 in PaxTest.Book"
     end
   end

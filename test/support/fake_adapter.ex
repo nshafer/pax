@@ -11,7 +11,11 @@ defmodule PaxTest.FakeAdapter do
 
   def init(callback_module, opts), do: opts |> Map.new() |> Map.put(:callback_module, callback_module)
 
-  def config_spec(_opts), do: %{fake_key: [:string, {:function, 1, :string}]}
+  # `fake_key` is resource config, folded into opts at init. `per_call_key` is resolved per call instead, the
+  # way a real adapter resolves an actor or tenant - it can read things that do not exist yet at init.
+  def config_spec(_opts) do
+    %{fake_key: [:string, {:function, 1, :string}], per_call_key: [:string, {:function, 1, :string}]}
+  end
 
   def merge_config(opts, config, socket) do
     Map.put(opts, :fake_key, Pax.Config.get(config, :fake_key, [socket], nil))
@@ -32,13 +36,13 @@ defmodule PaxTest.FakeAdapter do
   def object_ids(_opts, _object), do: nil
   def object_name(opts, object), do: Map.get(opts, :object_name, fn _ -> nil end).(object)
 
-  def count_objects(opts, criteria) do
-    Owner.notify({__MODULE__, :count_objects, criteria})
+  def count_objects(opts, criteria, socket) do
+    Owner.notify({__MODULE__, :count_objects, criteria, per_call_config(socket)})
     result(opts, :count_objects, fn -> length(Map.get(opts, :objects, [])) end)
   end
 
-  def list_objects(opts, criteria) do
-    Owner.notify({__MODULE__, :list_objects, criteria})
+  def list_objects(opts, criteria, socket) do
+    Owner.notify({__MODULE__, :list_objects, criteria, per_call_config(socket)})
     result(opts, :list_objects, fn -> Map.get(opts, :objects, []) end)
   end
 
@@ -69,6 +73,12 @@ defmodule PaxTest.FakeAdapter do
   def update_object(opts, _object, changeset) do
     Owner.notify({__MODULE__, :update_object, changeset})
     result(opts, :update_object, fn -> Ecto.Changeset.apply_action(changeset, :update) end)
+  end
+
+  # Resolves a config value per call from the socket, the way a real adapter resolves an actor or tenant.
+  defp per_call_config(socket) do
+    %{config: config} = socket.assigns.pax
+    Pax.Config.get(config, [:adapter, :per_call_key], [socket], nil)
   end
 
   defp result(opts, callback, default) do

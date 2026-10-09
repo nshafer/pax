@@ -1,4 +1,28 @@
 defmodule Pax.Admin.Resource do
+  @moduledoc """
+  A resource in a `Pax.Admin`, which is a `Pax.Interface` for one kind of object.
+
+      defmodule MyAppWeb.Admin.BookResource do
+        use Pax.Admin.Resource
+
+        def adapter(_socket) do
+          {Pax.Adapters.EctoSchema, repo: MyApp.Repo, schema: MyApp.Library.Book}
+        end
+
+        def config(_socket) do
+          [fields: [{:title, link: true}, :author, :published_on]]
+        end
+      end
+
+  The callbacks mirror those of `Pax.Interface`, without the `pax_` prefix, and all of them have defaults. The
+  data callbacks are optional: define one to load or persist objects yourself, or leave it out and let the
+  configured `Pax.Adapter` answer. With neither, Pax raises.
+
+  Every data callback receives the socket, and `socket.assigns.pax` is a `%Pax.Interface{}` holding the fields,
+  object, action, criteria and config for the current request - see `Pax.Interface` for the full list, and
+  `Pax.Adapter` for how to resolve per-call values such as an actor or a tenant.
+  """
+
   @derive {Phoenix.Param, key: :path}
 
   @type t() :: %__MODULE__{

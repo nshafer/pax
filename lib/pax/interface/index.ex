@@ -70,24 +70,24 @@ defmodule Pax.Interface.Index do
     %{module: module, adapter: adapter, criteria: criteria} = socket.assigns.pax
 
     case module.count_objects(criteria, socket) do
-      :not_implemented -> init_adapter_count_objects(adapter, criteria)
+      :not_implemented -> init_adapter_count_objects(adapter, criteria, socket)
       count when is_integer(count) and count >= 0 -> count
       other -> raise "count_objects/2 must return a non-negative integer, got: #{inspect(other)}"
     end
   end
 
-  defp init_adapter_count_objects(nil, _criteria) do
+  defp init_adapter_count_objects(nil, _criteria, _socket) do
     raise "Could not get a total count of objects for the page. You must either define " <>
             "a `count_objects/2` callback or configure a Pax.Adapter."
   end
 
-  defp init_adapter_count_objects(adapter, criteria) do
-    case Pax.Adapter.count_objects(adapter, criteria) do
+  defp init_adapter_count_objects(adapter, criteria, socket) do
+    case Pax.Adapter.count_objects(adapter, criteria, socket) do
       count when is_integer(count) and count >= 0 ->
         count
 
       other ->
-        raise "#{inspect(adapter.module)}.count_objects/2 must return a non-negative integer, got: #{inspect(other)}"
+        raise "#{inspect(adapter.module)}.count_objects/3 must return a non-negative integer, got: #{inspect(other)}"
     end
   end
 
@@ -176,21 +176,21 @@ defmodule Pax.Interface.Index do
     %{module: module, adapter: adapter, criteria: criteria} = socket.assigns.pax
 
     case module.list_objects(criteria, socket) do
-      :not_implemented -> init_adapter_list_objects(adapter, criteria)
+      :not_implemented -> init_adapter_list_objects(adapter, criteria, socket)
       objects when is_list(objects) -> objects
       other -> raise "list_objects/2 must return a list of objects, got: #{inspect(other)}"
     end
   end
 
-  defp init_adapter_list_objects(nil, _criteria) do
+  defp init_adapter_list_objects(nil, _criteria, _socket) do
     raise "Could not list objects for the page. You must either define " <>
             "a `list_objects/2` callback, or configure a Pax.Adapter."
   end
 
-  defp init_adapter_list_objects(adapter, criteria) do
-    case Pax.Adapter.list_objects(adapter, criteria) do
+  defp init_adapter_list_objects(adapter, criteria, socket) do
+    case Pax.Adapter.list_objects(adapter, criteria, socket) do
       objects when is_list(objects) -> objects
-      other -> raise "#{inspect(adapter.module)}.list_objects/2 must return a list of objects, got: #{inspect(other)}"
+      other -> raise "#{inspect(adapter.module)}.list_objects/3 must return a list of objects, got: #{inspect(other)}"
     end
   end
 end

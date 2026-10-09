@@ -32,6 +32,10 @@ defmodule Pax.Interface do
   * `criteria` - A map of various criteria for loading data, see the [Criteria](#criteria) section
   * `private` - A map of private values for pax internals and plugins to use, see the [Private](#private) section
 
+  Every data callback receives the socket, so an adapter or a callback module can read any of the above from
+  `socket.assigns.pax` rather than being passed it. See `Pax.Adapter` for how an adapter resolves per-call
+  values such as an actor or a tenant.
+
   ### Criteria
 
   The `:criteria` map is used to pass information to the data loading callbacks or the adapter for basic operations,

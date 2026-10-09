@@ -152,7 +152,7 @@ defmodule Pax.Adapters.EctoSchema do
   end
 
   @impl Pax.Adapter
-  def count_objects(%{repo: repo, schema: schema}, criteria) do
+  def count_objects(%{repo: repo, schema: schema}, criteria, _socket) do
     schema
     |> build_query(criteria)
     |> filter_where(criteria)
@@ -165,7 +165,7 @@ defmodule Pax.Adapters.EctoSchema do
   TODO: advanced filtering that allows different types of queries/operators
   """
   @impl Pax.Adapter
-  def list_objects(%{repo: repo, schema: schema}, criteria) do
+  def list_objects(%{repo: repo, schema: schema}, criteria, _socket) do
     schema
     |> build_query(criteria)
     |> filter_where(criteria)

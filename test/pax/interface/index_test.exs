@@ -70,7 +70,7 @@ defmodule Pax.Interface.IndexTest do
       interface(
         pax_adapter: {FakeAdapter, objects: @books, default_fields: [{:title, :string}]},
         pax_plugins: [Pax.Plugins.IndexTable],
-        pax_config: [default_criteria: %{limit: 5}]
+        pax_config: [default_criteria: %{limit: 5}, adapter: [per_call_key: &"key for #{&1.assigns.pax.action}"]]
       )
 
       conn
@@ -78,20 +78,20 @@ defmodule Pax.Interface.IndexTest do
       |> assert_has("tr#pax-object-1", text: "Dune")
       |> assert_has("tr#pax-object-2", text: "Emma")
 
-      assert_received {FakeAdapter, :count_objects, %{limit: 5}}
-      assert_received {FakeAdapter, :list_objects, %{limit: 5}}
+      assert_received {FakeAdapter, :count_objects, %{limit: 5}, "key for index"}
+      assert_received {FakeAdapter, :list_objects, %{limit: 5}, "key for index"}
     end
 
     test "raises when the adapter returns the wrong types", %{conn: conn} do
       interface(pax_adapter: {FakeAdapter, results: %{count_objects: nil}})
 
       assert_raise RuntimeError,
-                   "PaxTest.FakeAdapter.count_objects/2 must return a non-negative integer, got: nil",
+                   "PaxTest.FakeAdapter.count_objects/3 must return a non-negative integer, got: nil",
                    fn -> visit(conn, "/interface") end
 
       interface(pax_adapter: {FakeAdapter, results: %{list_objects: :none}})
 
-      assert_raise RuntimeError, "PaxTest.FakeAdapter.list_objects/2 must return a list of objects, got: :none", fn ->
+      assert_raise RuntimeError, "PaxTest.FakeAdapter.list_objects/3 must return a list of objects, got: :none", fn ->
         visit(conn, "/interface")
       end
     end
