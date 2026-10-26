@@ -1,0 +1,49 @@
+#!/bin/sh
+# Pax can be installed from git, and Mix never builds a dependency's assets, so the built
+# assets in priv/ are committed. Rebuild them with `mix assets.deploy` and refuse the push
+# when the committed copies in any pushed commit don't match.
+#
+# Enable with: git config core.hooksPath .githooks
+set -eu
+
+zero=0000000000000000000000000000000000000000
+sources="assets config mix.exs mix.lock"
+built="priv/assets priv/static"
+
+# Git passes the refs on stdin; read them before mix gets a chance to
+refs=$(cat)
+shas=$(printf '%s\n' "$refs" | awk -v zero="$zero" 'NF && $2 != zero { print $2 }' | sort -u)
+[ -z "$shas" ] && exit 0
+
+# The build reads the working tree, so it only speaks for commits whose sources match it
+for sha in $shas; do
+  if ! git diff --quiet "$sha" -- $sources || [ -n "$(git ls-files --others --exclude-standard -- $sources)" ]; then
+    echo "pre-push: asset sources in the working tree differ from $sha." >&2
+    echo "pre-push: commit or stash those changes, or check out the commit you are pushing." >&2
+    exit 1
+  fi
+done
+
+echo "pre-push: building assets with mix assets.deploy" >&2
+mix assets.deploy </dev/null >/dev/null
+
+stale=0
+for sha in $shas; do
+  if ! git diff --quiet "$sha" -- $built; then
+    echo "pre-push: built assets in $sha are stale:" >&2
+    git diff --stat "$sha" -- $built >&2
+    stale=1
+  fi
+done
+
+untracked=$(git ls-files --others --exclude-standard -- $built)
+if [ -n "$untracked" ]; then
+  echo "pre-push: built assets are not committed:" >&2
+  echo "$untracked" >&2
+  stale=1
+fi
+
+if [ "$stale" -ne 0 ]; then
+  echo "pre-push: commit the rebuilt priv/assets and priv/static, then push again." >&2
+  exit 1
+fi

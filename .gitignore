@@ -30,9 +30,11 @@ local/
 *.local
 *.local.*
 
-# Ignore static files that are produced by build tools.
-/priv/assets
-/priv/static
+# Built assets in priv/ are committed so Pax works as a git dependency (see .githooks/pre-push).
+# The phx.digest output is not: it is only for the hex package, and the manifest is timestamped on every run.
+/priv/static/cache_manifest.json
+/priv/static/**/*.gz
+/priv/static/**/*-????????????????????????????????.*
 
 ### VisualStudioCode ###
 .vscode/*
