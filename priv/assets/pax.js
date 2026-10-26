@@ -1,0 +1,1 @@
+(()=>{document.addEventListener("DOMContentLoaded",()=>{console.log("pax.js loaded"),window.liveSocket?(console.log("Installing hooks"),window.liveSocket.hooks.PaxHook={mounted(){console.log("PaxHook mounted")}}):console.error("Pax was unable to find a LiveSocket instance")});})();
